@@ -1,0 +1,212 @@
+:root {
+  --laranja: #ff6a00;
+  --branco: #ffffff;
+  --cinza-suave: #f4f4f4;
+  --cinza-medio: #5e5e5e;
+  --preto-carvao: #1e1e1e;
+  --azul-petroleo: #3a7ca5;
+}
+
+.Nav__Container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  background-color: var(--branco);
+  position: fixed;
+  width: 100%;
+  height: 70px;
+  top: 0;
+  z-index: 2000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.7s ease-in-out forwards;
+}
+
+.Nav__logo__wrapper {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.Nav__logo {
+  max-height: 100px;
+  height: 100%;
+  object-fit: contain;
+}
+
+.Nav__Bar {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+}
+
+.Nav__Bar li {
+  padding: 10px;
+}
+
+.Nav__Bar a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--cinza-medio);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.Nav__Bar a svg {
+  font-size: 1.2rem;
+  color: var(--azul-petroleo);
+}
+
+.Nav__Bar a:hover {
+  color: var(--laranja);
+}
+
+.Nav__Bar .active {
+  color: var(--laranja);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* LOGIN BUTTON */
+.Nav__Login__Button {
+  padding: 8px 20px;
+  background-color: var(--laranja);
+  color: var(--branco);
+  border-radius: 25px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.Nav__Login__Button:hover {
+  background-color: #e65c00;
+}
+
+/* MOSTRAR NO DESKTOP */
+.Nav__Login__Desktop {
+  display: block;
+}
+
+/* ESCONDER NO DESKTOP */
+.Nav__Login__Mobile {
+  display: none;
+}
+
+/* HAMBURGER */
+.Nav__Hamburger {
+  display: none;
+  background: none;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 3000;
+}
+
+.Hamburger__Box {
+  width: 30px;
+  height: 24px;
+  position: relative;
+}
+
+.Hamburger__Inner,
+.Hamburger__Inner::before,
+.Hamburger__Inner::after {
+  width: 30px;
+  height: 3px;
+  background-color: var(--azul-petroleo);
+  position: absolute;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.Hamburger__Inner {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.Hamburger__Inner::before {
+  content: "";
+  top: -10px;
+}
+
+.Hamburger__Inner::after {
+  content: "";
+  top: 10px;
+}
+
+.Nav__Hamburger.open .Hamburger__Inner {
+  background-color: transparent;
+}
+
+.Nav__Hamburger.open .Hamburger__Inner::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+
+.Nav__Hamburger.open .Hamburger__Inner::after {
+  transform: rotate(-45deg);
+  top: 0;
+}
+
+@media (max-width: 1200px) {
+  .Nav__Bar {
+    display: none;
+  }
+
+  .Nav__Bar.active {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--branco);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.4s ease-in-out;
+  }
+
+  .Nav__Bar a {
+    font-size: 1.5rem;
+    color: var(--cinza-medio);
+  }
+
+  .Nav__Bar a svg {
+    color: var(--azul-petroleo);
+  }
+
+  .Nav__Hamburger {
+    display: flex;
+  }
+
+  /* ESCONDE LOGIN DESKTOP */
+  .Nav__Login__Desktop {
+    display: none;
+  }
+
+  /* MOSTRA LOGIN DENTRO DO MENU */
+  .Nav__Login__Mobile {
+    display: block;
+  }
+
+  .Nav__Login__Mobile .Nav__Login__Button {
+    font-size: 1.3rem;
+    padding: 12px 28px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

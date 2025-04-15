@@ -1,5 +1,6 @@
 ﻿using Firebase.Database;
 using Firebase.Database.Query;
+using Pet_shop.DTOs;
 using Pet_shop.Models;
 
 namespace Pet_shop.Services
@@ -127,5 +128,40 @@ namespace Pet_shop.Services
                 .Child(id)
                 .DeleteAsync();
         }
+
+        // 🔸 Usuarios
+
+        public async Task SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
+        {
+            // Mapeia o UsuarioDTO para o modelo Usuario
+            var usuario = new Usuario
+            {
+                Nome = usuarioDTO.Nome,
+                Email = usuarioDTO.Email,
+                Senha = usuarioDTO.Senha,
+                Telefone = usuarioDTO.Telefone,
+                Endereco = usuarioDTO.Endereco
+            };
+
+            // Gerando um ID único automaticamente no Firebase
+            var novoUsuarioRef = await _firebase
+                .Child("usuarios")  // Referência para o nó "usuarios" no Realtime Database
+                .PostAsync(new
+                {
+                    usuario.Nome,
+                    usuario.Email,
+                    usuario.Senha,
+                    usuario.Telefone,
+                    usuario.Endereco
+                });
+
+            // Pega o ID gerado automaticamente pelo Firebase
+            var novoId = novoUsuarioRef.Key;
+
+            // Se precisar salvar o ID gerado no próprio modelo de Usuario (não necessário aqui, mas se precisar)
+            // usuario.Id = novoId;
+        }
+
+
     }
 }

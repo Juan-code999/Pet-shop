@@ -1,0 +1,86 @@
+.Footer__Container {
+  background-color: #FFFFFF; /* Fundo branco clean */
+  color: #5E5E5E; /* Texto base cinza médio */
+  padding: 3rem 1rem;
+  text-align: center;
+  border-top: 2px solid #F4F4F4;
+}
+
+.Footer__Content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: auto;
+  padding-bottom: 2rem;
+}
+
+/* Logo e descrição */
+.Footer__Brand {
+  text-align: left;
+}
+
+.Footer__Logo {
+  width: 150px;
+  margin-bottom: 10px;
+}
+
+/* Seções gerais */
+.Footer__Section h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #1E1E1E; /* Título com peso */
+  text-align: left;
+}
+
+.Footer__Section p,
+.Footer__Section ul {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.Footer__Section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.Footer__Section ul li {
+  margin-bottom: 8px;
+}
+
+.Footer__Section ul li a {
+  text-decoration: none;
+  color: #3A7CA5; /* Azul petróleo nos links */
+  transition: color 0.3s ease;
+}
+
+.Footer__Section ul li a:hover {
+  color: #FF6A00; /* Hover com laranja vibrante */
+}
+
+/* Redes sociais */
+.Footer__Socials {
+  display: flex;
+  gap: 15px;
+  justify-content: left;
+}
+
+.Footer__Socials a {
+  color: #3A7CA5;
+  font-size: 1.8rem;
+  transition: color 0.3s ease;
+}
+
+.Footer__Socials a:hover {
+  color: #FF6A00;
+}
+
+/* Copyright */
+.Footer__Bottom {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F4F4F4;
+  font-size: 0.9rem;
+  color: #5E5E5E;
+}

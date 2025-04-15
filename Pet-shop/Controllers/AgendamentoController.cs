@@ -5,7 +5,7 @@ using Pet_shop.Services;
 
 namespace Pet_shop.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AgendamentoController : ControllerBase
     {

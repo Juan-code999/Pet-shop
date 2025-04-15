@@ -5,80 +5,78 @@ using Pet_shop.Services;
 
 namespace Pet_shop.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
-    public class PetController : ControllerBase
+    public class TutorController : ControllerBase
     {
         private readonly FirebaseService _firebase;
 
-        public PetController(FirebaseService firebase)
+        public TutorController(FirebaseService firebase)
         {
             _firebase = firebase;
         }
 
-        // POST - Criar pet
+        // POST - Criar tutor
         [HttpPost]
-        public async Task<IActionResult> Criar([FromBody] PetDTO dto)
+        public async Task<IActionResult> Criar([FromBody] TutorDTO dto)
         {
-            var pet = new Pet
+            var tutor = new Tutor
             {
                 Id = Guid.NewGuid().ToString(),
                 Nome = dto.Nome,
-                Raca = dto.Raca,
-                Idade = dto.Idade,
-                TutorId = dto.TutorId
+                Telefone = dto.Telefone,
+                Email = dto.Email
             };
 
-            await _firebase.AddPetAsync(pet);
-            return Ok(new { Message = "Pet cadastrado com sucesso.", Id = pet.Id });
+            await _firebase.AddTutorAsync(tutor);
+            return Ok(new { Message = "Tutor cadastrado com sucesso.", Id = tutor.Id });
         }
 
-        // GET - Listar todos os pets
+        // GET - Listar todos os tutores
         [HttpGet]
         public async Task<IActionResult> Listar()
         {
-            var pets = await _firebase.ListarPetsAsync();
-            return Ok(pets);
+            var tutores = await _firebase.ListarTutoresAsync();
+            return Ok(tutores);
         }
 
-        // GET - Buscar pet por ID
+        // GET - Obter tutor por ID
         [HttpGet("{id}")]
         public async Task<IActionResult> Obter(string id)
         {
-            var pet = await _firebase.GetPetAsync(id);
-            if (pet == null)
-                return NotFound("Pet não encontrado.");
+            var tutor = await _firebase.GetTutorAsync(id);
+            if (tutor == null)
+                return NotFound("Tutor não encontrado.");
 
-            return Ok(pet);
+            return Ok(tutor);
         }
 
-        // PUT - Atualizar pet
+        // PUT - Atualizar tutor
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(string id, [FromBody] PetDTO dto)
+        public async Task<IActionResult> Atualizar(string id, [FromBody] TutorDTO dto)
         {
-            var existente = await _firebase.GetPetAsync(id);
+            var existente = await _firebase.GetTutorAsync(id);
             if (existente == null)
-                return NotFound("Pet não encontrado.");
+                return NotFound("Tutor não encontrado.");
 
             existente.Nome = dto.Nome;
-            existente.Raca = dto.Raca;
-            existente.Idade = dto.Idade;
-            existente.TutorId = dto.TutorId;
+            existente.Telefone = dto.Telefone;
+            existente.Email = dto.Email;
 
-            await _firebase.AddPetAsync(existente);
-            return Ok(new { Message = "Pet atualizado com sucesso." });
+            await _firebase.AddTutorAsync(existente);
+            return Ok(new { Message = "Tutor atualizado com sucesso." });
         }
 
-        // DELETE - Remover pet
+        // DELETE - Remover tutor
         [HttpDelete("{id}")]
         public async Task<IActionResult> Remover(string id)
         {
-            var pet = await _firebase.GetPetAsync(id);
-            if (pet == null)
-                return NotFound("Pet não encontrado.");
+            var tutor = await _firebase.GetTutorAsync(id);
+            if (tutor == null)
+                return NotFound("Tutor não encontrado.");
 
-            await _firebase.RemoverPetAsync(id);
-            return Ok(new { Message = "Pet removido com sucesso." });
+            await _firebase.RemoverTutorAsync(id);
+            return Ok(new { Message = "Tutor removido com sucesso." });
         }
     }
 }
