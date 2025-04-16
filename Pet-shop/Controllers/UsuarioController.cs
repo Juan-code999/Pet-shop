@@ -16,6 +16,7 @@ namespace Pet_shop.Controllers
             _firebaseService = firebaseService;
         }
 
+        // Método para criar um usuário
         [HttpPost]
         public async Task<IActionResult> CriarUsuario([FromBody] UsuarioDTO dto)
         {
@@ -26,6 +27,20 @@ namespace Pet_shop.Controllers
             await _firebaseService.SalvarUsuarioAsync(dto);
 
             return Ok(new { Message = "Usuário criado com sucesso!" });
+        }
+
+        // Método para promover um usuário para admin
+        [HttpPut("promover/{email}")]
+        public async Task<IActionResult> PromoverParaAdmin(string email)
+        {
+            var sucesso = await _firebaseService.PromoverUsuarioParaAdminAsync(email);
+
+            if (!sucesso)
+            {
+                return NotFound("Usuário não encontrado.");
+            }
+
+            return Ok("Usuário promovido para admin com sucesso.");
         }
     }
 }
