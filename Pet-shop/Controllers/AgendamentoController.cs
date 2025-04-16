@@ -16,71 +16,34 @@ namespace Pet_shop.Controllers
             _firebaseService = firebaseService;
         }
 
-        // 🔹 POST - Criar agendamento
+        // Criar agendamento
         [HttpPost]
-        public async Task<IActionResult> CriarAgendamento([FromBody] AgendamentoDTO agendamentoDto)
+        public async Task<IActionResult> CriarAgendamento([FromBody] AgendamentoDTO agendamentoDTO)
         {
-            if (agendamentoDto == null)
-                return BadRequest("Dados do agendamento inválidos.");
+            if (agendamentoDTO == null)
+            {
+                return BadRequest("Dados inválidos.");
+            }
 
             var agendamento = new Agendamento
             {
-                Id = Guid.NewGuid().ToString(),
-                PetId = agendamentoDto.PetId,
-                DataHora = agendamentoDto.DataHora,
-                Servicos = agendamentoDto.Servicos ?? new List<string>(),
-                Status = "Agendado"
+                NomePet = agendamentoDTO.NomePet,
+                DataAgendamento = agendamentoDTO.DataAgendamento,
+                HoraAgendamento = agendamentoDTO.HoraAgendamento,
             };
 
-            await _firebaseService.AddAgendamentoAsync(agendamento);
-            return Ok(new { Message = "Agendamento criado com sucesso.", Id = agendamento.Id });
+            await _firebaseService.SalvarAgendamentoAsync(agendamento); // Método de salvar no Firebase
+
+            return Ok(new { message = "Agendamento criado com sucesso!" });
         }
 
-        // 🔹 GET - Listar todos os agendamentos
+        // Listar agendamentos (opcional)
         [HttpGet]
-        public async Task<IActionResult> ListarAgendamentos()
+        public async Task<IActionResult> GetAgendamentos()
         {
             var agendamentos = await _firebaseService.ListarAgendamentosAsync();
             return Ok(agendamentos);
         }
-
-        // 🔹 GET - Obter agendamento por ID
-        [HttpGet("{id}")]
-        public async Task<IActionResult> ObterAgendamento(string id)
-        {
-            var agendamento = await _firebaseService.GetAgendamentoAsync(id);
-            if (agendamento == null)
-                return NotFound("Agendamento não encontrado.");
-
-            return Ok(agendamento);
-        }
-
-        // 🔹 PUT - Atualizar agendamento
-        [HttpPut("{id}")]
-        public async Task<IActionResult> AtualizarAgendamento(string id, [FromBody] AgendamentoDTO agendamentoDto)
-        {
-            var agendamentoExistente = await _firebaseService.GetAgendamentoAsync(id);
-            if (agendamentoExistente == null)
-                return NotFound("Agendamento não encontrado.");
-
-            agendamentoExistente.PetId = agendamentoDto.PetId;
-            agendamentoExistente.DataHora = agendamentoDto.DataHora;
-            agendamentoExistente.Servicos = agendamentoDto.Servicos ?? new List<string>();
-
-            await _firebaseService.AddAgendamentoAsync(agendamentoExistente);
-            return Ok(new { Message = "Agendamento atualizado com sucesso." });
-        }
-
-        // 🔹 DELETE - Cancelar agendamento
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> CancelarAgendamento(string id)
-        {
-            var agendamento = await _firebaseService.GetAgendamentoAsync(id);
-            if (agendamento == null)
-                return NotFound("Agendamento não encontrado.");
-
-            await _firebaseService.CancelarAgendamentoAsync(id);
-            return Ok(new { Message = "Agendamento cancelado com sucesso." });
-        }
     }
 }
+

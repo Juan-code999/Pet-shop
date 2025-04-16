@@ -13,7 +13,12 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      await signInWithEmailAndPassword(auth, email, senha);
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      
+      // Salvar o UID no localStorage
+      const userId = userCredential.user.uid;
+      localStorage.setItem('tutorId', userId); // Salva o UID como tutorId
+      
       alert("Login realizado com sucesso!");
       navigate('/dashboard'); // ou onde quiser ir depois do login
     } catch (error) {
