@@ -70,8 +70,9 @@ public async Task SalvarPetAsync(Pet pet)
                 .ToList();
         }
 
-        // 🔸 Usuarios
+        /// 🔸 Usuarios
 
+        // Método para salvar o usuário no Firebase com IsAdmin
         public async Task SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
         {
             // Mapeia o UsuarioDTO para o modelo Usuario
@@ -81,7 +82,8 @@ public async Task SalvarPetAsync(Pet pet)
                 Email = usuarioDTO.Email,
                 Senha = usuarioDTO.Senha,
                 Telefone = usuarioDTO.Telefone,
-                Endereco = usuarioDTO.Endereco
+                Endereco = usuarioDTO.Endereco,
+                IsAdmin = usuarioDTO.IsAdmin // Salva a informação do admin
             };
 
             // Gerando um ID único automaticamente no Firebase
@@ -93,7 +95,8 @@ public async Task SalvarPetAsync(Pet pet)
                     usuario.Email,
                     usuario.Senha,
                     usuario.Telefone,
-                    usuario.Endereco
+                    usuario.Endereco,
+                    usuario.IsAdmin // Inclui o campo IsAdmin
                 });
 
             // Pega o ID gerado automaticamente pelo Firebase
@@ -102,6 +105,35 @@ public async Task SalvarPetAsync(Pet pet)
             // Se precisar salvar o ID gerado no próprio modelo de Usuario (não necessário aqui, mas se precisar)
             // usuario.Id = novoId;
         }
+
+        // Método para promover um usuário para admin
+        public async Task<bool> PromoverUsuarioParaAdminAsync(string email)
+        {
+            // Busca o usuário pelo email
+            var usuarioRef = _firebase
+                .Child("usuarios")
+                .OrderBy("Email")
+                .EqualTo(email);
+
+            var usuarioSnapshot = await usuarioRef.OnceAsync<Usuario>();
+
+            if (usuarioSnapshot.Count == 0)
+            {
+                return false; // Usuário não encontrado
+            }
+
+            // Atualiza o campo IsAdmin para true
+            var usuario = usuarioSnapshot.First().Object;
+            await _firebase
+                .Child("usuarios")
+                .Child(usuarioSnapshot.First().Key) // Usando a chave do usuário encontrado
+                .Child("IsAdmin") // Atualiza apenas o campo IsAdmin
+                .PutAsync(true);
+
+            return true; // Sucesso
+        }
+
+        // (Outros métodos para manipulação de pets, agendamentos e tutores continuam os mesmos)
 
 
     }
