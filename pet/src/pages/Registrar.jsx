@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../Db/firebaseConfig";
-import { useNavigate, Link } from "react-router-dom";
-import "../styles/registrar.css";
+import React, { useState } from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../Db/firebaseConfig';
+import { useNavigate, Link } from 'react-router-dom';
+import '../styles/registrar.css';
 
 const Registrar = () => {
   const [formDataUsuario, setFormDataUsuario] = useState({
-    Nome: "",
-    Email: "",
-    Senha: "",
-    Telefone: "",
-    Endereco: "",
+    Nome: '',
+    Email: '',
+    Senha: '',
+    Telefone: '',
+    Endereco: '',
   });
 
   const navigate = useNavigate();
@@ -27,12 +27,12 @@ const Registrar = () => {
 
     // Validação simples
     if (!Email || !Senha) {
-      alert("Preencha o email e a senha!");
+      alert('Preencha o email e a senha!');
       return;
     }
 
     try {
-      console.log("Tentando registrar com:", formDataUsuario);
+      console.log('Tentando registrar com:', formDataUsuario);
 
       // 1️⃣ Cadastrar no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
@@ -41,10 +41,10 @@ const Registrar = () => {
       const userId = userCredential.user.uid;
 
       // 2️⃣ Enviar para a API com o Firebase UID
-      const response = await fetch("http://localhost:5005/Usuario", {
-        method: "POST",
+      const response = await fetch('http://localhost:5005/Usuario', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formDataUsuario,
@@ -53,15 +53,14 @@ const Registrar = () => {
       });
 
       if (response.ok) {
-        alert("Usuário registrado com sucesso!");
-        navigate("/login");
+        alert('Usuário registrado com sucesso!');
+        navigate('/login');
       } else {
         const err = await response.json();
-        alert("Erro ao salvar na API: " + err.message);
+        alert('Erro ao salvar na API: ' + err.message);
       }
-
     } catch (error) {
-      alert("Erro ao registrar: " + error.message);
+      alert('Erro ao registrar: ' + error.message);
     }
   };
 

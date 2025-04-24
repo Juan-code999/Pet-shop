@@ -9,6 +9,7 @@ import Registrar from "./pages/Registrar";
 import Agendamentos from "./pages/Agendamentos";
 
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registrar" element={<Registrar/>} />
         <Route path="/agendamentos" element={<Agendamentos/>} />
+        
         
         {/* <Route path="/conta" element={Contatos} /> */}
 

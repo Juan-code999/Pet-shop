@@ -7,76 +7,39 @@ namespace Pet_shop.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class TutorController : ControllerBase
+    public class PetController : ControllerBase
     {
-        private readonly FirebaseService _firebase;
+        private readonly FirebaseService _firebaseService;
 
-        public TutorController(FirebaseService firebase)
+        public PetController(FirebaseService firebaseService)
         {
-            _firebase = firebase;
+            _firebaseService = firebaseService;
         }
 
-        // POST - Criar tutor
         [HttpPost]
-        public async Task<IActionResult> Criar([FromBody] TutorDTO dto)
+        public async Task<IActionResult> CriarPet([FromBody] PetDTO dto)
         {
-            var tutor = new Tutor
+            if (dto == null || string.IsNullOrEmpty(dto.TutorUid))
+                return BadRequest("Dados inválidos");
+
+            var pet = new Pet
             {
-                Id = Guid.NewGuid().ToString(),
                 Nome = dto.Nome,
-                Telefone = dto.Telefone,
-                Email = dto.Email
+                Especie = dto.Especie,
+                Raca = dto.Raca,
+                Idade = dto.Idade,
+                TutorUid = dto.TutorUid
             };
 
-            await _firebase.AddTutorAsync(tutor);
-            return Ok(new { Message = "Tutor cadastrado com sucesso.", Id = tutor.Id });
+            await _firebaseService.SalvarPetAsync(pet);
+            return Ok(new { Message = "Pet cadastrado com sucesso!" });
         }
 
-        // GET - Listar todos os tutores
-        [HttpGet]
-        public async Task<IActionResult> Listar()
+        [HttpGet("{tutorUid}")]
+        public async Task<IActionResult> ListarPetsDoTutor(string tutorUid)
         {
-            var tutores = await _firebase.ListarTutoresAsync();
-            return Ok(tutores);
-        }
-
-        // GET - Obter tutor por ID
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Obter(string id)
-        {
-            var tutor = await _firebase.GetTutorAsync(id);
-            if (tutor == null)
-                return NotFound("Tutor não encontrado.");
-
-            return Ok(tutor);
-        }
-
-        // PUT - Atualizar tutor
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(string id, [FromBody] TutorDTO dto)
-        {
-            var existente = await _firebase.GetTutorAsync(id);
-            if (existente == null)
-                return NotFound("Tutor não encontrado.");
-
-            existente.Nome = dto.Nome;
-            existente.Telefone = dto.Telefone;
-            existente.Email = dto.Email;
-
-            await _firebase.AddTutorAsync(existente);
-            return Ok(new { Message = "Tutor atualizado com sucesso." });
-        }
-
-        // DELETE - Remover tutor
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Remover(string id)
-        {
-            var tutor = await _firebase.GetTutorAsync(id);
-            if (tutor == null)
-                return NotFound("Tutor não encontrado.");
-
-            await _firebase.RemoverTutorAsync(id);
-            return Ok(new { Message = "Tutor removido com sucesso." });
+            var pets = await _firebaseService.ObterPetsDoTutorAsync(tutorUid);
+            return Ok(pets);
         }
     }
 }

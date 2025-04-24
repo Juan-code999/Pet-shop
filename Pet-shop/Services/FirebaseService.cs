@@ -19,42 +19,38 @@ namespace Pet_shop.Services
 
         // 🔸 Agendamento
 
-        public async Task AddAgendamentoAsync(Agendamento agendamento)
+        // Salvar agendamento no Firebase
+        public async Task SalvarAgendamentoAsync(Agendamento agendamento)
         {
             await _firebase
                 .Child("agendamentos")
-                .Child(agendamento.Id)
-                .PutAsync(agendamento);
+                .PostAsync(agendamento);
         }
 
-        public async Task<Agendamento?> GetAgendamentoAsync(string id)
-        {
-            return await _firebase
-                .Child("agendamentos")
-                .Child(id)
-                .OnceSingleAsync<Agendamento>();
-        }
-
-        public async Task CancelarAgendamentoAsync(string id)
-        {
-            await _firebase
-                .Child("agendamentos")
-                .Child(id)
-                .DeleteAsync();
-        }
-
+        // Listar agendamentos (opcional)
         public async Task<List<Agendamento>> ListarAgendamentosAsync()
         {
-            var result = await _firebase
+            var agendamentos = await _firebase
                 .Child("agendamentos")
                 .OnceAsync<Agendamento>();
 
-            return result.Select(item => item.Object).ToList();
+            return agendamentos
+                .Select(a => new Agendamento
+                {
+                    Id = a.Key,
+                    NomePet = a.Object.NomePet,
+                    DataAgendamento = a.Object.DataAgendamento,
+                    HoraAgendamento = a.Object.HoraAgendamento
+                })
+                .ToList();
         }
+    
 
-        // 🔸 Pet
 
-        public async Task AddPetAsync(Pet pet)
+
+// 🔸 Pet
+
+public async Task SalvarPetAsync(Pet pet)
         {
             await _firebase
                 .Child("pets")
@@ -62,71 +58,16 @@ namespace Pet_shop.Services
                 .PutAsync(pet);
         }
 
-        public async Task<Pet?> GetPetAsync(string id)
+        public async Task<List<Pet>> ObterPetsDoTutorAsync(string tutorUid)
         {
-            return await _firebase
-                .Child("pets")
-                .Child(id)
-                .OnceSingleAsync<Pet>();
-        }
-
-        public async Task<List<Pet>> ListarPetsAsync()
-        {
-            var result = await _firebase
+            var pets = await _firebase
                 .Child("pets")
                 .OnceAsync<Pet>();
 
-            return result.Select(item => item.Object).ToList();
-        }
-
-        public async Task RemoverPetAsync(string id)
-        {
-            await _firebase
-                .Child("pets")
-                .Child(id)
-                .DeleteAsync();
-        }
-
-        // 🔸 Tutor
-
-        public async Task AddTutorAsync(Tutor tutor)
-        {
-            await _firebase
-                .Child("tutores")
-                .Child(tutor.Id)
-                .PutAsync(tutor);
-        }
-
-        public async Task<Tutor?> GetTutorAsync(string id)
-        {
-            try
-            {
-                return await _firebase
-                    .Child("tutores")
-                    .Child(id)
-                    .OnceSingleAsync<Tutor>();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<List<Tutor>> ListarTutoresAsync()
-        {
-            var result = await _firebase
-                .Child("tutores")
-                .OnceAsync<Tutor>();
-
-            return result.Select(item => item.Object).ToList();
-        }
-
-        public async Task RemoverTutorAsync(string id)
-        {
-            await _firebase
-                .Child("tutores")
-                .Child(id)
-                .DeleteAsync();
+            return pets
+                .Select(p => p.Object)
+                .Where(p => p.TutorUid == tutorUid)
+                .ToList();
         }
 
         /// 🔸 Usuarios
