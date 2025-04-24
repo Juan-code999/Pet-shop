@@ -1,14 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaHome, FaProjectDiagram, FaUser, FaBuilding } from "react-icons/fa";
 import "../styles/NavBar.css";
 
+// Supondo Firebase, você pode adaptar para qualquer auth
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 const NavBar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({
+          name: currentUser.displayName,
+          photo: currentUser.photoURL,
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <nav className="Nav__Container">
@@ -23,11 +43,6 @@ const NavBar = () => {
           </Link>
         </li>
         <li>
-          <Link to="/projetos" className={location.pathname === "/projetos" ? "active" : ""} onClick={closeMenu}>
-            <FaProjectDiagram /> Projetos
-          </Link>
-        </li>
-        <li>
           <Link to="/conta" className={location.pathname === "/conta" ? "active" : ""} onClick={closeMenu}>
             <FaUser /> Contatos
           </Link>
@@ -38,19 +53,33 @@ const NavBar = () => {
           </Link>
         </li>
 
-        {/* LOGIN dentro do menu quando for responsivo */}
+        {/* Mobile login ou nome do usuário */}
         <li className="Nav__Login__Mobile">
-          <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
-            Login
-          </Link>
+          {user ? (
+            <div className="Nav__User__Info">
+              <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
+              <span>{user.name}</span>
+            </div>
+          ) : (
+            <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
+              Login
+            </Link>
+          )}
         </li>
       </ul>
 
-      {/* LOGIN fora do menu (só no desktop) */}
+      {/* Desktop login ou nome do usuário */}
       <div className="Nav__Login__Desktop">
-        <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
-          Login
-        </Link>
+        {user ? (
+          <div className="Nav__User__Info">
+            <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
+            <span>{user.name}</span>
+          </div>
+        ) : (
+          <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
+            Login
+          </Link>
+        )}
       </div>
 
       <button className={`Nav__Hamburger ${isOpen ? "open" : ""}`} onClick={toggleMenu} aria-label="Menu">
