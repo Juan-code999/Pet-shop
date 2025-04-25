@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../Db/firebaseConfig';
-=======
+
 import React, { useState, useEffect } from "react";
 import { auth } from "../Db/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
->>>>>>> 8a9e0db70a78c586f3098988e31aea8f2741c144
 import "../styles/Agendamentos.css";
 
 const Agendamento = () => {
@@ -18,13 +13,9 @@ const Agendamento = () => {
   
   const navigate = useNavigate();
 
-<<<<<<< HEAD
-  // Pegar o UID do usuário logado
-  const usuarioId = auth.currentUser?.uid;
-=======
+
   const [tutorId, setTutorId] = useState(null);
   const [mensagem, setMensagem] = useState("");
->>>>>>> 8a9e0db70a78c586f3098988e31aea8f2741c144
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -40,54 +31,11 @@ const Agendamento = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-<<<<<<< HEAD
-    setFormDataAgendamento((prev) => ({ ...prev, [name]: value }));
-=======
     setFormData((prev) => ({ ...prev, [name]: value }));
->>>>>>> 8a9e0db70a78c586f3098988e31aea8f2741c144
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
-
-    if (!usuarioId) {
-      alert('Você precisa estar logado para agendar.');
-      return;
-    }
-
-    const { NomePet, DataAgendamento, HoraAgendamento } = formDataAgendamento;
-
-    // Validando os campos
-    if (!NomePet || !DataAgendamento || !HoraAgendamento) {
-      alert('Preencha todos os campos!');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:5005/api/agendamento', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          NomePet,
-          DataAgendamento,
-          HoraAgendamento,
-          UsuarioId: usuarioId,  // Enviando o ID do usuário
-        }),
-      });
-
-      if (response.ok) {
-        alert('Agendamento realizado com sucesso!');
-        navigate('/dashboard'); // Redireciona para o dashboard
-      } else {
-        const err = await response.json();
-        alert('Erro ao criar agendamento: ' + err.message);
-      }
-    } catch (error) {
-      alert('Erro ao registrar agendamento: ' + error.message);
-=======
   
     if (!tutorId) {
       alert("Você precisa estar logado para agendar.");
@@ -120,7 +68,6 @@ const Agendamento = () => {
       }
     } catch (err) {
       alert("Erro de conexão com a API: " + err.message);
->>>>>>> 8a9e0db70a78c586f3098988e31aea8f2741c144
     }
   };
   return (

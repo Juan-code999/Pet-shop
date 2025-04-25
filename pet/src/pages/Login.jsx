@@ -15,12 +15,14 @@ const Login = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       
-      // Salvar o UID no localStorage
-      const userId = userCredential.user.uid;
-      localStorage.setItem('tutorId', userId); // Salva o UID como tutorId
+      const user = userCredential.user;
       
+      // Salvar UID e nome no localStorage
+      localStorage.setItem('tutorId', user.uid);
+      localStorage.setItem('tutorNome', user.displayName || ''); // displayName salvo no registro
+
       alert("Login realizado com sucesso!");
-      navigate('/dashboard'); // ou onde quiser ir depois do login
+      navigate('/dashboard');
     } catch (error) {
       alert("Erro no login: " + error.message);
     }

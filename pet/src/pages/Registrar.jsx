@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../Db/firebaseConfig';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/registrar.css';
@@ -23,11 +23,10 @@ const Registrar = () => {
   const handleSubmitCompleto = async (e) => {
     e.preventDefault();
 
-    const { Email, Senha } = formDataUsuario;
+    const { Nome, Email, Senha } = formDataUsuario;
 
-    // Validação simples
-    if (!Email || !Senha) {
-      alert('Preencha o email e a senha!');
+    if (!Email || !Senha || !Nome) {
+      alert('Preencha o nome, email e a senha!');
       return;
     }
 
@@ -36,11 +35,16 @@ const Registrar = () => {
 
       // 1️⃣ Cadastrar no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
-      
-      // Agora você tem o usuário criado no Firebase Auth, pode pegar o UID do Firebase Auth
+
+      // 2️⃣ Atualizar o perfil do usuário com nome e foto (opcional)
+      await updateProfile(userCredential.user, {
+        displayName: Nome,
+        photoURL: 'https://i.pravatar.cc/150?u=' + Email, // foto padrão gerada pelo email
+      });
+
       const userId = userCredential.user.uid;
 
-      // 2️⃣ Enviar para a API com o Firebase UID
+      // 3️⃣ Enviar para a API
       const response = await fetch('http://localhost:5005/Usuario', {
         method: 'POST',
         headers: {
@@ -48,7 +52,7 @@ const Registrar = () => {
         },
         body: JSON.stringify({
           ...formDataUsuario,
-          id: userId,  // Incluindo o UID do Firebase para vincular os dados na API
+          id: userId,
         }),
       });
 

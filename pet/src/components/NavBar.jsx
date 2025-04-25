@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaHome, FaProjectDiagram, FaUser, FaBuilding } from "react-icons/fa";
 import "../styles/NavBar.css";
-
-// Supondo Firebase, você pode adaptar para qualquer auth
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 const NavBar = () => {
   const location = useLocation();
@@ -16,10 +14,13 @@ const NavBar = () => {
 
   useEffect(() => {
     const auth = getAuth();
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
+        // Verifica se há nome salvo no localStorage
+        const nome = localStorage.getItem("tutorNome") || currentUser.displayName || "Usuário";
         setUser({
-          name: currentUser.displayName,
+          name: nome,
           photo: currentUser.photoURL,
         });
       } else {
@@ -29,6 +30,28 @@ const NavBar = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const handleLogout = () => {
+    const auth = getAuth();
+    signOut(auth).then(() => {
+      localStorage.removeItem("tutorNome");
+      localStorage.removeItem("tutorId");
+      setUser(null);
+    });
+  };
+
+  const renderLoginSection = () =>
+    user ? (
+      <div className="Nav__User__Info">
+        {user.photo && <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />}
+        <span>{user.name}</span>
+        <button onClick={handleLogout} className="Nav__Logout__Button">Sair</button>
+      </div>
+    ) : (
+      <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
+        Login
+      </Link>
+    );
 
   return (
     <nav className="Nav__Container">
@@ -54,33 +77,11 @@ const NavBar = () => {
         </li>
 
         {/* Mobile login ou nome do usuário */}
-        <li className="Nav__Login__Mobile">
-          {user ? (
-            <div className="Nav__User__Info">
-              <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
-              <span>{user.name}</span>
-            </div>
-          ) : (
-            <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
-              Login
-            </Link>
-          )}
-        </li>
+        <li className="Nav__Login__Mobile">{renderLoginSection()}</li>
       </ul>
 
       {/* Desktop login ou nome do usuário */}
-      <div className="Nav__Login__Desktop">
-        {user ? (
-          <div className="Nav__User__Info">
-            <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
-            <span>{user.name}</span>
-          </div>
-        ) : (
-          <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
-            Login
-          </Link>
-        )}
-      </div>
+      <div className="Nav__Login__Desktop">{renderLoginSection()}</div>
 
       <button className={`Nav__Hamburger ${isOpen ? "open" : ""}`} onClick={toggleMenu} aria-label="Menu">
         <div className="Hamburger__Box">
