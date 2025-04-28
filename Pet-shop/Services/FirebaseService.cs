@@ -76,6 +76,7 @@ namespace Pet_shop.Services
         {
             var usuario = new Usuario
             {
+                Id = "",
                 Nome = usuarioDTO.Nome,
                 Email = usuarioDTO.Email,
                 Senha = usuarioDTO.Senha,
@@ -88,6 +89,7 @@ namespace Pet_shop.Services
                 .Child("usuarios")
                 .PostAsync(new
                 {
+                    usuario.Id,
                     usuario.Nome,
                     usuario.Email,
                     usuario.Senha,
@@ -96,6 +98,12 @@ namespace Pet_shop.Services
                     usuario.IsAdmin
                 });
 
+            usuario.Id = novoUsuarioRef.Key;
+
+            await _firebase
+                .Child("usuarios")
+                .Child(usuario.Id)
+                .PutAsync(usuario);
             return novoUsuarioRef.Key; // Retorna o ID gerado automaticamente pelo Firebase
         }
 

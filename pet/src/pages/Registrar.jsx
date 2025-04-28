@@ -11,6 +11,7 @@ const Registrar = () => {
     Senha: '',
     Telefone: '',
     Endereco: '',
+    IsAdmin: false, // Adiciona o campo IsAdmin
   });
 
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const Registrar = () => {
   const handleSubmitCompleto = async (e) => {
     e.preventDefault();
 
-    const { Nome, Email, Senha } = formDataUsuario;
+    const { Nome, Email, Senha, IsAdmin } = formDataUsuario;
 
     if (!Email || !Senha || !Nome) {
       alert('Preencha o nome, email e a senha!');
@@ -36,15 +37,15 @@ const Registrar = () => {
       // 1️⃣ Cadastrar no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
 
-      // 2️⃣ Atualizar o perfil do usuário
+      // 2️⃣ Atualizar o perfil do usuário com nome e foto (opcional)
       await updateProfile(userCredential.user, {
         displayName: Nome,
-        photoURL: 'https://i.pravatar.cc/150?u=' + Email,
+        photoURL: 'https://i.pravatar.cc/150?u=' + Email, // foto padrão gerada pelo email
       });
 
       const userId = userCredential.user.uid;
 
-      // 3️⃣ Enviar para a API
+      // 3️⃣ Enviar para a API com o campo IsAdmin
       const response = await fetch('http://localhost:5005/Usuario', {
         method: 'POST',
         headers: {
@@ -107,6 +108,15 @@ const Registrar = () => {
           value={formDataUsuario.Endereco}
           onChange={handleChange}
         />
+        <label>
+          <input
+            type="checkbox"
+            name="IsAdmin"
+            checked={formDataUsuario.IsAdmin}
+            onChange={() => setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))}
+          />
+          Tornar este usuário admin
+        </label>
         <button type="submit">Cadastrar</button>
       </form>
       <p>
