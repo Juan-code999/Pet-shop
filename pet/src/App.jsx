@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from "./pages/Login";
 import Registrar from "./pages/Registrar";
 import Agendamentos from "./pages/Agendamentos";
+import Settings from "./components/Settings";
 
 
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registrar" element={<Registrar/>} />
         <Route path="/agendamentos" element={<Agendamentos/>} />
+        <Route path="/settings" element={<Settings/>} />
         
         
         {/* <Route path="/conta" element={Contatos} /> */}

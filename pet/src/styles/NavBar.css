@@ -1,47 +1,56 @@
+/* Container principal da Navbar */
 .Nav__Container {
+  background-color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #141414;
-  padding: 12px 24px;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  padding: 8px 20px; /* Diminuí o padding */
+  height: 64px; /* Altura fixa mais baixa */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 100;
 }
 
+/* Logo */
 .Nav__logo__wrapper {
   display: flex;
   align-items: center;
 }
 
 .Nav__logo {
-  height: 40px;
+  width: 100px; /* Diminuí um pouco o tamanho da logo */
+  height: auto;
 }
 
+/* Menu principal */
 .Nav__Bar {
-  display: flex;
-  gap: 20px;
   list-style: none;
-  margin: 0;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
-.Nav__Bar li a {
-  color: white;
+.Nav__Bar li {
+  position: relative;
+}
+
+.Nav__Bar a {
   text-decoration: none;
+  color: #333;
   font-weight: 500;
+  padding: 6px 10px; /* Ajustei o padding interno */
+  transition: color 0.3s;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: color 0.2s;
 }
 
-.Nav__Bar li a:hover,
-.Nav__Bar li a.active {
-  color: #00c3ff;
+.Nav__Bar a:hover,
+.Nav__Bar a.active {
+  color: #007bff;
 }
 
+/* Seção de login / usuário */
 .Nav__Login__Desktop {
   display: flex;
   align-items: center;
@@ -52,43 +61,72 @@
   display: none;
 }
 
+/* Botão de login */
 .Nav__Login__Button {
-  padding: 6px 16px;
-  background-color: #00c3ff;
-  border: none;
-  border-radius: 20px;
+  background-color: #007bff;
   color: white;
-  font-weight: 500;
-  cursor: pointer;
+  padding: 6px 14px; /* Menor */
+  border-radius: 6px;
   text-decoration: none;
-  transition: background-color 0.2s;
+  font-weight: 600;
+  transition: background-color 0.3s;
 }
 
 .Nav__Login__Button:hover {
-  background-color: #009cc2;
+  background-color: #0056b3;
 }
 
-.Nav__Logout__Button {
-  padding: 6px 14px;
-  background-color: #ff4d4d;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.Nav__Logout__Button:hover {
-  background-color: #e60000;
-}
-
-.Nav__User__Info {
+/* Dropdown do usuário */
+.Nav__User__Dropdown {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  cursor: pointer;
 }
 
+.Nav__User__Name {
+  margin-left: 8px;
+  position: relative;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.Nav__Dropdown__Content {
+  display: none;
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: #ffffff;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.Nav__Dropdown__Content a,
+.Nav__Dropdown__Content button {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.Nav__Dropdown__Content a:hover,
+.Nav__Dropdown__Content button:hover {
+  background-color: #f0f0f0;
+}
+
+.Nav__User__Dropdown:hover .Nav__Dropdown__Content {
+  display: block;
+}
+
+/* Avatar */
 .Nav__User__Avatar {
   width: 30px;
   height: 30px;
@@ -96,16 +134,20 @@
   object-fit: cover;
 }
 
+/* Botão de hamburguer (menu mobile) */
 .Nav__Hamburger {
-  display: none;
-  flex-direction: column;
   background: none;
   border: none;
   cursor: pointer;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
 }
 
 .Hamburger__Box {
-  width: 25px;
+  width: 24px;
   height: 18px;
   position: relative;
 }
@@ -113,12 +155,12 @@
 .Hamburger__Inner,
 .Hamburger__Inner::before,
 .Hamburger__Inner::after {
-  content: '';
+  background-color: #333;
   position: absolute;
-  width: 25px;
+  width: 100%;
   height: 3px;
-  background-color: white;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  border-radius: 2px;
 }
 
 .Hamburger__Inner {
@@ -127,42 +169,52 @@
 }
 
 .Hamburger__Inner::before {
+  content: "";
   top: -8px;
 }
 
 .Hamburger__Inner::after {
+  content: "";
   top: 8px;
 }
 
+/* Animação do hambúrguer quando aberto */
 .Nav__Hamburger.open .Hamburger__Inner {
-  background: transparent;
+  background-color: transparent;
 }
 
 .Nav__Hamburger.open .Hamburger__Inner::before {
-  transform: rotate(45deg) translate(5px, 5px);
+  transform: rotate(45deg);
+  top: 0;
 }
 
 .Nav__Hamburger.open .Hamburger__Inner::after {
-  transform: rotate(-45deg) translate(5px, -5px);
+  transform: rotate(-45deg);
+  top: 0;
 }
 
-/* Responsivo */
-@media screen and (max-width: 768px) {
+/* Responsividade */
+@media (max-width: 768px) {
   .Nav__Bar {
     position: absolute;
-    top: 65px;
+    top: 64px; /* Ajustei para combinar com a nova altura da navbar */
+    left: 0;
     right: 0;
+    background-color: #ffffff;
     flex-direction: column;
-    background-color: #141414;
-    width: 100%;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .Nav__Bar.active {
-    max-height: 300px;
-    padding: 12px 0;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .Nav__Login__Desktop {
@@ -171,7 +223,6 @@
 
   .Nav__Login__Mobile {
     display: block;
-    margin-top: 12px;
   }
 
   .Nav__Hamburger {

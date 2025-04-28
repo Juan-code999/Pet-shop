@@ -15,14 +15,41 @@ const NavBar = () => {
   useEffect(() => {
     const auth = getAuth();
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        // Verifica se há nome salvo no localStorage
-        const nome = localStorage.getItem("tutorNome") || currentUser.displayName || "Usuário";
-        setUser({
-          name: nome,
-          photo: currentUser.photoURL,
-        });
+        try {
+          const userId = currentUser.uid;
+          const response = await fetch(`http://localhost:5005/Usuario/${userId}`);
+          if (response.ok) {
+            const usuario = await response.json();
+            const nome = usuario.Nome || "Usuário";
+            const isAdmin = usuario.IsAdmin || false;
+
+            localStorage.setItem("tutorNome", nome);
+            localStorage.setItem("tutorId", userId);
+            localStorage.setItem("isAdmin", isAdmin); // opcional, se quiser guardar no navegador
+
+            setUser({
+              name: nome,
+              photo: currentUser.photoURL,
+              isAdmin: isAdmin,
+            });
+          } else {
+            console.error("Não foi possível buscar o nome na API.");
+            setUser({
+              name: currentUser.displayName || "Usuário",
+              photo: currentUser.photoURL,
+              isAdmin: false,
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar usuário:", error);
+          setUser({
+            name: currentUser.displayName || "Usuário",
+            photo: currentUser.photoURL,
+            isAdmin: false,
+          });
+        }
       } else {
         setUser(null);
       }
@@ -36,16 +63,25 @@ const NavBar = () => {
     signOut(auth).then(() => {
       localStorage.removeItem("tutorNome");
       localStorage.removeItem("tutorId");
+      localStorage.removeItem("isAdmin");
       setUser(null);
     });
   };
 
   const renderLoginSection = () =>
     user ? (
-      <div className="Nav__User__Info">
+      <div className="Nav__User__Dropdown">
         {user.photo && <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />}
-        <span>{user.name}</span>
-        <button onClick={handleLogout} className="Nav__Logout__Button">Sair</button>
+        <div className="Nav__User__Name">
+          {user.name}
+          <div className="Nav__Dropdown__Content">
+            <Link to="/settings" onClick={closeMenu}>Configurações</Link>
+            {user.isAdmin && (
+              <Link to="/admin" onClick={closeMenu}>Página Adm</Link>
+            )}
+            <button onClick={handleLogout}>Sair</button>
+          </div>
+        </div>
       </div>
     ) : (
       <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
@@ -75,6 +111,15 @@ const NavBar = () => {
             <FaBuilding /> Empresa
           </Link>
         </li>
+
+        {/* Página Adm no menu, visível apenas para admins */}
+        {user && user.isAdmin && (
+          <li>
+            <Link to="/admin" className={location.pathname === "/admin" ? "active" : ""} onClick={closeMenu}>
+              <FaProjectDiagram /> Página Adm
+            </Link>
+          </li>
+        )}
 
         {/* Mobile login ou nome do usuário */}
         <li className="Nav__Login__Mobile">{renderLoginSection()}</li>

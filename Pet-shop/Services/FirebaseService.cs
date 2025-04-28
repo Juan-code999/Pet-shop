@@ -44,13 +44,11 @@ namespace Pet_shop.Services
                 })
                 .ToList();
         }
-    
 
+        // 🔸 Pet
 
-
-// 🔸 Pet
-
-public async Task SalvarPetAsync(Pet pet)
+        // Salvar pet no Firebase
+        public async Task SalvarPetAsync(Pet pet)
         {
             await _firebase
                 .Child("pets")
@@ -58,6 +56,7 @@ public async Task SalvarPetAsync(Pet pet)
                 .PutAsync(pet);
         }
 
+        // Obter lista de pets de um tutor específico
         public async Task<List<Pet>> ObterPetsDoTutorAsync(string tutorUid)
         {
             var pets = await _firebase
@@ -70,12 +69,11 @@ public async Task SalvarPetAsync(Pet pet)
                 .ToList();
         }
 
-        /// 🔸 Usuarios
+        // 🔸 Usuarios
 
         // Método para salvar o usuário no Firebase com IsAdmin
-        public async Task SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
+        public async Task<string> SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
         {
-            // Mapeia o UsuarioDTO para o modelo Usuario
             var usuario = new Usuario
             {
                 Nome = usuarioDTO.Nome,
@@ -86,9 +84,8 @@ public async Task SalvarPetAsync(Pet pet)
                 IsAdmin = usuarioDTO.IsAdmin // Salva a informação do admin
             };
 
-            // Gerando um ID único automaticamente no Firebase
             var novoUsuarioRef = await _firebase
-                .Child("usuarios")  // Referência para o nó "usuarios" no Realtime Database
+                .Child("usuarios")
                 .PostAsync(new
                 {
                     usuario.Nome,
@@ -96,20 +93,15 @@ public async Task SalvarPetAsync(Pet pet)
                     usuario.Senha,
                     usuario.Telefone,
                     usuario.Endereco,
-                    usuario.IsAdmin // Inclui o campo IsAdmin
+                    usuario.IsAdmin
                 });
 
-            // Pega o ID gerado automaticamente pelo Firebase
-            var novoId = novoUsuarioRef.Key;
-
-            // Se precisar salvar o ID gerado no próprio modelo de Usuario (não necessário aqui, mas se precisar)
-            // usuario.Id = novoId;
+            return novoUsuarioRef.Key; // Retorna o ID gerado automaticamente pelo Firebase
         }
 
         // Método para promover um usuário para admin
         public async Task<bool> PromoverUsuarioParaAdminAsync(string email)
         {
-            // Busca o usuário pelo email
             var usuarioRef = _firebase
                 .Child("usuarios")
                 .OrderBy("Email")
@@ -122,19 +114,44 @@ public async Task SalvarPetAsync(Pet pet)
                 return false; // Usuário não encontrado
             }
 
-            // Atualiza o campo IsAdmin para true
             var usuario = usuarioSnapshot.First().Object;
             await _firebase
                 .Child("usuarios")
-                .Child(usuarioSnapshot.First().Key) // Usando a chave do usuário encontrado
-                .Child("IsAdmin") // Atualiza apenas o campo IsAdmin
-                .PutAsync(true);
+                .Child(usuarioSnapshot.First().Key)
+                .Child("IsAdmin")
+                .PutAsync(true); // Atualiza o campo IsAdmin para true
 
             return true; // Sucesso
         }
 
-        // (Outros métodos para manipulação de pets, agendamentos e tutores continuam os mesmos)
+        // Método para buscar um usuário por e-mail
+        public async Task<Usuario> BuscarUsuarioPorEmailAsync(string email)
+        {
+            var usuarioRef = _firebase
+                .Child("usuarios")
+                .OrderBy("Email")
+                .EqualTo(email);
 
+            var usuarioSnapshot = await usuarioRef.OnceAsync<Usuario>();
 
+            if (usuarioSnapshot.Count == 0)
+            {
+                return null; // Não encontrado
+            }
+
+            return usuarioSnapshot.First().Object;
+        }
+
+        // Método para listar todos os usuários (opcional)
+        public async Task<List<Usuario>> ListarUsuariosAsync()
+        {
+            var usuarios = await _firebase
+                .Child("usuarios")
+                .OnceAsync<Usuario>();
+
+            return usuarios
+                .Select(u => u.Object)
+                .ToList();
+        }
     }
 }

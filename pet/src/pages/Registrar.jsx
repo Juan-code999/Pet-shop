@@ -36,10 +36,10 @@ const Registrar = () => {
       // 1️⃣ Cadastrar no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
 
-      // 2️⃣ Atualizar o perfil do usuário com nome e foto (opcional)
+      // 2️⃣ Atualizar o perfil do usuário
       await updateProfile(userCredential.user, {
         displayName: Nome,
-        photoURL: 'https://i.pravatar.cc/150?u=' + Email, // foto padrão gerada pelo email
+        photoURL: 'https://i.pravatar.cc/150?u=' + Email,
       });
 
       const userId = userCredential.user.uid;
