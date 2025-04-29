@@ -7,7 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
 // Registrar o serviço do Firebase
-builder.Services.AddSingleton<FirebaseService>();
+builder.Services.AddSingleton<UsuarioService>();
+builder.Services.AddSingleton<ProdutoService>();
+builder.Services.AddSingleton<CarrinhoService>();
+
 
 // Swagger com configurações do appsettings
 builder.Services.AddSwaggerGen(options =>
