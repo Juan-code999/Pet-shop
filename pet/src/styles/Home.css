@@ -1,11 +1,7 @@
 /* ======================== */
 /* ESTILOS GERAIS */
 /* ======================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+
 
 body {
   font-family: 'Poppins', sans-serif;
@@ -13,9 +9,7 @@ body {
   color: #f8f9fa;
 }
 
-.home-container {
-  margin-top: 70px;
-}
+
 
 /* ======================== */
 /* HERO SECTION */

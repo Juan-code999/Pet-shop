@@ -1,0 +1,236 @@
+.produto-container {
+    display: flex;
+    gap: 30px;
+    padding: 40px;
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    flex-wrap: wrap;
+  }
+  
+  .filtros {
+    width: 250px;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .filtros h3 {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .filtros ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+  }
+  
+  .filtros li {
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #555;
+  }
+  
+  .colors {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .color {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+  
+  .black { background: #000; }
+  .red { background: #f00; }
+  .blue { background: #00f; }
+  .pink { background: #ff69b4; }
+  .yellow { background: #ff0; }
+  .white { background: #fff; border: 1px solid #000; }
+  
+  .sizes {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+  }
+  
+  .sizes button {
+    padding: 5px 10px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .prices label {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+  }
+  
+  .reset {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #3576f5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .produtos {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  
+  .produto-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    position: relative;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+  
+  .produto-card img {
+    width: 100px;
+    height: auto;
+    margin-bottom: 10px;
+  }
+  
+  .produto-card h4 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .produto-card p {
+    font-size: 13px;
+    color: #555;
+  }
+  
+  .produto-card s {
+    color: #999;
+    margin-right: 5px;
+  }
+  
+  .produto-card strong {
+    color: #000;
+  }
+  
+  .produto-card .tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #00b2ff;
+    color: white;
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 4px;
+  }
+  
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  
+  .dots span {
+    width: 6px;
+    height: 6px;
+    background: #ccc;
+    border-radius: 50%;
+  }
+  
+  .load-more {
+    grid-column: 1 / -1;
+    margin: 30px auto 0;
+    padding: 10px 20px;
+    font-size: 14px;
+    border: none;
+    background: #f4f4f4;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .newsletter {
+    width: 100%;
+    background: #edf1f7;
+    padding: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 60px;
+    border-radius: 10px;
+  }
+  
+  .newsletter h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .newsletter form {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .newsletter input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 250px;
+  }
+  
+  .newsletter button {
+    padding: 10px 20px;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .rodape {
+    display: flex;
+    justify-content: space-around;
+    background: #fff;
+    padding: 40px 20px;
+    border-top: 1px solid #eee;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+  
+  .rodape-item {
+    display: flex;
+    align-items: center;
+    max-width: 250px;
+    gap: 15px;
+    margin: 10px 0;
+  }
+  
+  .rodape-item img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .rodape-item p {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .rodape-item span {
+    font-size: 12px;
+    color: #777;
+  }
+  

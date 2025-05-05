@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaProjectDiagram, FaUser, FaBuilding } from "react-icons/fa";
+import { FaHome, FaProjectDiagram, FaUser, FaBuilding, FaStore } from "react-icons/fa"; // Adicionei o ícone FaStore
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -99,10 +99,18 @@ const NavBar = () => {
         <li>
           <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeMenu}>
             <FaHome /> Home
+          </Link> 
+          </li>
+
+          <li>
+          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeMenu}>
+            <FaStore /> Produtos
           </Link>
         </li>
+
+       
         <li>
-          <Link to="/conta" className={location.pathname === "/conta" ? "active" : ""} onClick={closeMenu}>
+          <Link to="/contatos" className={location.pathname === "/conta" ? "active" : ""} onClick={closeMenu}>
             <FaUser /> Contatos
           </Link>
         </li>
@@ -111,7 +119,7 @@ const NavBar = () => {
             <FaBuilding /> Empresa
           </Link>
         </li>
-
+        
         {/* Página Adm no menu, visível apenas para admins */}
         {user && user.isAdmin && (
           <li>

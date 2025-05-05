@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Registrar from "./pages/Registrar";
 import Agendamentos from "./pages/Agendamentos";
 import Settings from "./components/Settings";
+import Contatos from "./pages/Contatos";
+import Produtos from "./pages/Produtos";
 
 
 
@@ -17,6 +19,8 @@ function App() {
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/contatos" element={<Contatos/>} />
+        <Route path="/produtos" element={<Produtos/>} />
         <Route path="/login" element={<Login />} />
         <Route path="/registrar" element={<Registrar/>} />
         <Route path="/agendamentos" element={<Agendamentos/>} />
