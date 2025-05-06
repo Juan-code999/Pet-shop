@@ -26,23 +26,32 @@ const NavBar = () => {
         try {
           const userId = currentUser.uid;
           const response = await fetch(`http://localhost:5005/Usuario/${userId}`);
+
           if (response.ok) {
             const usuario = await response.json();
-            console.log("Retorno da API:", usuario);
+            console.log("Dados do usuário da API:", usuario);
 
             const nome = usuario.Nome || "Usuário";
 
-            // Correção aqui: verifica se IsAdmin é true ou string "true"
-            const isAdmin = usuario.IsAdmin === true || usuario.IsAdmin === "true";
+            // Verificação robusta de IsAdmin
+            const isAdmin =
+              !!usuario.IsAdmin &&
+              (usuario.IsAdmin === true ||
+                usuario.IsAdmin === "true" ||
+                usuario.IsAdmin === 1 ||
+                usuario.IsAdmin === "1");
 
             localStorage.setItem("tutorNome", nome);
             localStorage.setItem("tutorId", userId);
 
-            setUser({
+            const newUser = {
               name: nome,
               photo: currentUser.photoURL,
               isAdmin: isAdmin,
-            });
+            };
+
+            console.log("Usuário configurado:", newUser);
+            setUser(newUser);
           } else {
             console.error("Não foi possível buscar o nome na API.");
             setUser({
@@ -133,7 +142,7 @@ const NavBar = () => {
         <li>
           <Link
             to="/contatos"
-            className={location.pathname === "/conta" ? "active" : ""}
+            className={location.pathname === "/contatos" ? "active" : ""}
             onClick={closeMenu}
           >
             <FaUser /> Contatos
@@ -152,15 +161,15 @@ const NavBar = () => {
 
         {/* Página Adm no menu (visível apenas para admin) */}
         {user && user.isAdmin && (
-          <li>
-            <Link
-              to="/admin"
-              className={location.pathname === "/admin" ? "active" : ""}
-              onClick={closeMenu}
-            >
-              <FaProjectDiagram /> Página Adm
-            </Link>
-          </li>
+          <Link
+            to="/admin"
+            className={`admin-link ${
+              location.pathname.startsWith("/admin") ? "active" : ""
+            }`}
+            onClick={closeMenu}
+          >
+            <FaProjectDiagram /> Página Adm
+          </Link>
         )}
 
         {/* Mobile login */}

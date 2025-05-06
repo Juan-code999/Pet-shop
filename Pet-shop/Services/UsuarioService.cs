@@ -14,6 +14,7 @@ namespace Pet_shop.Services
             var url = configuration["Firebase:DatabaseUrl"];
             _firebase = new FirebaseClient(url);
         }
+
         public async Task<string> SalvarUsuarioAsync(UsuarioDTO dto)
         {
             var usuario = new Usuario
@@ -48,7 +49,7 @@ namespace Pet_shop.Services
                 .EqualTo(email)
                 .OnceAsync<Usuario>();
 
-            if (usuarioSnapshot.Count == 0)
+            if (!usuarioSnapshot.Any())
                 return false;
 
             var key = usuarioSnapshot.First().Key;
@@ -79,7 +80,12 @@ namespace Pet_shop.Services
                 .Child("usuarios")
                 .OnceAsync<Usuario>();
 
-            return usuarios.Select(x => x.Object).ToList();
+            return usuarios.Select(u =>
+            {
+                var obj = u.Object;
+                obj.Id = u.Key;
+                return obj;
+            }).ToList();
         }
 
         public async Task<bool> AtualizarUsuarioAsync(string id, UsuarioDTO dto)
@@ -110,6 +116,16 @@ namespace Pet_shop.Services
 
             return true;
         }
+        public async Task<Usuario> BuscarUsuarioPorIdAsync(string id)
+        {
+            var usuarioSnapshot = await _firebase
+                .Child("usuarios")
+                .Child(id)
+                .OnceSingleAsync<Usuario>();
+
+            return usuarioSnapshot;
+        }
+
 
         public async Task<bool> DeletarUsuarioAsync(string id)
         {

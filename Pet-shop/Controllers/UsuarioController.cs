@@ -8,11 +8,11 @@ namespace Pet_shop.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
-        private readonly UsuarioService _firebaseService;
+        private readonly UsuarioService _usuarioService;
 
         public UsuarioController(UsuarioService usuarioService)
         {
-            _firebaseService = usuarioService;
+            _usuarioService = usuarioService;
         }
 
         [HttpPost]
@@ -21,39 +21,48 @@ namespace Pet_shop.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = await _firebaseService.SalvarUsuarioAsync(dto);
+            var userId = await _usuarioService.SalvarUsuarioAsync(dto);
             return Ok(new { Success = true, Message = "Usuário criado com sucesso!", UserId = userId });
         }
 
         [HttpPut("promover/{email}")]
         public async Task<IActionResult> PromoverParaAdmin(string email)
         {
-            var sucesso = await _firebaseService.PromoverUsuarioParaAdminAsync(email);
-            if (!sucesso)
-                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
-
-            return Ok(new { Success = true, Message = "Usuário promovido para admin com sucesso." });
+            var sucesso = await _usuarioService.PromoverUsuarioParaAdminAsync(email);
+            return sucesso
+                ? Ok(new { Success = true, Message = "Usuário promovido para admin com sucesso." })
+                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
         }
 
         [HttpGet("buscar/{email}")]
         public async Task<IActionResult> BuscarUsuario(string email)
         {
-            var usuario = await _firebaseService.BuscarUsuarioPorEmailAsync(email);
-            if (usuario == null)
-                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
-
-            return Ok(new { Success = true, Data = usuario });
+            var usuario = await _usuarioService.BuscarUsuarioPorEmailAsync(email);
+            return usuario != null
+                ? Ok(new { Success = true, Data = usuario })
+                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
         }
 
         [HttpGet("listar")]
         public async Task<IActionResult> ListarUsuarios()
         {
-            var usuarios = await _firebaseService.ListarUsuariosAsync();
-            if (usuarios == null || usuarios.Count == 0)
-                return NotFound(new { Success = false, Message = "Nenhum usuário encontrado." });
+            var usuarios = await _usuarioService.ListarUsuariosAsync();
+            return usuarios.Any()
+                ? Ok(new { Success = true, Data = usuarios })
+                : NotFound(new { Success = false, Message = "Nenhum usuário encontrado." });
 
-            return Ok(new { Success = true, Data = usuarios });
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObterUsuarioPorId(string id)
+        {
+            var usuario = await _usuarioService.BuscarUsuarioPorIdAsync(id);
+            if (usuario == null)
+                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
+
+            return Ok(usuario); // Aqui ele deve retornar { Nome, Email, IsAdmin, etc. }
+        }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioDTO dto)
@@ -61,21 +70,19 @@ namespace Pet_shop.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var sucesso = await _firebaseService.AtualizarUsuarioAsync(id, dto);
-            if (!sucesso)
-                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
-
-            return Ok(new { Success = true, Message = "Usuário atualizado com sucesso." });
+            var sucesso = await _usuarioService.AtualizarUsuarioAsync(id, dto);
+            return sucesso
+                ? Ok(new { Success = true, Message = "Usuário atualizado com sucesso." })
+                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletarUsuario(string id)
         {
-            var sucesso = await _firebaseService.DeletarUsuarioAsync(id);
-            if (!sucesso)
-                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
-
-            return Ok(new { Success = true, Message = "Usuário removido com sucesso." });
+            var sucesso = await _usuarioService.DeletarUsuarioAsync(id);
+            return sucesso
+                ? Ok(new { Success = true, Message = "Usuário removido com sucesso." })
+                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
         }
     }
 }

@@ -103,6 +103,10 @@
   border-radius: 8px;
   overflow: hidden;
   z-index: 10;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
 }
 
 .Nav__Dropdown__Content a,
@@ -115,6 +119,9 @@
   color: #333;
   font-size: 14px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaçamento entre ícones e texto */
 }
 
 .Nav__Dropdown__Content a:hover,
@@ -124,6 +131,9 @@
 
 .Nav__User__Dropdown:hover .Nav__Dropdown__Content {
   display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 /* Avatar */
@@ -228,4 +238,14 @@
   .Nav__Hamburger {
     display: flex;
   }
+}
+
+/* Estilo do link de 'Página Adm' (opcional) */
+.Nav__Bar a.admin-link {
+  color: #d9534f; /* Um vermelho suave */
+  font-weight: 600;
+}
+
+.Nav__Bar a.admin-link:hover {
+  color: #c9302c;
 }
