@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  deleteUser
+} from 'firebase/auth';
 import { auth } from '../Db/firebaseConfig';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/registrar.css';
@@ -11,7 +15,7 @@ const Registrar = () => {
     Senha: '',
     Telefone: '',
     Endereco: '',
-    IsAdmin: false, // Adiciona o campo IsAdmin
+    IsAdmin: false,
   });
 
   const navigate = useNavigate();
@@ -23,30 +27,28 @@ const Registrar = () => {
 
   const handleSubmitCompleto = async (e) => {
     e.preventDefault();
-
-    const { Nome, Email, Senha, IsAdmin } = formDataUsuario;
+    const { Nome, Email, Senha } = formDataUsuario;
 
     if (!Email || !Senha || !Nome) {
       alert('Preencha o nome, email e a senha!');
       return;
     }
 
+    let userCredential = null;
+
     try {
-      console.log('Tentando registrar com:', formDataUsuario);
+      // 1️⃣ Cadastra no Firebase Auth
+      userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
 
-      // 1️⃣ Cadastrar no Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
-
-      // 2️⃣ Atualizar o perfil do usuário com nome e foto (opcional)
       await updateProfile(userCredential.user, {
         displayName: Nome,
-        photoURL: 'https://i.pravatar.cc/150?u=' + Email, // foto padrão gerada pelo email
+        photoURL: 'https://i.pravatar.cc/150?u=' + Email,
       });
 
       const userId = userCredential.user.uid;
 
-      // 3️⃣ Enviar para a API com o campo IsAdmin
-      const response = await fetch('http://localhost:5005/Usuario', {
+      // 2️⃣ Cadastra na API
+      const response = await fetch('https://localhost:7096/api/Usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,15 +59,38 @@ const Registrar = () => {
         }),
       });
 
-      if (response.ok) {
-        alert('Usuário registrado com sucesso!');
-        navigate('/login');
-      } else {
-        const err = await response.json();
-        alert('Erro ao salvar na API: ' + err.message);
+      if (!response.ok) {
+        let errMsg = 'Erro desconhecido na API';
+        try {
+          const err = await response.json();
+          errMsg = err.message || errMsg;
+        } catch {}
+
+        // ⚠️ Se falhou na API, desfaz o cadastro no Firebase
+        await deleteUser(userCredential.user);
+        alert('Erro ao salvar na API: ' + errMsg);
+        return;
       }
+
+      alert('Usuário registrado com sucesso!');
+      navigate('/login');
+
     } catch (error) {
-      alert('Erro ao registrar: ' + error.message);
+      // Se Firebase Auth falhar
+      if (error.code === 'auth/email-already-in-use') {
+        alert('Este e-mail já está em uso.');
+      } else {
+        alert('Erro ao registrar: ' + error.message);
+      }
+
+      // Se API falhar e não for possível deletar o user
+      if (userCredential && userCredential.user) {
+        try {
+          await deleteUser(userCredential.user);
+        } catch (err) {
+          console.error('Erro ao desfazer no Firebase:', err.message);
+        }
+      }
     }
   };
 
@@ -113,7 +138,9 @@ const Registrar = () => {
             type="checkbox"
             name="IsAdmin"
             checked={formDataUsuario.IsAdmin}
-            onChange={() => setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))}
+            onChange={() =>
+              setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))
+            }
           />
           Tornar este usuário admin
         </label>

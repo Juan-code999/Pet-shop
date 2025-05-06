@@ -22,6 +22,7 @@ const NavBar = () => {
           const response = await fetch(`http://localhost:5005/Usuario/${userId}`);
           if (response.ok) {
             const usuario = await response.json();
+            console.log("Usuário:", usuario);  // Verifique se 'IsAdmin' está vindo da API
             const nome = usuario.Nome || "Usuário";
             const isAdmin = usuario.IsAdmin || false;
 
@@ -100,20 +101,20 @@ const NavBar = () => {
           <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeMenu}>
             <FaHome /> Home
           </Link> 
-          </li>
+        </li>
 
-          <li>
+        <li>
           <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeMenu}>
             <FaStore /> Produtos
           </Link>
         </li>
 
-       
         <li>
           <Link to="/contatos" className={location.pathname === "/conta" ? "active" : ""} onClick={closeMenu}>
             <FaUser /> Contatos
           </Link>
         </li>
+
         <li>
           <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""} onClick={closeMenu}>
             <FaBuilding /> Empresa
