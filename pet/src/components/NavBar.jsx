@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaProjectDiagram, FaUser, FaBuilding, FaStore } from "react-icons/fa"; // Adicionei o ícone FaStore
+import {
+  FaHome,
+  FaProjectDiagram,
+  FaUser,
+  FaBuilding,
+  FaStore,
+} from "react-icons/fa";
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -22,13 +28,15 @@ const NavBar = () => {
           const response = await fetch(`http://localhost:5005/Usuario/${userId}`);
           if (response.ok) {
             const usuario = await response.json();
-            console.log("Usuário:", usuario);  // Verifique se 'IsAdmin' está vindo da API
+            console.log("Retorno da API:", usuario);
+
             const nome = usuario.Nome || "Usuário";
-            const isAdmin = usuario.IsAdmin || false;
+
+            // Correção aqui: verifica se IsAdmin é true ou string "true"
+            const isAdmin = usuario.IsAdmin === true || usuario.IsAdmin === "true";
 
             localStorage.setItem("tutorNome", nome);
             localStorage.setItem("tutorId", userId);
-            localStorage.setItem("isAdmin", isAdmin); // opcional, se quiser guardar no navegador
 
             setUser({
               name: nome,
@@ -64,7 +72,6 @@ const NavBar = () => {
     signOut(auth).then(() => {
       localStorage.removeItem("tutorNome");
       localStorage.removeItem("tutorId");
-      localStorage.removeItem("isAdmin");
       setUser(null);
     });
   };
@@ -72,13 +79,19 @@ const NavBar = () => {
   const renderLoginSection = () =>
     user ? (
       <div className="Nav__User__Dropdown">
-        {user.photo && <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />}
+        {user.photo && (
+          <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
+        )}
         <div className="Nav__User__Name">
           {user.name}
           <div className="Nav__Dropdown__Content">
-            <Link to="/settings" onClick={closeMenu}>Configurações</Link>
+            <Link to="/settings" onClick={closeMenu}>
+              Configurações
+            </Link>
             {user.isAdmin && (
-              <Link to="/admin" onClick={closeMenu}>Página Adm</Link>
+              <Link to="/admin" onClick={closeMenu}>
+                Página Adm
+              </Link>
             )}
             <button onClick={handleLogout}>Sair</button>
           </div>
@@ -98,46 +111,70 @@ const NavBar = () => {
 
       <ul className={`Nav__Bar ${isOpen ? "active" : ""}`}>
         <li>
-          <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/"
+            className={location.pathname === "/" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaHome /> Home
-          </Link> 
+          </Link>
         </li>
 
         <li>
-          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/produtos"
+            className={location.pathname === "/produtos" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaStore /> Produtos
           </Link>
         </li>
 
         <li>
-          <Link to="/contatos" className={location.pathname === "/conta" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/contatos"
+            className={location.pathname === "/conta" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaUser /> Contatos
           </Link>
         </li>
 
         <li>
-          <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/empresa"
+            className={location.pathname === "/empresa" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaBuilding /> Empresa
           </Link>
         </li>
-        
-        {/* Página Adm no menu, visível apenas para admins */}
+
+        {/* Página Adm no menu (visível apenas para admin) */}
         {user && user.isAdmin && (
           <li>
-            <Link to="/admin" className={location.pathname === "/admin" ? "active" : ""} onClick={closeMenu}>
+            <Link
+              to="/admin"
+              className={location.pathname === "/admin" ? "active" : ""}
+              onClick={closeMenu}
+            >
               <FaProjectDiagram /> Página Adm
             </Link>
           </li>
         )}
 
-        {/* Mobile login ou nome do usuário */}
+        {/* Mobile login */}
         <li className="Nav__Login__Mobile">{renderLoginSection()}</li>
       </ul>
 
-      {/* Desktop login ou nome do usuário */}
+      {/* Desktop login */}
       <div className="Nav__Login__Desktop">{renderLoginSection()}</div>
 
-      <button className={`Nav__Hamburger ${isOpen ? "open" : ""}`} onClick={toggleMenu} aria-label="Menu">
+      <button
+        className={`Nav__Hamburger ${isOpen ? "open" : ""}`}
+        onClick={toggleMenu}
+        aria-label="Menu"
+      >
         <div className="Hamburger__Box">
           <div className="Hamburger__Inner"></div>
         </div>
