@@ -48,7 +48,7 @@ const Registrar = () => {
       const userId = userCredential.user.uid;
 
       // 2️⃣ Cadastra na API
-      const response = await fetch('https://localhost:7096/api/Usuario', {
+      const response = await fetch('http://localhost:5005/api/Usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

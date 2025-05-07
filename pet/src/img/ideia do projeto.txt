@@ -1,0 +1,31 @@
+MVP - Agendamento de Banho e Tosa
+
+📌 Funcionalidades básicas:
+
+Cadastro de pets (nome, raça, idade, tutor)
+
+Agendamento de serviços (banho, tosa, horários disponíveis)
+
+Notificações para lembrar os clientes do agendamento
+
+Histórico de serviços prestados
+
+📌 Tecnologias sugeridas:
+
+Back-end (API) → ASP.NET Core, Node.js ou Django
+
+Banco de Dados → Firebase (Firestore ou Realtime Database) para sincronização rápida
+
+Front-end → React (para web) ou React Native/Flutter (para mobile)
+
+📌 Diferenciais para melhorar a nota:
+
+Implementação de um painel administrativo para visualizar os agendamentos
+
+Opção para o cliente remarcar ou cancelar agendamentos
+
+Integração com WhatsApp para confirmações
+
+Se precisar de ajuda para estruturar a API, modelar o banco de dados ou criar o front-end, é só falar! 🚀🐾
+
+https://localhost:7096/api/Usuario
