@@ -25,24 +25,17 @@ const NavBar = () => {
       if (currentUser) {
         try {
           const userId = currentUser.uid;
-          const response = await fetch(`http://localhost:5005/Usuario/${userId}`);
+          const response = await fetch(`http://localhost:5005/api/Usuario/${id}`);
+
 
           if (response.ok) {
             const usuario = await response.json();
-            console.log("Dados do usuário da API:", usuario);
-
             const nome = usuario.Nome || "Usuário";
-
-            // Verificação robusta de IsAdmin
-            const isAdmin =
-              !!usuario.IsAdmin &&
-              (usuario.IsAdmin === true ||
-                usuario.IsAdmin === "true" ||
-                usuario.IsAdmin === 1 ||
-                usuario.IsAdmin === "1");
+            const isAdmin = Boolean(usuario.IsAdmin);
 
             localStorage.setItem("tutorNome", nome);
             localStorage.setItem("tutorId", userId);
+            localStorage.setItem("isAdmin", isAdmin);
 
             const newUser = {
               name: nome,
@@ -50,10 +43,8 @@ const NavBar = () => {
               isAdmin: isAdmin,
             };
 
-            console.log("Usuário configurado:", newUser);
             setUser(newUser);
           } else {
-            console.error("Não foi possível buscar o nome na API.");
             setUser({
               name: currentUser.displayName || "Usuário",
               photo: currentUser.photoURL,
@@ -81,6 +72,7 @@ const NavBar = () => {
     signOut(auth).then(() => {
       localStorage.removeItem("tutorNome");
       localStorage.removeItem("tutorId");
+      localStorage.removeItem("isAdmin");
       setUser(null);
     });
   };
@@ -99,7 +91,7 @@ const NavBar = () => {
             </Link>
             {user.isAdmin && (
               <Link to="/admin" onClick={closeMenu}>
-                Página Adm
+                Página Admin
               </Link>
             )}
             <button onClick={handleLogout}>Sair</button>
@@ -120,55 +112,33 @@ const NavBar = () => {
 
       <ul className={`Nav__Bar ${isOpen ? "active" : ""}`}>
         <li>
-          <Link
-            to="/"
-            className={location.pathname === "/" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeMenu}>
             <FaHome /> Home
           </Link>
         </li>
 
         <li>
-          <Link
-            to="/produtos"
-            className={location.pathname === "/produtos" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeMenu}>
             <FaStore /> Produtos
           </Link>
         </li>
 
         <li>
-          <Link
-            to="/contatos"
-            className={location.pathname === "/contatos" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""} onClick={closeMenu}>
             <FaUser /> Contatos
           </Link>
         </li>
 
         <li>
-          <Link
-            to="/empresa"
-            className={location.pathname === "/empresa" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""} onClick={closeMenu}>
             <FaBuilding /> Empresa
           </Link>
         </li>
 
-        {/* Página Adm no menu (visível apenas para admin) */}
+        {/* Página Admin visível apenas para admin */}
         {user && user.isAdmin && (
-          <Link
-            to="/admin"
-            className={`admin-link ${
-              location.pathname.startsWith("/admin") ? "active" : ""
-            }`}
-            onClick={closeMenu}
-          >
-            <FaProjectDiagram /> Página Adm
+          <Link to="/admin" className={`admin-link ${location.pathname.startsWith("/admin") ? "active" : ""}`} onClick={closeMenu}>
+            <FaProjectDiagram /> Página Admin
           </Link>
         )}
 

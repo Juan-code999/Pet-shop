@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Pet_shop.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pet_shop.DTOs
 {

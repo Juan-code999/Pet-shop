@@ -9,140 +9,224 @@ namespace Pet_shop.Services
     {
         private readonly FirebaseClient _firebase;
 
+        public object JwtBearerDefaults { get; private set; }
+
         public UsuarioService(IConfiguration configuration)
         {
             var url = configuration["Firebase:DatabaseUrl"];
             _firebase = new FirebaseClient(url);
         }
 
-        public async Task<string> SalvarUsuarioAsync(UsuarioDTO dto)
+        // Método para salvar um novo usuário
+        public async Task<string> SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
         {
             var usuario = new Usuario
             {
-                Nome = dto.Nome,
-                Email = dto.Email,
-                Senha = BCrypt.Net.BCrypt.HashPassword(dto.Senha),
-                Telefone = dto.Telefone,
-                Endereco = dto.Endereco,
-                IsAdmin = dto.IsAdmin
+                Nome = usuarioDTO.Nome,
+                Email = usuarioDTO.Email,
+                Senha = usuarioDTO.Senha,
+                Telefone = usuarioDTO.Telefone,
+                Endereco = usuarioDTO.Endereco,
+                IsAdmin = usuarioDTO.IsAdmin
             };
 
-            var novoRef = await _firebase
-                .Child("usuarios")
-                .PostAsync(usuario);
-
-            usuario.Id = novoRef.Key;
-
-            await _firebase
-                .Child("usuarios")
-                .Child(usuario.Id)
-                .PutAsync(usuario);
-
-            return usuario.Id;
+            var novoUsuarioRef = await _firebase.Child("usuarios").PostAsync(usuario);
+            return novoUsuarioRef.Key; // <- aqui retorna o ID gerado pelo Firebase
         }
 
+
+        // Método para promover um usuário para admin
         public async Task<bool> PromoverUsuarioParaAdminAsync(string email)
         {
-            var usuarioSnapshot = await _firebase
-                .Child("usuarios")
-                .OrderBy("Email")
-                .EqualTo(email)
-                .OnceAsync<Usuario>();
-
-            if (!usuarioSnapshot.Any())
-                return false;
-
-            var key = usuarioSnapshot.First().Key;
-
-            await _firebase
-                .Child("usuarios")
-                .Child(key)
-                .Child("IsAdmin")
-                .PutAsync(true);
-
-            return true;
-        }
-
-        public async Task<Usuario> BuscarUsuarioPorEmailAsync(string email)
-        {
-            var usuarioSnapshot = await _firebase
-                .Child("usuarios")
-                .OrderBy("Email")
-                .EqualTo(email)
-                .OnceAsync<Usuario>();
-
-            return usuarioSnapshot.FirstOrDefault()?.Object;
-        }
-
-        public async Task<List<Usuario>> ListarUsuariosAsync()
-        {
-            var usuarios = await _firebase
-                .Child("usuarios")
-                .OnceAsync<Usuario>();
-
-            return usuarios.Select(u =>
+            try
             {
-                var obj = u.Object;
-                obj.Id = u.Key;
-                return obj;
-            }).ToList();
+                var usuarioSnapshot = await _firebase
+                    .Child("usuarios")
+                    .OrderBy("Email")
+                    .EqualTo(email)
+                    .OnceAsync<Usuario>();
+
+                if (!usuarioSnapshot.Any())
+                    return false;
+
+                var key = usuarioSnapshot.First().Key;
+
+                await _firebase
+                    .Child("usuarios")
+                    .Child(key)
+                    .Child("IsAdmin")
+                    .PutAsync(true);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
+
+
+        // Método para buscar usuário por e-mail
+        public async Task<UsuarioDTO> BuscarUsuarioPorEmailAsync(string email)
+        {
+            try
+            {
+                var usuarioSnapshot = await _firebase
+                    .Child("usuarios")
+                    .OrderBy("Email")
+                    .EqualTo(email)
+                    .OnceAsync<Usuario>();
+
+                var usuario = usuarioSnapshot.FirstOrDefault()?.Object;
+
+                if (usuario != null)
+                {
+                    usuario.Senha = null;
+                    return new UsuarioDTO
+                    {
+                        Nome = usuario.Nome,
+                        Email = usuario.Email,
+                        Telefone = usuario.Telefone,
+                        Endereco = usuario.Endereco,
+                        IsAdmin = usuario.IsAdmin
+                    };
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Método para listar todos os usuários
+        public async Task<List<UsuarioDTO>> ListarUsuariosAsync()
+        {
+            try
+            {
+                var usuarios = await _firebase
+                    .Child("usuarios")
+                    .OnceAsync<Usuario>();
+
+                return usuarios.Select(u =>
+                {
+                    var obj = u.Object;
+                    obj.Id = u.Key;
+                    obj.Senha = null;
+
+                    return new UsuarioDTO
+                    {
+                        Nome = obj.Nome,
+                        Email = obj.Email,
+                        Telefone = obj.Telefone,
+                        Endereco = obj.Endereco,
+                        IsAdmin = obj.IsAdmin
+                    };
+                }).ToList();
+            }
+            catch
+            {
+                return new List<UsuarioDTO>();
+            }
+        }
+
+        // Método para atualizar um usuário existente
         public async Task<bool> AtualizarUsuarioAsync(string id, UsuarioDTO dto)
         {
-            var existente = await _firebase
-                .Child("usuarios")
-                .Child(id)
-                .OnceSingleAsync<Usuario>();
-
-            if (existente == null)
-                return false;
-
-            var usuarioAtualizado = new Usuario
+            try
             {
-                Id = id,
-                Nome = dto.Nome,
-                Email = dto.Email,
-                Senha = BCrypt.Net.BCrypt.HashPassword(dto.Senha),
-                Telefone = dto.Telefone,
-                Endereco = dto.Endereco,
-                IsAdmin = dto.IsAdmin
-            };
+                var existente = await _firebase
+                    .Child("usuarios")
+                    .Child(id)
+                    .OnceSingleAsync<Usuario>();
 
-            await _firebase
-                .Child("usuarios")
-                .Child(id)
-                .PutAsync(usuarioAtualizado);
+                if (existente == null)
+                    return false;
 
-            return true;
+                var senhaHash = string.IsNullOrWhiteSpace(dto.Senha)
+                    ? existente.Senha
+                    : BCrypt.Net.BCrypt.HashPassword(dto.Senha);
+
+                var usuarioAtualizado = new Usuario
+                {
+                    Id = id,
+                    Nome = dto.Nome,
+                    Email = dto.Email,
+                    Senha = senhaHash,
+                    Telefone = dto.Telefone,
+                    Endereco = dto.Endereco,
+                    IsAdmin = dto.IsAdmin
+                };
+
+                await _firebase
+                    .Child("usuarios")
+                    .Child(id)
+                    .PutAsync(usuarioAtualizado);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
-        public async Task<Usuario> BuscarUsuarioPorIdAsync(string id)
+
+        // Método para buscar um usuário pelo ID
+        public async Task<UsuarioDTO> BuscarUsuarioPorIdAsync(string id)
         {
-            var usuarioSnapshot = await _firebase
-                .Child("usuarios")
-                .Child(id)
-                .OnceSingleAsync<Usuario>();
+            try
+            {
+                var usuarioSnapshot = await _firebase
+                    .Child("usuarios")
+                    .Child(id)
+                    .OnceSingleAsync<Usuario>();
 
-            return usuarioSnapshot;
+                if (usuarioSnapshot == null)
+                    return null;
+
+                usuarioSnapshot.Senha = null;
+
+                return new UsuarioDTO
+                {
+                    Nome = usuarioSnapshot.Nome,
+                    Email = usuarioSnapshot.Email,
+                    Telefone = usuarioSnapshot.Telefone,
+                    Endereco = usuarioSnapshot.Endereco,
+                    IsAdmin = usuarioSnapshot.IsAdmin
+                };
+            }
+            catch
+            {
+                return null;
+            }
         }
 
-
+        // Método para deletar um usuário
         public async Task<bool> DeletarUsuarioAsync(string id)
         {
-            var existente = await _firebase
-                .Child("usuarios")
-                .Child(id)
-                .OnceSingleAsync<Usuario>();
+            try
+            {
+                var existente = await _firebase
+                    .Child("usuarios")
+                    .Child(id)
+                    .OnceSingleAsync<Usuario>();
 
-            if (existente == null)
+                if (existente == null)
+                    return false;
+
+                await _firebase
+                    .Child("usuarios")
+                    .Child(id)
+                    .DeleteAsync();
+
+                return true;
+            }
+            catch
+            {
                 return false;
-
-            await _firebase
-                .Child("usuarios")
-                .Child(id)
-                .DeleteAsync();
-
-            return true;
+            }
         }
     }
 }

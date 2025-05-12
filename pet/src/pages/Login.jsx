@@ -14,12 +14,18 @@ const Login = () => {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      
       const user = userCredential.user;
-      
-      // Salvar UID e nome no localStorage
+
+      // Fetch the user details from API
+      const response = await fetch(`http://localhost:5005/api/Usuario/${id}`);
+
+      const usuario = await response.json();
+      const isAdmin = Boolean(usuario.IsAdmin);
+
+      // Save UID, name and isAdmin in localStorage
       localStorage.setItem('tutorId', user.uid);
-      localStorage.setItem('tutorNome', user.displayName || ''); // displayName salvo no registro
+      localStorage.setItem('tutorNome', user.displayName || ''); // displayName saved during registration
+      localStorage.setItem('isAdmin', isAdmin);
 
       alert("Login realizado com sucesso!");
       navigate('/dashboard');

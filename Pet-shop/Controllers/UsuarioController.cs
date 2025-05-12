@@ -15,74 +15,89 @@ namespace Pet_shop.Controllers
             _usuarioService = usuarioService;
         }
 
+        // POST: api/Usuario
         [HttpPost]
-        public async Task<IActionResult> CriarUsuario([FromBody] UsuarioDTO dto)
+        public async Task<IActionResult> SalvarUsuario([FromBody] UsuarioDTO usuarioDTO)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = await _usuarioService.SalvarUsuarioAsync(dto);
-            return Ok(new { Success = true, Message = "Usuário criado com sucesso!", UserId = userId });
+            var id = await _usuarioService.SalvarUsuarioAsync(usuarioDTO);
+
+            if (id == null)
+                return StatusCode(500, "Erro ao salvar usuário");
+
+            return Ok(new { id = id, usuario = usuarioDTO });
         }
 
-        [HttpPut("promover/{email}")]
-        public async Task<IActionResult> PromoverParaAdmin(string email)
+
+
+        // PUT: api/Usuario/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioDTO usuarioDTO)
         {
-            var sucesso = await _usuarioService.PromoverUsuarioParaAdminAsync(email);
-            return sucesso
-                ? Ok(new { Success = true, Message = "Usuário promovido para admin com sucesso." })
-                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, usuarioDTO);
+            if (!usuarioAtualizado)
+                return NotFound();
+
+            return NoContent();
         }
 
-        [HttpGet("buscar/{email}")]
-        public async Task<IActionResult> BuscarUsuario(string email)
-        {
-            var usuario = await _usuarioService.BuscarUsuarioPorEmailAsync(email);
-            return usuario != null
-                ? Ok(new { Success = true, Data = usuario })
-                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
-        }
-
-        [HttpGet("listar")]
-        public async Task<IActionResult> ListarUsuarios()
-        {
-            var usuarios = await _usuarioService.ListarUsuariosAsync();
-            return usuarios.Any()
-                ? Ok(new { Success = true, Data = usuarios })
-                : NotFound(new { Success = false, Message = "Nenhum usuário encontrado." });
-
-        }
-
+        // GET: api/Usuario/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObterUsuarioPorId(string id)
+        public async Task<IActionResult> BuscarUsuarioPorId(string id)
         {
             var usuario = await _usuarioService.BuscarUsuarioPorIdAsync(id);
             if (usuario == null)
-                return NotFound(new { Success = false, Message = "Usuário não encontrado." });
+                return NotFound();
 
-            return Ok(usuario); // Aqui ele deve retornar { Nome, Email, IsAdmin, etc. }
+            return Ok(usuario);
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioDTO dto)
+        // GET: api/Usuario/email
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> BuscarUsuarioPorEmail(string email)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var usuario = await _usuarioService.BuscarUsuarioPorEmailAsync(email);
+            if (usuario == null)
+                return NotFound();
 
-            var sucesso = await _usuarioService.AtualizarUsuarioAsync(id, dto);
-            return sucesso
-                ? Ok(new { Success = true, Message = "Usuário atualizado com sucesso." })
-                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
+            return Ok(usuario);
         }
 
+        // GET: api/Usuario
+        [HttpGet]
+        public async Task<IActionResult> ListarUsuarios()
+        {
+            var usuarios = await _usuarioService.ListarUsuariosAsync();
+            return Ok(usuarios);
+        }
+
+        // DELETE: api/Usuario/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletarUsuario(string id)
         {
-            var sucesso = await _usuarioService.DeletarUsuarioAsync(id);
-            return sucesso
-                ? Ok(new { Success = true, Message = "Usuário removido com sucesso." })
-                : NotFound(new { Success = false, Message = "Usuário não encontrado." });
+            var deletado = await _usuarioService.DeletarUsuarioAsync(id);
+            if (!deletado)
+                return NotFound();
+
+            return NoContent();
         }
+
+        // POST: api/Usuario/promover
+        [HttpPost("promover")]
+        public async Task<IActionResult> PromoverUsuario([FromBody] string email)
+        {
+            var promovido = await _usuarioService.PromoverUsuarioParaAdminAsync(email);
+            if (!promovido)
+                return NotFound();
+
+            return NoContent();
+        }
+
+
     }
 }
