@@ -183,11 +183,14 @@ namespace Pet_shop.Services
                     .Child(id)
                     .OnceSingleAsync<Usuario>();
 
+                // Verifica se o usuário foi encontrado
                 if (usuarioSnapshot == null)
                     return null;
 
+                // Remove a senha antes de retornar os dados
                 usuarioSnapshot.Senha = null;
 
+                // Mapeia o usuário para o DTO
                 return new UsuarioDTO
                 {
                     Nome = usuarioSnapshot.Nome,
@@ -197,11 +200,15 @@ namespace Pet_shop.Services
                     IsAdmin = usuarioSnapshot.IsAdmin
                 };
             }
-            catch
+            catch (Exception ex)
             {
+                // Registra a exceção (pode usar um logger, como Serilog, NLog, etc.)
+                Console.Error.WriteLine($"Erro ao buscar usuário por ID: {ex.Message}");
+                // Retorna null em caso de erro, mas você pode optar por lançar uma exceção personalizada
                 return null;
             }
         }
+
 
         // Método para deletar um usuário
         public async Task<bool> DeletarUsuarioAsync(string id)

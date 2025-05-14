@@ -57,6 +57,8 @@ namespace Pet_shop.Controllers
             return Ok(usuario);
         }
 
+
+
         // GET: api/Usuario/email
         [HttpGet("email/{email}")]
         public async Task<IActionResult> BuscarUsuarioPorEmail(string email)

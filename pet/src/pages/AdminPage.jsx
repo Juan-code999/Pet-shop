@@ -1,14 +1,78 @@
-// src/pages/AdminPage.js
-
 import React from 'react';
+import '../styles/AdminPage.css';
+import {
+  PieChart, Pie, Cell,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 
-const AdminPage = () => {
+const pieData = [
+  { name: 'Websites', value: 400 },
+  { name: 'Logo', value: 300 },
+  { name: 'Social Media', value: 300 },
+  { name: 'Adwords', value: 200 },
+  { name: 'E-Commerce', value: 360 },
+];
+
+const COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#1e3a8a'];
+
+const lineData = [
+  { name: 'Jan', value: 200 },
+  { name: 'Feb', value: 300 },
+  { name: 'Mar', value: 250 },
+  { name: 'Apr', value: 400 },
+  { name: 'May', value: 300 },
+  { name: 'Jun', value: 350 },
+  { name: 'Jul', value: 260 },
+];
+
+export default function AdminPage() {
   return (
-    <div>
-      <h1>Página Administrativa</h1>
-      <p>Bem-vindo à página de administração!</p>
+    <div className="admin-container">
+      <aside className="sidebar">
+        <h2>Menu</h2>
+        <ul>
+          <li>Home</li>
+          <li>Workflow</li>
+          <li>Statistics</li>
+          <li>Calendar</li>
+          <li>Users</li>
+          <li>Settings</li>
+        </ul>
+      </aside>
+
+      <main className="main-content">
+        <h1>Hello John!</h1>
+
+        <div className="dashboard-charts">
+          <div className="chart-box">
+            <h3>Your Sales</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" outerRadius={80} label>
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-box">
+            <h3>Report</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={lineData}>
+                <CartesianGrid stroke="#eee" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#3b82f6" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Você pode adicionar Tasks, Messages e Activity abaixo se quiser */}
+      </main>
     </div>
   );
-};
-
-export default AdminPage;
+}

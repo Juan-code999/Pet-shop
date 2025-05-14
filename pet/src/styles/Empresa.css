@@ -1,0 +1,219 @@
+.empresa-container {
+  font-family: 'Poppins', sans-serif;
+  background: #ffffff;
+  color: #1e1e1e;
+}
+
+/* HERO */
+.empresa-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px;
+  background-color: #f4f4f4;
+  position: relative;
+}
+
+.empresa-hero-text {
+  max-width: 50%;
+}
+
+.empresa-hero-text h1 {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.empresa-hero-text span {
+  color: #3A7CA5;
+}
+
+.empresa-hero-text p {
+  margin: 20px 0;
+  font-size: 18px;
+  color: #5e5e5e;
+}
+
+.empresa-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+.empresa-btn-orange {
+  background-color: #FF6A00;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.empresa-btn-white {
+  background-color: white;
+  color: #3A7CA5;
+  border: 2px solid #3A7CA5;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.empresa-hero-image {
+  position: relative;
+  width: 45%;
+}
+
+.empresa-hero-image img {
+  max-width: 100%;
+  height: auto;
+}
+
+.empresa-paw {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  opacity: 0.5;
+}
+
+.paw1 { top: 10%; left: 10%; }
+.paw2 { bottom: 20%; right: 15%; }
+.paw3 { top: 50%; right: 5%; }
+
+/* SERVIÇOS */
+.empresa-servicos {
+  background-color: #2e5033;
+  color: white;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empresa-servicos h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.empresa-servicos p {
+  max-width: 600px;
+  margin: 0 auto 40px;
+  font-size: 16px;
+  color: #dcdcdc;
+}
+
+.empresa-servicos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+.empresa-servico-img img {
+  width: 240px;
+  height: auto;
+  border-radius: 50%;
+}
+
+.empresa-servico-card {
+  background: white;
+  color: #333;
+  border-radius: 16px;
+  padding: 20px;
+  width: 260px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.empresa-servico-card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.empresa-servico-card p {
+  font-size: 14px;
+  color: #666;
+}
+
+.empresa-servico-card button {
+  margin-top: 15px;
+  background-color: #FF6A00;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+/* INFORMAÇÕES */
+.empresa-info {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 60px 20px;
+  background-color: #f4f4f4;
+  justify-content: space-around;
+  gap: 40px;
+}
+
+.empresa-info-texto {
+  flex: 1;
+  max-width: 500px;
+}
+
+.empresa-info-texto h2 {
+  font-size: 24px;
+  color: #2e5033;
+  margin-bottom: 10px;
+}
+
+.empresa-info-texto p {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.empresa-info-texto ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.empresa-info-texto li {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.empresa-info-texto img {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 20px;
+  border-radius: 12px;
+}
+
+.empresa-info-cta {
+  flex: 1;
+  background-color: #2e5033;
+  color: white;
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 500px;
+}
+
+.empresa-info-cta h3 {
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+.empresa-info-cta p {
+  font-size: 16px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.empresa-info-cta button {
+  background-color: #FF6A00;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}

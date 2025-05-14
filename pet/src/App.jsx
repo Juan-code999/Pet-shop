@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 import Contatos from './pages/Contatos';
 import Produtos from './pages/Produtos';
 import AdminPage from './pages/AdminPage'; // Adicionando a importação da página de admin
+import Empresa from './pages/Empresa';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/registrar" element={<Registrar />} />
         <Route path="/agendamentos" element={<Agendamentos />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/empresa" element={<Empresa />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         <Route path="*" element={<h1>Página não encontrada</h1>} />
       </Routes>

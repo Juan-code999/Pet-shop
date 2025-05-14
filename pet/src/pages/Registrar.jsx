@@ -37,7 +37,6 @@ const Registrar = () => {
     let userCredential = null;
 
     try {
-      // 1️⃣ Cadastra no Firebase Auth
       userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
 
       await updateProfile(userCredential.user, {
@@ -47,43 +46,38 @@ const Registrar = () => {
 
       const userId = userCredential.user.uid;
 
-      // 2️⃣ Cadastra na API
       const response = await fetch('http://localhost:5005/api/Usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formDataUsuario,
-          id: userId,
+          Id: userId, // Corrigido: com "I" maiúsculo
+          Nome: formDataUsuario.Nome,
+          Email: formDataUsuario.Email,
+          Senha: formDataUsuario.Senha,
+          Telefone: formDataUsuario.Telefone,
+          Endereco: formDataUsuario.Endereco,
+          IsAdmin: formDataUsuario.IsAdmin,
         }),
       });
 
       if (!response.ok) {
-        let errMsg = 'Erro desconhecido na API';
-        try {
-          const err = await response.json();
-          errMsg = err.message || errMsg;
-        } catch {}
-
-        // ⚠️ Se falhou na API, desfaz o cadastro no Firebase
+        const err = await response.json();
         await deleteUser(userCredential.user);
-        alert('Erro ao salvar na API: ' + errMsg);
+        alert('Erro ao salvar na API: ' + (err.message || 'Erro desconhecido'));
         return;
       }
 
       alert('Usuário registrado com sucesso!');
       navigate('/login');
-
     } catch (error) {
-      // Se Firebase Auth falhar
       if (error.code === 'auth/email-already-in-use') {
         alert('Este e-mail já está em uso.');
       } else {
         alert('Erro ao registrar: ' + error.message);
       }
 
-      // Se API falhar e não for possível deletar o user
       if (userCredential && userCredential.user) {
         try {
           await deleteUser(userCredential.user);
