@@ -70,8 +70,40 @@ export default function AdminPage() {
             </ResponsiveContainer>
           </div>
         </div>
+        <div className="dashboard-cards">
+  {/* TASKS */}
+  <div className="card">
+    <h3>Tasks</h3>
+    <ul className="task-list">
+      <li><input type="checkbox" /> Respond client feedback</li>
+      <li><input type="checkbox" /> Finish dashboard layout</li>
+      <li><input type="checkbox" /> Deploy website updates</li>
+    </ul>
+  </div>
 
-        {/* Você pode adicionar Tasks, Messages e Activity abaixo se quiser */}
+  {/* MESSAGES */}
+  <div className="card">
+    <h3>Messages</h3>
+    <ul className="message-list">
+      <li><strong>Ana:</strong> Please review the last changes.</li>
+      <li><strong>Pedro:</strong> Are we publishing today?</li>
+      <li><strong>Lucas:</strong> Approved the new layout!</li>
+    </ul>
+  </div>
+
+  {/* ACTIVITY */}
+  <div className="card">
+    <h3>Recent Activity</h3>
+    <ul className="activity-list">
+      <li>✓ Created new project folder</li>
+      <li>✓ Updated Sales Pie Chart</li>
+      <li>✓ Added new task for development</li>
+    </ul>
+  </div>
+</div>
+
+
+       
       </main>
     </div>
   );
