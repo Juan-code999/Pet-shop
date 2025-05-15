@@ -1,8 +1,4 @@
-import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Db/firebaseConfig';
-import { useNavigate, Link } from 'react-router-dom';
-import '../styles/login.css';
+// ... (imports e configurações mantidos)
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,20 +7,16 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Fetch the user details from API
-      const response = await fetch(`http://localhost:5005/api/Usuario/${id}`);
-
+      const response = await fetch(`http://localhost:5005/api/Usuario/${user.uid}`);
       const usuario = await response.json();
       const isAdmin = Boolean(usuario.IsAdmin);
 
-      // Save UID, name and isAdmin in localStorage
       localStorage.setItem('tutorId', user.uid);
-      localStorage.setItem('tutorNome', user.displayName || ''); // displayName saved during registration
+      localStorage.setItem('tutorNome', user.displayName || '');
       localStorage.setItem('isAdmin', isAdmin);
 
       alert("Login realizado com sucesso!");
@@ -35,28 +27,42 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form className="login-form" onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Senha"
-          required
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
-        <button type="submit">Entrar</button>
-      </form>
-      <p>
-        Ainda não tem conta? <Link to="/registrar">Cadastre-se</Link>
-      </p>
+    <div className="login-wrapper">
+      <div className="login-box">
+        <div className="login-left">
+          <div className="logo">
+            <img src="src/img/logop.png" alt="Pet Care" />
+            <h2>Lat Miau</h2>
+          </div>
+          <h3>Sign In To Continue</h3>
+          <form onSubmit={handleLogin}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+            />
+            <div className="options">
+              <Link to="/registrar" className="forgot">Don't have an account? Register</Link>
+            </div>
+            <button type="submit">Login</button>
+          </form>
+          <div className="terms">
+            <Link to="/termos">Terms & Conditions</Link> | <Link to="/privacidade">Privacy Policy</Link>
+          </div>
+        </div>
+        <div className="login-right">
+          <img src="src/img/dog.jpg" alt="Dog" />
+        </div>
+      </div>
     </div>
   );
 };

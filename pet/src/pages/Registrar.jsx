@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  deleteUser
-} from 'firebase/auth';
-import { auth } from '../Db/firebaseConfig';
-import { useNavigate, Link } from 'react-router-dom';
-import '../styles/registrar.css';
+// ... (imports mantidos)
 
 const Registrar = () => {
   const [formDataUsuario, setFormDataUsuario] = useState({
     Nome: '',
     Email: '',
     Senha: '',
+    ConfirmarSenha: '',
     Telefone: '',
     Endereco: '',
     IsAdmin: false,
@@ -27,10 +20,15 @@ const Registrar = () => {
 
   const handleSubmitCompleto = async (e) => {
     e.preventDefault();
-    const { Nome, Email, Senha } = formDataUsuario;
+    const { Nome, Email, Senha, ConfirmarSenha } = formDataUsuario;
 
     if (!Email || !Senha || !Nome) {
       alert('Preencha o nome, email e a senha!');
+      return;
+    }
+
+    if (Senha !== ConfirmarSenha) {
+      alert('As senhas não coincidem!');
       return;
     }
 
@@ -52,7 +50,7 @@ const Registrar = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          Id: userId, // Corrigido: com "I" maiúsculo
+          Id: userId,
           Nome: formDataUsuario.Nome,
           Email: formDataUsuario.Email,
           Senha: formDataUsuario.Senha,
@@ -89,60 +87,27 @@ const Registrar = () => {
   };
 
   return (
-    <div className="registrar-container">
-      <h2>Cadastro</h2>
-      <form className="registrar-form" onSubmit={handleSubmitCompleto}>
-        <input
-          type="text"
-          name="Nome"
-          placeholder="Nome completo"
-          value={formDataUsuario.Nome}
-          onChange={handleChange}
-        />
-        <input
-          type="email"
-          name="Email"
-          placeholder="Email"
-          value={formDataUsuario.Email}
-          onChange={handleChange}
-        />
-        <input
-          type="password"
-          name="Senha"
-          placeholder="Senha"
-          value={formDataUsuario.Senha}
-          onChange={handleChange}
-        />
-        <input
-          type="text"
-          name="Telefone"
-          placeholder="Telefone"
-          value={formDataUsuario.Telefone}
-          onChange={handleChange}
-        />
-        <input
-          type="text"
-          name="Endereco"
-          placeholder="Endereço"
-          value={formDataUsuario.Endereco}
-          onChange={handleChange}
-        />
-        <label>
-          <input
-            type="checkbox"
-            name="IsAdmin"
-            checked={formDataUsuario.IsAdmin}
-            onChange={() =>
-              setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))
-            }
-          />
-          Tornar este usuário admin
-        </label>
-        <button type="submit">Cadastrar</button>
-      </form>
-      <p>
-        Já tem uma conta? <Link to="/login">Entrar</Link>
-      </p>
+    <div className="registrar-container registrar-invertido">
+      <div className="registrar-left">
+        <img src="src/img/dog.jpg" alt="Dog" />
+      </div>
+      <div className="registrar-right">
+        <h2>Cadastro</h2>
+        <form className="registrar-form" onSubmit={handleSubmitCompleto}>
+          <input type="text" name="Nome" placeholder="Nome completo" value={formDataUsuario.Nome} onChange={handleChange} />
+          <input type="email" name="Email" placeholder="Email" value={formDataUsuario.Email} onChange={handleChange} />
+          <input type="text" name="Telefone" placeholder="Telefone" value={formDataUsuario.Telefone} onChange={handleChange} />
+          <input type="text" name="Endereco" placeholder="Endereço" value={formDataUsuario.Endereco} onChange={handleChange} />
+          <input type="password" name="Senha" placeholder="Senha" value={formDataUsuario.Senha} onChange={handleChange} />
+          <input type="password" name="ConfirmarSenha" placeholder="Confirmar Senha" value={formDataUsuario.ConfirmarSenha} onChange={handleChange} />
+          <label>
+            <input type="checkbox" name="IsAdmin" checked={formDataUsuario.IsAdmin} onChange={() => setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))} />
+            Tornar este usuário admin
+          </label>
+          <button type="submit">Cadastrar</button>
+        </form>
+        <p>Já tem uma conta? <Link to="/login">Entrar</Link></p>
+      </div>
     </div>
   );
 };
