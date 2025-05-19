@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/Home.css';
-import dog1 from '../img/dog2.png';
-import dog2 from '../img/dog2.png';
+import dog1 from '../img/img_home.png';
+
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -15,16 +15,19 @@ export default function Home() {
   return (
     <div className="home">
       {/* HEADER / HERO */}
-      <header className="header">
-        <div className="header-text">
-          <h1>We are daying dog<br />traint to 1 ferfms.</h1>
-          <p>
-            Consciduving Trakuser pod stershupo ent diabi grom anq Gosndlefen ers.<br />
-            Ors ssp y allwore you brennutmyerungrof rutetclners.
-          </p>
-          <button className="btn-primary">Now Reciph</button>
-        </div>
-      </header>
+<header className="header">
+  <div className="header-overlay">
+    <div className="header-text">
+      <h1>We are daying dog<br />traint to 1 ferfms.</h1>
+      <p>
+        Consciduving Trakuser pod stershupo ent diabi grom anq Gosndlefen ers.<br />
+        Ors ssp y allwore you brennutmyerungrof rutetclners.
+      </p>
+      <button className="btn-primary">Now Reciph</button>
+    </div>
+  </div>
+</header>
+
 
       {/* SERVICES / CARDS */}
       <section className="cards-section">
