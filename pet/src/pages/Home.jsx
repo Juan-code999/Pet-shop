@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/Home.css';
 import dog1 from '../img/img_home.png';
+import dogBanner from '../img/banner.jpg';
 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,15 +17,17 @@ export default function Home() {
     <div className="home">
       {/* HEADER / HERO */}
 <header className="header">
-  <div className="header-overlay">
-    <div className="header-text">
-      <h1>We are daying dog<br />traint to 1 ferfms.</h1>
-      <p>
-        Consciduving Trakuser pod stershupo ent diabi grom anq Gosndlefen ers.<br />
-        Ors ssp y allwore you brennutmyerungrof rutetclners.
-      </p>
-      <button className="btn-primary">Now Reciph</button>
-    </div>
+  <div className="header-text">
+    <h1>We are training dogs<br />to perform their best.</h1>
+    <p>
+      Consistent training strengthens behavior and builds confidence.<br />
+      Our sessions help your dog become more responsive and well-mannered.
+    </p>
+    <button className="btn-primary">Now Reciph</button>
+  </div>
+
+  <div className="header-image">
+    <img src={dogBanner} alt="Dog Training" />
   </div>
 </header>
 
