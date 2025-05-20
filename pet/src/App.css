@@ -4,15 +4,4 @@
   box-sizing: border-box;
 }
 
-html, body {
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-  background-color: #f4f4f4;
-  font-family: 'Poppins', sans-serif;
-  color: #333;
-}
 
-body > * {
-  max-width: 100%;
-}
