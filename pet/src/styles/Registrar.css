@@ -1,4 +1,4 @@
-.register-wrapper {
+.registrar-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -8,7 +8,7 @@
   overflow: hidden;
 }
 
-.register-box {
+.registrar-box {
   display: flex;
   width: 800px;
   max-width: 100%;
@@ -16,61 +16,35 @@
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  position: relative;
 }
 
-/* Left side = form */
-.register-left {
+.registrar-left {
+  flex: 1;
+  background-color: #f4f4f4;
+}
+
+.registrar-left img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.registrar-right {
   flex: 1;
   padding: 50px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  z-index: 2;
-  position: relative;
-  background: white;
 }
 
-/* Right side = imagem com animação */
-.register-right {
-  flex: 1;
-  background-color: #f4f4f4;
-  position: relative;
-  overflow: hidden;
-  animation: slideImageIn 1s ease forwards;
-}
-
-.register-right img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: translateX(100%);
-  animation: slideImageToLeft 1s ease forwards;
-}
-
-/* Logo */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #FF6A00;
-  font-weight: bold;
-  font-size: 22px;
-  margin-bottom: 20px;
-}
-
-.logo img {
-  width: 30px;
-  height: 30px;
-}
-
-h3 {
+.registrar-right h2 {
   margin-bottom: 20px;
   font-weight: 500;
-  font-size: 18px;
+  font-size: 24px;
+  color: #007BFF;
 }
 
-form input {
+.registrar-form input {
   width: 100%;
   padding: 10px 14px;
   margin-bottom: 12px;
@@ -80,10 +54,10 @@ form input {
   font-size: 14px;
 }
 
-form button {
+.registrar-form button {
   width: 100%;
   padding: 10px;
-  background: #FF6A00;
+  background: #007BFF;
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -91,57 +65,44 @@ form button {
   cursor: pointer;
   transition: background 0.3s;
   font-size: 15px;
+  margin-top: 10px;
 }
 
-form button:hover {
-  background: #cc5500;
+.registrar-form button:hover {
+  background: #0056b3;
 }
 
-.terms {
-  font-size: 0.75em;
+.registrar-right label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #333;
+}
+
+.registrar-right p {
   margin-top: 15px;
-  color: #999;
+  font-size: 14px;
   text-align: center;
 }
 
-.terms a {
-  color: #FF6A00;
-  margin: 0 5px;
+.registrar-right p a {
+  color: #007BFF;
   text-decoration: none;
-}
-
-.redirect-login {
-  text-align: center;
-  margin-top: 12px;
-  font-size: 0.9em;
-}
-
-.redirect-login a {
-  color: #FF6A00;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-@keyframes slideImageToLeft {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
 }
 
 @media (max-width: 768px) {
-  .register-box {
+  .registrar-box {
     flex-direction: column;
     border-radius: 0;
   }
 
-  .register-right {
+  .registrar-left {
     display: none;
   }
 
-  .register-left {
+  .registrar-right {
     padding: 40px 30px;
   }
 }

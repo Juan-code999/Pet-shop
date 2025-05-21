@@ -3,7 +3,6 @@ import '../styles/Home.css';
 import dog1 from '../img/img_home.png';
 import dogBanner from '../img/banner.jpg';
 
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHandPaper,
@@ -15,76 +14,75 @@ import {
 export default function Home() {
   return (
     <div className="home">
-      {/* HEADER / HERO */}
-<header className="header">
-  <div className="header-text">
-    <h1>We are training dogs<br />to perform their best.</h1>
-    <p>
-      Consistent training strengthens behavior and builds confidence.<br />
-      Our sessions help your dog become more responsive and well-mannered.
-    </p>
-    <button className="btn-primary">Now Reciph</button>
-  </div>
+      {/* CABEÇALHO / HERO */}
+      <header className="header">
+        <div className="header-text">
+          <h1>Cuidamos do seu pet<br />com carinho e qualidade.</h1>
+          <p>
+            Na nossa loja você encontra os melhores produtos para o bem-estar do seu pet.<br />
+            Compre com segurança e receba em casa!
+          </p>
+          <button className="btn-primary">Ver Produtos</button>
+        </div>
 
-  <div className="header-image">
-    <img src={dogBanner} alt="Dog Training" />
-  </div>
-</header>
+        <div className="header-image">
+          <img src={dogBanner} alt="Petshop Banner" />
+        </div>
+      </header>
 
-
-      {/* SERVICES / CARDS */}
+      {/* SERVIÇOS / CATEGORIAS */}
       <section className="cards-section">
-        <h2>Wat us all for ours</h2>
+        <h2>Produtos e Cuidados</h2>
         <div className="cards-container">
           <div className="card">
             <div className="icon-circle">
               <FontAwesomeIcon icon={faHandPaper} />
             </div>
-            <h3>Rethet</h3>
-            <p>Dasdt lkmolene gosldu etf beac smprsk rgogin</p>
-            <a href="#!">Sh yvks</a>
+            <h3>Higiene</h3>
+            <p>Shampoos, sabonetes e produtos para manter seu pet sempre limpo e cheiroso.</p>
+            <a href="#!">Ver mais</a>
           </div>
           <div className="card">
             <div className="icon-circle">
               <FontAwesomeIcon icon={faDog} />
             </div>
-            <h3>Bzens</h3>
-            <p>Grasq o selekltembs yel hoernntay et sit Senpra</p>
-            <a href="#!">Sum daq rnestlq</a>
+            <h3>Brinquedos</h3>
+            <p>Diversão garantida com brinquedos seguros e divertidos para cães e gatos.</p>
+            <a href="#!">Ver mais</a>
           </div>
           <div className="card">
             <div className="icon-circle">
               <FontAwesomeIcon icon={faPaw} />
             </div>
-            <h3>Corvlinge</h3>
-            <p>Raia poprkolsn orfrortos entlenet vel orrenae.</p>
-            <a href="#!">Dres led on poprilis</a>
+            <h3>Rações</h3>
+            <p>As melhores marcas de ração para todas as fases e portes do seu pet.</p>
+            <a href="#!">Ver mais</a>
           </div>
           <div className="card">
             <div className="icon-circle">
               <FontAwesomeIcon icon={faLeaf} />
             </div>
-            <h3>Det leam</h3>
-            <p>Loqed evrahlle eno popraete fromt qod.</p>
-            <a href="#!">Fos duto &amp; drugs</a>
+            <h3>Produtos Naturais</h3>
+            <p>Cuidados alternativos com ingredientes naturais para a saúde do seu pet.</p>
+            <a href="#!">Ver mais</a>
           </div>
         </div>
       </section>
 
-      {/* DOGS INFO */}
+      {/* INFORMAÇÕES ADICIONAIS */}
       <section className="dogs-section">
         <div className="dogs-text">
-          <h2>Worit leorins time<br /><span>on hale it hon.</span></h2>
+          <h2>O melhor para o seu pet<br /><span>em um só lugar</span></h2>
           <p>
-            Thse pot vvil resurtirg seng asng lhtu hos bones. Tascer Dra tveand psut ylf der luctas f rowiradnehq, en finare sitent bysluew dsnong onwutpt hhe, beasj ntroh lutrs of onep sel to reetla in the pot.
+            Nossa missão é oferecer produtos de qualidade e atendimento diferenciado para garantir o bem-estar do seu companheiro de quatro patas.
           </p>
           <p>
-            Fedakhad tas tas sowneve lquchvthrlarub trba esndlqp tust temq Etap croe of cpnadt ondedfanson) citl poy netan ovis si duwon oad od enylt srooloyqeler.
+            Contamos com uma variedade de itens: rações, brinquedos, acessórios, produtos de higiene e muito mais. Tudo pensado com carinho e dedicação.
           </p>
-          <button className="btn-primary">Consulting Nda</button>
+          <button className="btn-primary">Conheça a Loja</button>
         </div>
         <div className="dogs-images">
-          <img src={dog1} alt="Dog 1" />
+          <img src={dog1} alt="Cachorro feliz" />
         </div>
       </section>
     </div>

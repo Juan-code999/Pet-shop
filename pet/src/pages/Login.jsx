@@ -1,4 +1,8 @@
-// ... (imports e configurações mantidos)
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../Db/firebaseConfig'; // ajuste o caminho conforme sua estrutura
+import '../styles/Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -34,7 +38,7 @@ const Login = () => {
             <img src="src/img/logop.png" alt="Pet Care" />
             <h2>Lat Miau</h2>
           </div>
-          <h3>Sign In To Continue</h3>
+          <h3>Faça login para continuar</h3>
           <form onSubmit={handleLogin}>
             <input
               type="email"
@@ -45,22 +49,22 @@ const Login = () => {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder="Senha"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
             />
             <div className="options">
-              <Link to="/registrar" className="forgot">Don't have an account? Register</Link>
+              <Link to="/registrar" className="forgot">Não tem uma conta? Cadastre-se</Link>
             </div>
-            <button type="submit">Login</button>
+            <button type="submit">Entrar</button>
           </form>
           <div className="terms">
-            <Link to="/termos">Terms & Conditions</Link> | <Link to="/privacidade">Privacy Policy</Link>
+            <Link to="/termos">Termos e Condições</Link> | <Link to="/privacidade">Política de Privacidade</Link>
           </div>
         </div>
         <div className="login-right">
-          <img src="src/img/dog.jpg" alt="Dog" />
+          <img src="src/img/dogg.jpg" alt="Cachorro" />
         </div>
       </div>
     </div>

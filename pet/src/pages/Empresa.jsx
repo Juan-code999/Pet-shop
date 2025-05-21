@@ -6,67 +6,70 @@ import pawIcon from '../img/paws.png';
 export default function Empresa() {
   return (
     <div className="empresa-container">
+      {/* HERO - SOBRE A EMPRESA */}
       <section className="empresa-hero">
         <div className="empresa-hero-text">
-          <h1><span>Professional</span><br />Pet Training Services</h1>
+          <h1><span>Especialistas</span><br />em Cuidado Animal</h1>
           <p>
-            Your expert pet and obedience trainer. We are dedicated to helping
-            your furry friends become their best selves.
+            Somos apaixonados por pets! Na nossa loja, você encontra tudo o que seu melhor amigo precisa: carinho, produtos de qualidade e atendimento diferenciado.
           </p>
           <div className="empresa-buttons">
-            <button className="empresa-btn-orange">Explore Now</button>
-            <button className="empresa-btn-white">Contact Now</button>
+            <button className="empresa-btn-orange">Conheça Agora</button>
+            <button className="empresa-btn-white">Fale Conosco</button>
           </div>
         </div>
         <div className="empresa-hero-image">
-          <img src={heroDog} alt="Dogs" />
-          <img className="empresa-paw paw1" src={pawIcon} alt="Paw" />
-          <img className="empresa-paw paw2" src={pawIcon} alt="Paw" />
-          <img className="empresa-paw paw3" src={pawIcon} alt="Paw" />
+          <img src={heroDog} alt="Cães felizes" />
+          <img className="empresa-paw paw1" src={pawIcon} alt="Patinha" />
+          <img className="empresa-paw paw2" src={pawIcon} alt="Patinha" />
+          <img className="empresa-paw paw3" src={pawIcon} alt="Patinha" />
         </div>
       </section>
 
+      {/* SERVIÇOS / MISSÃO DA EMPRESA */}
       <section className="empresa-servicos">
-        <h2>Than you ar yours just pet dogs</h2>
-        <p>Your understanding changes lives forever. Lorem ipsum dolor sit amet consectetur adipiscing elit.</p>
+        <h2>Mais que uma loja, um cuidado especial</h2>
+        <p>Nosso compromisso vai além da venda. Queremos proporcionar bem-estar e felicidade para o seu pet todos os dias.</p>
 
         <div className="empresa-servicos-grid">
           <div className="empresa-servico-img">
-            <img src="/images/puppy2.png" alt="Happy Puppy" />
+            <img src="/images/puppy2.png" alt="Filhote feliz" />
           </div>
 
           <div className="empresa-servico-card">
-            <h3>Grows the Pet Training?</h3>
-            <p>This description goes well and also says how we care about the animals.</p>
-            <button>Read Project</button>
+            <h3>Produtos de Qualidade</h3>
+            <p>Selecionamos os melhores itens do mercado, com foco na saúde e segurança dos animais.</p>
+            <button>Ver Produtos</button>
           </div>
 
           <div className="empresa-servico-card">
-            <h3>Happy Trainn training</h3>
-            <p>No greater time to make our animals happy and sociable.</p>
-            <button>Read Lesson</button>
+            <h3>Atendimento Especializado</h3>
+            <p>Nossa equipe é treinada para ajudar você a escolher o melhor para seu companheiro de quatro patas.</p>
+            <button>Fale com um Especialista</button>
           </div>
         </div>
       </section>
 
+      {/* INFORMAÇÕES ADICIONAIS */}
       <section className="empresa-info">
         <div className="empresa-info-texto">
-          <h2>Lets you ca Roal Pet Training:</h2>
-          <p>We’re pet lovers who are passionate about helping dogs reach their best potential through training.</p>
+          <h2>Por que escolher a nossa Petshop?</h2>
+          <p>Somos apaixonados por pets e nossa missão é garantir que cada animal receba o cuidado e carinho que merece.</p>
           <ul>
-            <li>About us</li>
-            <li>Our Pet Adopts collection</li>
-            <li>List of abilities</li>
+            <li>Quem somos</li>
+            <li>Adoção de pets</li>
+            <li>Serviços e produtos exclusivos</li>
           </ul>
-          <img src="/images/family-dog.png" alt="Family with dog" />
+          <img src="/images/family-dog.png" alt="Família com cachorro" />
         </div>
 
         <div className="empresa-info-cta">
-          <h3>How do you res of Pet Chepley</h3>
-          <p>Even if you’ve been your usual pet partner, learning behaviors like cause and reward strengthens obedience.  
-          Our experts are happy to assist your dog with positive reinforcement.  
-          Find a coach near you today or sign up for instant virtual sessions online now.</p>
-          <button>Contact Now</button>
+          <h3>Atendimento com Amor e Responsabilidade</h3>
+          <p>
+            Seja na escolha da ração ideal, em um acessório novo ou nos nossos serviços de cuidados, estamos prontos para ajudar.
+            Conte com uma equipe dedicada, pronta para orientar você em cada etapa. Venha nos visitar ou entre em contato online!
+          </p>
+          <button>Entre em Contato</button>
         </div>
       </section>
     </div>

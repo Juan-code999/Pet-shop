@@ -1,4 +1,8 @@
-// ... (imports mantidos)
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
+import { auth } from '../Db/firebaseConfig'; // Ajuste o caminho se estiver diferente
+import '../styles/Registrar.css';
 
 const Registrar = () => {
   const [formDataUsuario, setFormDataUsuario] = useState({
@@ -86,30 +90,78 @@ const Registrar = () => {
     }
   };
 
-  return (
-    <div className="registrar-container registrar-invertido">
+return (
+  <div className="registrar-container">
+    <div className="registrar-box">
       <div className="registrar-left">
-        <img src="src/img/dog.jpg" alt="Dog" />
+        <img src="src/img/dogg.jpg" alt="Dog" />
       </div>
       <div className="registrar-right">
         <h2>Cadastro</h2>
         <form className="registrar-form" onSubmit={handleSubmitCompleto}>
-          <input type="text" name="Nome" placeholder="Nome completo" value={formDataUsuario.Nome} onChange={handleChange} />
-          <input type="email" name="Email" placeholder="Email" value={formDataUsuario.Email} onChange={handleChange} />
-          <input type="text" name="Telefone" placeholder="Telefone" value={formDataUsuario.Telefone} onChange={handleChange} />
-          <input type="text" name="Endereco" placeholder="Endereço" value={formDataUsuario.Endereco} onChange={handleChange} />
-          <input type="password" name="Senha" placeholder="Senha" value={formDataUsuario.Senha} onChange={handleChange} />
-          <input type="password" name="ConfirmarSenha" placeholder="Confirmar Senha" value={formDataUsuario.ConfirmarSenha} onChange={handleChange} />
+          <input
+            type="text"
+            name="Nome"
+            placeholder="Nome completo"
+            value={formDataUsuario.Nome}
+            onChange={handleChange}
+          />
+          <input
+            type="email"
+            name="Email"
+            placeholder="Email"
+            value={formDataUsuario.Email}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="Telefone"
+            placeholder="Telefone"
+            value={formDataUsuario.Telefone}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="Endereco"
+            placeholder="Endereço"
+            value={formDataUsuario.Endereco}
+            onChange={handleChange}
+          />
+          <input
+            type="password"
+            name="Senha"
+            placeholder="Senha"
+            value={formDataUsuario.Senha}
+            onChange={handleChange}
+          />
+          <input
+            type="password"
+            name="ConfirmarSenha"
+            placeholder="Confirmar Senha"
+            value={formDataUsuario.ConfirmarSenha}
+            onChange={handleChange}
+          />
           <label>
-            <input type="checkbox" name="IsAdmin" checked={formDataUsuario.IsAdmin} onChange={() => setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))} />
+            <input
+              type="checkbox"
+              name="IsAdmin"
+              checked={formDataUsuario.IsAdmin}
+              onChange={() =>
+                setFormDataUsuario((prev) => ({ ...prev, IsAdmin: !prev.IsAdmin }))
+              }
+            />
             Tornar este usuário admin
           </label>
           <button type="submit">Cadastrar</button>
         </form>
-        <p>Já tem uma conta? <Link to="/login">Entrar</Link></p>
+        <p>
+          Já tem uma conta? <Link to="/login">Entrar</Link>
+        </p>
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default Registrar;

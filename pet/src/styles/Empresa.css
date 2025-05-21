@@ -40,7 +40,7 @@
 }
 
 .empresa-btn-orange {
-  background-color: #FF6A00;
+  background-color: #2980b9; /* Azul vibrante */
   color: white;
   border: none;
   padding: 12px 24px;
@@ -82,7 +82,7 @@
 
 /* SERVIÇOS */
 .empresa-servicos {
-  background-color: #2e5033;
+  background-color: #2c3e50; /* Azul escuro */
   color: white;
   text-align: center;
   padding: 60px 20px;
@@ -135,7 +135,7 @@
 
 .empresa-servico-card button {
   margin-top: 15px;
-  background-color: #FF6A00;
+  background-color: #2980b9; /* Azul vibrante */
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
@@ -160,7 +160,7 @@
 
 .empresa-info-texto h2 {
   font-size: 24px;
-  color: #2e5033;
+  color: #2c3e50; /* Azul escuro */
   margin-bottom: 10px;
 }
 
@@ -190,7 +190,7 @@
 
 .empresa-info-cta {
   flex: 1;
-  background-color: #2e5033;
+  background-color: #2c3e50; /* Azul escuro */
   color: white;
   padding: 30px;
   border-radius: 16px;
@@ -209,7 +209,7 @@
 }
 
 .empresa-info-cta button {
-  background-color: #FF6A00;
+  background-color: #2980b9; /* Azul vibrante */
   border: none;
   padding: 12px 24px;
   border-radius: 8px;

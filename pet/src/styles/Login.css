@@ -2,12 +2,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 140px); /* Altura da tela menos altura da navbar + footer */
+  min-height: calc(100vh - 140px);
   padding: 60px 20px;
   background: #ffffff;
   overflow: hidden;
 }
-
 
 .login-box {
   display: flex;
@@ -35,14 +34,14 @@
 .login-right img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* imagem preenche toda área, pode cortar */
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #FF6A00;
+  color: #007BFF; /* azul */
   font-weight: bold;
   font-size: 22px;
   margin-bottom: 20px;
@@ -72,7 +71,7 @@ form input {
 form button {
   width: 100%;
   padding: 10px;
-  background: #FF6A00;
+  background: #007BFF; /* azul */
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -83,7 +82,7 @@ form button {
 }
 
 form button:hover {
-  background: #cc5500;
+  background: #0056b3; /* azul escuro */
 }
 
 .options {
@@ -95,7 +94,7 @@ form button:hover {
 }
 
 .forgot {
-  color: #FF6A00;
+  color: #007BFF; /* azul */
   text-decoration: none;
 }
 
@@ -107,7 +106,7 @@ form button:hover {
 }
 
 .terms a {
-  color: #FF6A00;
+  color: #007BFF; /* azul */
   margin: 0 5px;
   text-decoration: none;
 }
