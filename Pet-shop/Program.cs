@@ -10,6 +10,7 @@ var config = builder.Configuration;
 builder.Services.AddSingleton<UsuarioService>();
 builder.Services.AddSingleton<ProdutoService>();
 builder.Services.AddSingleton<CarrinhoService>();
+builder.Services.AddSingleton<ContatoService>();
 
 
 // Swagger com configurações do appsettings

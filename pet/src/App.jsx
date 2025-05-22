@@ -6,7 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Registrar from './pages/Registrar';
 import Agendamentos from './pages/Agendamentos';
-import Settings from './components/Settings';
+import ProfilePage from './components/ProfilePage';
 import Contatos from './pages/Contatos';
 import Produtos from './pages/Produtos';
 import AdminPage from './pages/AdminPage'; // Adicionando a importação da página de admin
@@ -23,7 +23,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registrar" element={<Registrar />} />
         <Route path="/agendamentos" element={<Agendamentos />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<ProfilePage />} />
         <Route path="/empresa" element={<Empresa />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         <Route path="*" element={<h1>Página não encontrada</h1>} />
