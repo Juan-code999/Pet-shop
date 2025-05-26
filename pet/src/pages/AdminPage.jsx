@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAdminCheck } from '../hooks/useAdminCheck';
 import '../styles/AdminPage.css';
 import {
   PieChart, Pie, Cell,
@@ -26,9 +27,18 @@ const lineData = [
 ];
 
 export default function AdminPage() {
+  const { isAdmin, loading } = useAdminCheck();
   const [activeMenu, setActiveMenu] = useState('Home');
 
   const menuItems = ['Home', 'Workflow', 'Statistics', 'Calendar', 'Users', 'Settings'];
+
+  if (loading) {
+    return <div className="admin-loading">Carregando...</div>;
+  }
+
+  if (!isAdmin) {
+    return <div className="admin-error">Acesso negado. Você não tem permissão para ver esta página.</div>;
+  }
 
   return (
     <div className="admin-container">

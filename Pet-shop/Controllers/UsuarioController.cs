@@ -27,8 +27,12 @@ namespace Pet_shop.Controllers
             if (id == null)
                 return StatusCode(500, "Erro ao salvar usuário");
 
+            // Atribui o ID ao DTO
+            usuarioDTO.Id = id;
+
             return Ok(new { id = id, usuario = usuarioDTO });
         }
+
 
 
 
@@ -69,6 +73,16 @@ namespace Pet_shop.Controllers
 
             return Ok(usuario);
         }
+
+        // GET: api/Usuario/admincheck/email/{email}
+        [HttpGet("admincheck/email/{email}")]
+        public async Task<IActionResult> ChecarAdminPorEmail(string email)
+        {
+            var isAdmin = await _usuarioService.VerificarSeUsuarioEhAdminAsync(email);
+            return Ok(new { isAdmin });
+        }
+
+
 
         // GET: api/Usuario
         [HttpGet]

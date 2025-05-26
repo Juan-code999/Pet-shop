@@ -5,6 +5,8 @@ namespace Pet_shop.DTOs
 {
     public class UsuarioDTO
     {
+        public string Id { get; set; }
+
         [Required]
         public string Nome { get; set; }
 
@@ -22,4 +24,6 @@ namespace Pet_shop.DTOs
 
         public bool IsAdmin { get; set; } = false;
     }
+
+
 }

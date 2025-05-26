@@ -25,8 +25,7 @@ const NavBar = () => {
       if (currentUser) {
         try {
           const userId = currentUser.uid;
-          const response = await fetch(`http://localhost:5005/api/Usuario/${id}`);
-
+          const response = await fetch(`http://localhost:5005/api/Usuario/${userId}`);
 
           if (response.ok) {
             const usuario = await response.json();
@@ -37,13 +36,11 @@ const NavBar = () => {
             localStorage.setItem("tutorId", userId);
             localStorage.setItem("isAdmin", isAdmin);
 
-            const newUser = {
+            setUser({
               name: nome,
               photo: currentUser.photoURL,
               isAdmin: isAdmin,
-            };
-
-            setUser(newUser);
+            });
           } else {
             setUser({
               name: currentUser.displayName || "Usuário",

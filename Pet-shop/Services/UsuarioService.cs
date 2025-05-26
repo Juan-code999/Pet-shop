@@ -30,9 +30,18 @@ namespace Pet_shop.Services
                 IsAdmin = usuarioDTO.IsAdmin
             };
 
+            // Primeiro salva (POST) para gerar um ID
             var novoUsuarioRef = await _firebase.Child("usuarios").PostAsync(usuario);
-            return novoUsuarioRef.Key; // <- aqui retorna o ID gerado pelo Firebase
+            var id = novoUsuarioRef.Key;
+
+            // Atualiza o objeto com o ID e salva novamente com PUT
+            usuario.Id = id;
+            await _firebase.Child("usuarios").Child(id).PutAsync(usuario); // garante que o objeto salva com o campo Id
+
+            return id;
         }
+
+
 
 
         // Método para promover um usuário para admin
@@ -208,6 +217,31 @@ namespace Pet_shop.Services
                 return null;
             }
         }
+
+        // Verifica se o usuário com o email informado é admin
+        public async Task<bool> VerificarSeUsuarioEhAdminAsync(string email)
+        {
+            try
+            {
+                var usuarioSnapshot = await _firebase
+                    .Child("usuarios")
+                    .OrderBy("Email")
+                    .EqualTo(email)
+                    .OnceAsync<Usuario>();
+
+                var usuario = usuarioSnapshot.FirstOrDefault()?.Object;
+
+                if (usuario == null)
+                    return false;
+
+                return usuario.IsAdmin;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
 
         // Método para deletar um usuário
