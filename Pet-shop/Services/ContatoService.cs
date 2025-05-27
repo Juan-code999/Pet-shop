@@ -18,15 +18,18 @@ namespace Pet_shop.Services
         {
             var contato = new Contato
             {
+                UsuarioId = dto.UsuarioId,   // <--- pega o Id do usuário, se houver
                 Email = dto.Email,
                 Telefone = dto.Telefone,
                 Nome = dto.Nome,
-                Mensagem = dto.Mensagem
+                Mensagem = dto.Mensagem,
+                DataEnvio = DateTime.Now
             };
 
             var contatoRef = await _firebase.Child("contatos").PostAsync(contato);
             return contatoRef.Key;
         }
+
 
         public async Task<string> SalvarNewsletterAsync(NewsletterDTO dto)
         {

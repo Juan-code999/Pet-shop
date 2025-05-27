@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import "../styles/Contatos.css";
-import { Phone, Mail, MapPin } from 'lucide-react';
 
 const Contatos = () => {
   const [formData, setFormData] = useState({
@@ -19,8 +18,19 @@ const Contatos = () => {
 
   const handleSubmitContato = async (e) => {
     e.preventDefault();
+
+    // Pega o usuarioId do localStorage
+    const usuarioId = localStorage.getItem('usuarioId');
+    if (!usuarioId) {
+      alert('Você precisa estar logado para enviar uma mensagem.');
+      return;
+    }
+
     try {
-      await axios.post('http://localhost:5005/api/Contato/mensagem', formData);
+      await axios.post('http://localhost:5005/api/Contato/mensagem', {
+        ...formData,
+        usuarioId,  // envia o usuarioId junto
+      });
       alert('Mensagem enviada com sucesso!');
       setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
     } catch (error) {
@@ -55,6 +65,7 @@ const Contatos = () => {
               placeholder="Seu Email"
               value={formData.email}
               onChange={handleInputChange}
+              required
             />
             <input
               type="tel"
@@ -62,6 +73,7 @@ const Contatos = () => {
               placeholder="Seu Telefone"
               value={formData.telefone}
               onChange={handleInputChange}
+              required
             />
           </div>
           <input
@@ -70,12 +82,14 @@ const Contatos = () => {
             placeholder="Seu Nome"
             value={formData.nome}
             onChange={handleInputChange}
+            required
           />
           <textarea
             name="mensagem"
             placeholder="Sua Mensagem..."
             value={formData.mensagem}
             onChange={handleInputChange}
+            required
           />
           <button type="submit">Enviar</button>
         </form>
@@ -91,35 +105,6 @@ const Contatos = () => {
           />
           <button onClick={handleSubmitNewsletter}>Assinar</button>
         </div>
-      </section>
-
-      <section className="contact-info">
-        <div className="info-card">
-          <Phone size={24} />
-          <p>(+55) 11 98765-4321</p>
-          <span>Atendimento de segunda a sexta, das 9h às 18h</span>
-        </div>
-        <div className="info-card">
-          <Mail size={24} />
-          <p>contato@seudominio.com</p>
-          <span>Envie-nos suas dúvidas ou sugestões</span>
-        </div>
-        <div className="info-card">
-          <MapPin size={24} />
-          <p>Rua Exemplo, 123 - São Paulo/SP</p>
-          <span>Estamos localizados no centro da cidade</span>
-        </div>
-      </section>
-
-      <section className="map">
-        <iframe
-          title="Mapa"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.2782357439785!2d-46.63620448485314!3d-23.59209626873106!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c44c1a0e9d%3A0x48c35cd8b13c92fc!2sAv.%20Paulista%2C%20São%20Paulo%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1616596801177!5m2!1spt-BR!2sbr"
-          width="100%"
-          height="300"
-          style={{ border: "0", borderRadius: "16px" }}
-          loading="lazy"
-        ></iframe>
       </section>
     </div>
   );

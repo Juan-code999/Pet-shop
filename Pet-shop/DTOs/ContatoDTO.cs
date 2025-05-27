@@ -4,6 +4,9 @@ namespace Pet_shop.DTOs
 {
     public class ContatoDTO
     {
+        [Required]
+        public string UsuarioId { get; set; } // <-- Adicione isto
+
         [Required, EmailAddress]
         public string Email { get; set; }
 
@@ -16,4 +19,5 @@ namespace Pet_shop.DTOs
         [Required]
         public string Mensagem { get; set; }
     }
+
 }

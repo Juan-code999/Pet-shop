@@ -16,14 +16,13 @@ namespace Pet_shop.Services
             var url = configuration["Firebase:DatabaseUrl"];
             _firebase = new FirebaseClient(url);
         }
-
         // Método para salvar um novo usuário
         public async Task<string> SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
         {
             var usuario = new Usuario
             {
                 Nome = usuarioDTO.Nome,
-                Email = usuarioDTO.Email,
+                Email = usuarioDTO.Email.ToLower(),  // força salvar em lowercase
                 Senha = usuarioDTO.Senha,
                 Telefone = usuarioDTO.Telefone,
                 Endereco = usuarioDTO.Endereco,
@@ -40,6 +39,7 @@ namespace Pet_shop.Services
 
             return id;
         }
+
 
 
 
@@ -76,22 +76,25 @@ namespace Pet_shop.Services
 
 
 
-        // Método para buscar usuário por e-mail
+        // Método para buscar usuário por e-mail (case insensitive)
         public async Task<UsuarioDTO> BuscarUsuarioPorEmailAsync(string email)
         {
             try
             {
+                var emailLower = email.ToLower();  // força email em lowercase para consulta
+
                 var usuarioSnapshot = await _firebase
                     .Child("usuarios")
                     .OrderBy("Email")
-                    .EqualTo(email)
+                    .EqualTo(emailLower)
                     .OnceAsync<Usuario>();
 
                 var usuario = usuarioSnapshot.FirstOrDefault()?.Object;
 
                 if (usuario != null)
                 {
-                    usuario.Senha = null;
+                    usuario.Senha = null;  // não expor senha
+
                     return new UsuarioDTO
                     {
                         Nome = usuario.Nome,
@@ -104,11 +107,14 @@ namespace Pet_shop.Services
 
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
+                // Log opcional para ajudar no debug
+                Console.WriteLine($"Erro ao buscar usuário por email: {ex.Message}");
                 return null;
             }
         }
+
 
         // Método para listar todos os usuários
         public async Task<List<UsuarioDTO>> ListarUsuariosAsync()

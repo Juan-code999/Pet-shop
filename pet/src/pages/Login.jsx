@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Db/firebaseConfig'; // ajuste o caminho conforme sua estrutura
+import { auth } from '../Db/firebaseConfig'; 
 import '../styles/Login.css';
 
 const Login = () => {
@@ -12,15 +12,21 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      // Faz login no Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      const response = await fetch(`http://localhost:5005/api/Usuario/${user.uid}`);
+      // Buscar dados do usuário no backend pelo email (não pelo uid)
+      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(user.email)}`);
+      if (!response.ok) {
+        throw new Error('Usuário não encontrado no backend');
+      }
       const usuario = await response.json();
-      const isAdmin = Boolean(usuario.IsAdmin);
+      const isAdmin = Boolean(usuario.isAdmin);
 
-      localStorage.setItem('tutorId', user.uid);
-      localStorage.setItem('tutorNome', user.displayName || '');
+      // Salvar no localStorage o Id do Realtime Database (usuario.Id)
+      localStorage.setItem('usuarioId', usuario.id);
+      localStorage.setItem('usuarioNome', usuario.nome || '');
       localStorage.setItem('isAdmin', isAdmin);
 
       alert("Login realizado com sucesso!");
