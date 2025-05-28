@@ -77,43 +77,38 @@ namespace Pet_shop.Services
 
 
         // Método para buscar usuário por e-mail (case insensitive)
+        // Seu método no service (já corrigido)
         public async Task<UsuarioDTO> BuscarUsuarioPorEmailAsync(string email)
         {
-            try
+            var usuarios = await _firebase
+                .Child("usuarios")
+                .OrderBy("Email")
+                .EqualTo(email)
+                .OnceAsync<Usuario>();
+
+            var usuarioRegistro = usuarios.FirstOrDefault();
+
+            if (usuarioRegistro != null)
             {
-                var emailLower = email.ToLower();  // força email em lowercase para consulta
+                var usuario = usuarioRegistro.Object;
 
-                var usuarioSnapshot = await _firebase
-                    .Child("usuarios")
-                    .OrderBy("Email")
-                    .EqualTo(emailLower)
-                    .OnceAsync<Usuario>();
-
-                var usuario = usuarioSnapshot.FirstOrDefault()?.Object;
-
-                if (usuario != null)
+                return new UsuarioDTO
                 {
-                    usuario.Senha = null;  // não expor senha
-
-                    return new UsuarioDTO
-                    {
-                        Nome = usuario.Nome,
-                        Email = usuario.Email,
-                        Telefone = usuario.Telefone,
-                        Endereco = usuario.Endereco,
-                        IsAdmin = usuario.IsAdmin
-                    };
-                }
-
-                return null;
+                    Id = usuarioRegistro.Key,
+                    Nome = usuario.Nome,
+                    Email = usuario.Email,
+                    Telefone = usuario.Telefone,
+                    Endereco = usuario.Endereco,
+                    IsAdmin = usuario.IsAdmin
+                };
             }
-            catch (Exception ex)
-            {
-                // Log opcional para ajudar no debug
-                Console.WriteLine($"Erro ao buscar usuário por email: {ex.Message}");
-                return null;
-            }
+
+            return null;
         }
+
+
+
+
 
 
         // Método para listar todos os usuários

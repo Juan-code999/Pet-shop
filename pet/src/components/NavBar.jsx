@@ -21,41 +21,18 @@ const NavBar = () => {
   useEffect(() => {
     const auth = getAuth();
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    // Sincroniza estado do usuário com Firebase Auth e localStorage
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        try {
-          const userId = currentUser.uid;
-          const response = await fetch(`http://localhost:5005/api/Usuario/${userId}`);
+        // Tenta carregar dados do usuário do localStorage (salvo no login)
+        const nome = localStorage.getItem("usuarioNome") || currentUser.displayName || "Usuário";
+        const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-          if (response.ok) {
-            const usuario = await response.json();
-            const nome = usuario.Nome || "Usuário";
-            const isAdmin = Boolean(usuario.IsAdmin);
-
-            localStorage.setItem("tutorNome", nome);
-            localStorage.setItem("tutorId", userId);
-            localStorage.setItem("isAdmin", isAdmin);
-
-            setUser({
-              name: nome,
-              photo: currentUser.photoURL,
-              isAdmin: isAdmin,
-            });
-          } else {
-            setUser({
-              name: currentUser.displayName || "Usuário",
-              photo: currentUser.photoURL,
-              isAdmin: false,
-            });
-          }
-        } catch (error) {
-          console.error("Erro ao buscar usuário:", error);
-          setUser({
-            name: currentUser.displayName || "Usuário",
-            photo: currentUser.photoURL,
-            isAdmin: false,
-          });
-        }
+        setUser({
+          name: nome,
+          photo: currentUser.photoURL,
+          isAdmin: isAdmin,
+        });
       } else {
         setUser(null);
       }
@@ -64,16 +41,21 @@ const NavBar = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     const auth = getAuth();
-    signOut(auth).then(() => {
-      localStorage.removeItem("tutorNome");
-      localStorage.removeItem("tutorId");
+    try {
+      await signOut(auth);
+      localStorage.removeItem("usuarioNome");
+      localStorage.removeItem("usuarioId");
       localStorage.removeItem("isAdmin");
       setUser(null);
-    });
+      closeMenu();
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
   };
 
+  // Renderiza seção de login / usuário logado com dropdown
   const renderLoginSection = () =>
     user ? (
       <div className="Nav__User__Dropdown">
@@ -83,6 +65,9 @@ const NavBar = () => {
         <div className="Nav__User__Name">
           {user.name}
           <div className="Nav__Dropdown__Content">
+            <Link to="/profile" onClick={closeMenu}>
+              Perfil
+            </Link>
             <Link to="/settings" onClick={closeMenu}>
               Configurações
             </Link>
@@ -109,34 +94,55 @@ const NavBar = () => {
 
       <ul className={`Nav__Bar ${isOpen ? "active" : ""}`}>
         <li>
-          <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/"
+            className={location.pathname === "/" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaHome /> Home
           </Link>
         </li>
 
         <li>
-          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/produtos"
+            className={location.pathname === "/produtos" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaStore /> Produtos
           </Link>
         </li>
 
         <li>
-          <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/contatos"
+            className={location.pathname === "/contatos" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaUser /> Contatos
           </Link>
         </li>
 
         <li>
-          <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""} onClick={closeMenu}>
+          <Link
+            to="/empresa"
+            className={location.pathname === "/empresa" ? "active" : ""}
+            onClick={closeMenu}
+          >
             <FaBuilding /> Empresa
           </Link>
         </li>
 
-        {/* Página Admin visível apenas para admin */}
         {user && user.isAdmin && (
-          <Link to="/admin" className={`admin-link ${location.pathname.startsWith("/admin") ? "active" : ""}`} onClick={closeMenu}>
-            <FaProjectDiagram /> Página Admin
-          </Link>
+          <li>
+            <Link
+              to="/admin"
+              className={location.pathname.startsWith("/admin") ? "active" : ""}
+              onClick={closeMenu}
+            >
+              <FaProjectDiagram /> Página Admin
+            </Link>
+          </li>
         )}
 
         {/* Mobile login */}

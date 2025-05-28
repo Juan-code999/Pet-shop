@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Db/firebaseConfig'; 
+import { auth } from '../Db/firebaseConfig';
 import '../styles/Login.css';
 
 const Login = () => {
@@ -11,28 +11,30 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      // Faz login no Firebase Authentication
+      // Login com Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Buscar dados do usuário no backend pelo email (não pelo uid)
+      // Buscar usuário no backend pelo email (retorna o ID do Realtime DB)
       const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(user.email)}`);
       if (!response.ok) {
-        throw new Error('Usuário não encontrado no backend');
+        throw new Error('Usuário não encontrado no banco de dados.');
       }
+
       const usuario = await response.json();
-      const isAdmin = Boolean(usuario.isAdmin);
 
-      // Salvar no localStorage o Id do Realtime Database (usuario.Id)
-      localStorage.setItem('usuarioId', usuario.id);
-      localStorage.setItem('usuarioNome', usuario.nome || '');
-      localStorage.setItem('isAdmin', isAdmin);
+      // Salvar o ID real do banco de dados (chave correta)
+      localStorage.setItem('usuarioId', usuario.id || usuario.Id); // atenção para a chave (id ou Id)
+      localStorage.setItem('usuarioNome', usuario.nome || usuario.Nome || '');
+      localStorage.setItem('isAdmin', usuario.isAdmin || usuario.IsAdmin ? 'true' : 'false');
 
-      alert("Login realizado com sucesso!");
+      alert('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (error) {
-      alert("Erro no login: " + error.message);
+      console.error(error);
+      alert('Erro no login: ' + error.message);
     }
   };
 
@@ -61,12 +63,15 @@ const Login = () => {
               required
             />
             <div className="options">
-              <Link to="/registrar" className="forgot">Não tem uma conta? Cadastre-se</Link>
+              <Link to="/registrar" className="forgot">
+                Não tem uma conta? Cadastre-se
+              </Link>
             </div>
             <button type="submit">Entrar</button>
           </form>
           <div className="terms">
-            <Link to="/termos">Termos e Condições</Link> | <Link to="/privacidade">Política de Privacidade</Link>
+            <Link to="/termos">Termos e Condições</Link> |{' '}
+            <Link to="/privacidade">Política de Privacidade</Link>
           </div>
         </div>
         <div className="login-right">

@@ -63,24 +63,24 @@ namespace Pet_shop.Controllers
 
 
 
-        // GET: api/Usuario/email
+
+
+
+        // GET: api/Usuario/admincheck/email/{email}
         [HttpGet("email/{email}")]
         public async Task<IActionResult> BuscarUsuarioPorEmail(string email)
         {
             var usuario = await _usuarioService.BuscarUsuarioPorEmailAsync(email);
             if (usuario == null)
-                return NotFound();
-
+            {
+                return NotFound(new { mensagem = "Usuário não encontrado no banco de dados." });
+            }
             return Ok(usuario);
         }
 
-        // GET: api/Usuario/admincheck/email/{email}
-        [HttpGet("admincheck/email/{email}")]
-        public async Task<IActionResult> ChecarAdminPorEmail(string email)
-        {
-            var isAdmin = await _usuarioService.VerificarSeUsuarioEhAdminAsync(email);
-            return Ok(new { isAdmin });
-        }
+
+
+
 
 
 

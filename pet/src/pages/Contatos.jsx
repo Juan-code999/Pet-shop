@@ -19,17 +19,19 @@ const Contatos = () => {
   const handleSubmitContato = async (e) => {
     e.preventDefault();
 
-    // Pega o usuarioId do localStorage
+    // Pega o usuarioId real do banco (Realtimedatabase)
     const usuarioId = localStorage.getItem('usuarioId');
     if (!usuarioId) {
       alert('Você precisa estar logado para enviar uma mensagem.');
       return;
     }
 
+    console.log("Enviando mensagem com usuarioId:", usuarioId);
+
     try {
       await axios.post('http://localhost:5005/api/Contato/mensagem', {
         ...formData,
-        usuarioId,  // envia o usuarioId junto
+        usuarioId,  // envia o ID correto do banco
       });
       alert('Mensagem enviada com sucesso!');
       setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
