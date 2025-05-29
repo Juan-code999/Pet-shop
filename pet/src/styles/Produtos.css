@@ -1,236 +1,294 @@
 .produto-container {
-    display: flex;
-    gap: 30px;
-    padding: 40px;
-    font-family: 'Arial', sans-serif;
-    background-color: #f9f9f9;
-    flex-wrap: wrap;
-  }
-  
-  .filtros {
-    width: 250px;
-    background: #fff;
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-  }
-  
-  .filtros h3 {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .filtros ul {
-    list-style: none;
-    padding: 0;
-    margin-top: 10px;
-  }
-  
-  .filtros li {
-    margin-bottom: 10px;
-    font-size: 13px;
-    color: #555;
-  }
-  
-  .colors {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  
-  .color {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 1px solid #ccc;
-    cursor: pointer;
-  }
-  
-  .black { background: #000; }
-  .red { background: #f00; }
-  .blue { background: #00f; }
-  .pink { background: #ff69b4; }
-  .yellow { background: #ff0; }
-  .white { background: #fff; border: 1px solid #000; }
-  
-  .sizes {
-    display: flex;
-    gap: 5px;
-    margin-top: 10px;
-  }
-  
-  .sizes button {
-    padding: 5px 10px;
-    font-size: 12px;
-    border: 1px solid #ccc;
-    background: #fff;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .prices label {
-    display: block;
-    margin-top: 5px;
-    font-size: 13px;
-  }
-  
-  .reset {
-    margin-top: 20px;
-    padding: 8px 16px;
-    background: #3576f5;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .produtos {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-  }
-  
-  .produto-card {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    position: relative;
-    border: 1px solid #eee;
-    text-align: center;
-  }
-  
-  .produto-card img {
-    width: 100px;
-    height: auto;
-    margin-bottom: 10px;
-  }
-  
-  .produto-card h4 {
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 5px;
-  }
-  
-  .produto-card p {
-    font-size: 13px;
-    color: #555;
-  }
-  
-  .produto-card s {
-    color: #999;
-    margin-right: 5px;
-  }
-  
-  .produto-card strong {
-    color: #000;
-  }
-  
-  .produto-card .tag {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #00b2ff;
-    color: white;
-    font-size: 11px;
-    padding: 3px 6px;
-    border-radius: 4px;
-  }
-  
-  .dots {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    margin-top: 10px;
-  }
-  
-  .dots span {
-    width: 6px;
-    height: 6px;
-    background: #ccc;
-    border-radius: 50%;
-  }
-  
-  .load-more {
-    grid-column: 1 / -1;
-    margin: 30px auto 0;
-    padding: 10px 20px;
-    font-size: 14px;
-    border: none;
-    background: #f4f4f4;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  
-  .newsletter {
-    width: 100%;
-    background: #edf1f7;
-    padding: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 60px;
-    border-radius: 10px;
-  }
-  
-  .newsletter h2 {
-    font-size: 20px;
-    margin-bottom: 15px;
-  }
-  
-  .newsletter form {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .newsletter input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    width: 250px;
-  }
-  
-  .newsletter button {
-    padding: 10px 20px;
-    background: #222;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .rodape {
-    display: flex;
-    justify-content: space-around;
-    background: #fff;
-    padding: 40px 20px;
-    border-top: 1px solid #eee;
-    margin-top: 40px;
-    flex-wrap: wrap;
-  }
-  
-  .rodape-item {
-    display: flex;
-    align-items: center;
-    max-width: 250px;
-    gap: 15px;
-    margin: 10px 0;
-  }
-  
-  .rodape-item img {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .rodape-item p {
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .rodape-item span {
-    font-size: 12px;
-    color: #777;
-  }
-  
+  display: flex;
+  gap: 40px;
+  padding: 40px;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f7fa;
+  flex-wrap: wrap;
+}
+
+.filtros {
+  width: 260px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filtros h3 {
+  margin-top: 25px;
+  font-size: 16px;
+  color: #222;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.filtros ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.filtros li {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #444;
+  cursor: pointer;
+}
+
+.filtros input[type="radio"] {
+  margin-right: 8px;
+}
+
+.colors {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.color:hover {
+  transform: scale(1.2);
+}
+
+.sizes {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sizes button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #bbb;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.sizes button:hover {
+  background-color: #eee;
+}
+
+.prices label {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.reset {
+  margin-top: 25px;
+  padding: 10px 16px;
+  background: #3576f5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+}
+
+.produtos {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 25px;
+}
+
+.produto-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  position: relative;
+  border: 1px solid #eee;
+  text-align: center;
+  transition: box-shadow 0.3s ease;
+}
+
+.produto-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.produto-card img {
+  width: 120px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+.produto-card h4 {
+  font-size: 15px;
+  color: #222;
+  margin-bottom: 6px;
+}
+
+.produto-card p {
+  font-size: 14px;
+  color: #555;
+}
+
+.produto-card s {
+  color: #999;
+  margin-right: 6px;
+}
+
+.produto-card strong {
+  color: #000;
+}
+
+.produto-card .tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #00b2ff;
+  color: white;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.dots span {
+  width: 7px;
+  height: 7px;
+  background: #ccc;
+  border-radius: 50%;
+}
+
+.load-more {
+  grid-column: 1 / -1;
+  margin: 40px auto 0;
+  padding: 12px 24px;
+  font-size: 15px;
+  border: none;
+  background: #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.load-more:hover {
+  background: #ccc;
+}
+
+.newsletter {
+  width: 100%;
+  background: #dfe8f3;
+  padding: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 70px;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.newsletter h2 {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.newsletter form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.newsletter input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 280px;
+}
+
+.newsletter button {
+  padding: 12px 24px;
+  background: #1c1c1c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.rodape {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  padding: 50px 20px;
+  border-top: 1px solid #eee;
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+
+.rodape-item {
+  display: flex;
+  align-items: center;
+  max-width: 270px;
+  gap: 18px;
+  margin: 15px 0;
+}
+
+.rodape-item img {
+  width: 36px;
+  height: 36px;
+}
+
+.rodape-item p {
+  font-size: 15px;
+  color: #333;
+}
+
+.rodape-item span {
+  font-size: 13px;
+  color: #777;
+}
+
+/* PAGINAÇÃO */
+.paginacao {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  gap: 12px;
+}
+
+.paginacao button {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.paginacao button:hover {
+  background-color: #3576f5;
+  color: white;
+  border-color: #3576f5;
+}
+
+.paginacao button.active {
+  background-color: #3576f5;
+  color: white;
+  font-weight: bold;
+  border-color: #3576f5;
+}
