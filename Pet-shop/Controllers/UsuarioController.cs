@@ -50,7 +50,8 @@ namespace Pet_shop.Controllers
             return NoContent();
         }
 
-        // GET: api/Usuario/5
+
+        // GET: api/Usuario/{Id}
         [HttpGet("{id}")]
         public async Task<IActionResult> BuscarUsuarioPorId(string id)
         {

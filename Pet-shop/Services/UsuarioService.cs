@@ -193,16 +193,14 @@ namespace Pet_shop.Services
                     .Child(id)
                     .OnceSingleAsync<Usuario>();
 
-                // Verifica se o usuário foi encontrado
                 if (usuarioSnapshot == null)
                     return null;
 
-                // Remove a senha antes de retornar os dados
                 usuarioSnapshot.Senha = null;
 
-                // Mapeia o usuário para o DTO
                 return new UsuarioDTO
                 {
+                    Id = id,  // <-- incluir o ID aqui
                     Nome = usuarioSnapshot.Nome,
                     Email = usuarioSnapshot.Email,
                     Telefone = usuarioSnapshot.Telefone,
@@ -212,12 +210,11 @@ namespace Pet_shop.Services
             }
             catch (Exception ex)
             {
-                // Registra a exceção (pode usar um logger, como Serilog, NLog, etc.)
                 Console.Error.WriteLine($"Erro ao buscar usuário por ID: {ex.Message}");
-                // Retorna null em caso de erro, mas você pode optar por lançar uma exceção personalizada
                 return null;
             }
         }
+
 
         // Verifica se o usuário com o email informado é admin
         public async Task<bool> VerificarSeUsuarioEhAdminAsync(string email)
