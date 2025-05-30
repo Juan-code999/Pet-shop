@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/AdminPage.css';
 import {
   PieChart, Pie, Cell,
@@ -27,6 +27,32 @@ const lineData = [
 
 export default function AdminPage() {
   const [activeMenu, setActiveMenu] = useState('Home');
+
+  // Estados para contatos
+  const [contatos, setContatos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Busca contatos da API quando mudar de aba Home ou Workflow
+  useEffect(() => {
+    if (activeMenu === 'Home' || activeMenu === 'Workflow') {
+      setLoading(true);
+      fetch("http://localhost:5005/api/Contato/todos")  // Substitua pela URL real da sua API
+        .then(res => {
+          if (!res.ok) throw new Error('Erro ao carregar contatos');
+          return res.json();
+        })
+        .then(data => {
+          setContatos(data);
+          setLoading(false);
+          setError(null);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [activeMenu]);
 
   const menuItems = ['Home', 'Workflow', 'Statistics', 'Calendar', 'Users', 'Settings'];
 
@@ -92,11 +118,18 @@ export default function AdminPage() {
 
               <div className="card">
                 <h3>Messages</h3>
-                <ul className="message-list">
-                  <li><strong>Ana:</strong> Please review the last changes.</li>
-                  <li><strong>Pedro:</strong> Are we publishing today?</li>
-                  <li><strong>Lucas:</strong> Approved the new layout!</li>
-                </ul>
+                {loading && <p>Carregando mensagens...</p>}
+                {error && <p style={{ color: "red" }}>Erro: {error}</p>}
+                {!loading && !error && contatos.length === 0 && <p>Nenhuma mensagem encontrada.</p>}
+                {!loading && !error && contatos.length > 0 && (
+                  <ul className="message-list">
+                    {contatos.map(c => (
+                      <li key={c.Id}>
+                        <strong>{c.Nome}:</strong> {c.Mensagem}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="card">
@@ -113,8 +146,32 @@ export default function AdminPage() {
 
         {activeMenu === 'Workflow' && (
           <div className="section">
-            <h2>Workflow Section</h2>
-            <p>Here you can manage your project workflows.</p>
+            <h2>Workflow - Detalhes dos Contatos</h2>
+
+            {loading && <p>Carregando contatos...</p>}
+            {error && <p style={{ color: "red" }}>Erro: {error}</p>}
+
+            {!loading && !error && contatos.length === 0 && <p>Nenhum contato para exibir.</p>}
+
+            {!loading && !error && contatos.length > 0 && (
+              <ul style={{ listStyle: "none", padding: 0 }}>
+                {contatos.map(c => (
+                  <li key={c.Id} style={{
+                    border: "1px solid #ccc",
+                    borderRadius: 6,
+                    padding: 15,
+                    marginBottom: 15,
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                  }}>
+                    <p><strong>Nome:</strong> {c.Nome}</p>
+                    <p><strong>Email:</strong> {c.Email}</p>
+                    <p><strong>Telefone:</strong> {c.Telefone}</p>
+                    <p><strong>Mensagem:</strong> {c.Mensagem}</p>
+                    <p><strong>Data de envio:</strong> {new Date(c.DataEnvio).toLocaleString()}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

@@ -26,6 +26,14 @@ namespace Pet_shop.Controllers
             return Ok(new { id, message = "Mensagem enviada com sucesso!" });
         }
 
+        [HttpGet("todos")]
+        public async Task<IActionResult> ObterTodosContatos()
+        {
+            var contatos = await _contatoService.BuscarTodosContatosAsync();
+            return Ok(contatos);
+        }
+
+
         [HttpPost("newsletter")]
         public async Task<IActionResult> AssinarNewsletter([FromBody] NewsletterDTO dto)
         {

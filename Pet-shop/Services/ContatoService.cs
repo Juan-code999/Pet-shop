@@ -30,6 +30,13 @@ namespace Pet_shop.Services
             return contatoRef.Key;
         }
 
+        public async Task<List<Contato>> BuscarTodosContatosAsync()
+        {
+            var contatos = await _firebase.Child("contatos").OnceAsync<Contato>();
+            return contatos.Select(c => c.Object).ToList();
+        }
+
+
 
         public async Task<string> SalvarNewsletterAsync(NewsletterDTO dto)
         {
