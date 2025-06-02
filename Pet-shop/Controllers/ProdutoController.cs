@@ -1,57 +1,53 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Pet_shop.DTOs;
+using Pet_shop.Models;
 using Pet_shop.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Pet_shop.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class ProdutoController : ControllerBase
 {
-    [Route("[controller]")]
-    [ApiController]
-    public class ProdutoController : ControllerBase
+    private readonly ProdutoService _produtoService;
+
+    public ProdutoController(ProdutoService produtoService)
     {
-        private readonly ProdutoService _firebaseService;
+        _produtoService = produtoService;
+    }
 
-        public ProdutoController(ProdutoService firebaseService)
-        {
-            _firebaseService = firebaseService;
-        }
+    [HttpGet]
+    public async Task<ActionResult<List<Produto>>> Get()
+    {
+        var produtos = await _produtoService.BuscarTodosProdutosAsync();
+        return Ok(produtos);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Criar([FromBody] ProdutoDTO dto)
-        {
-            if (dto == null) return BadRequest("Dados inválidos");
-            var id = await _firebaseService.CriarProdutoAsync(dto);
-            return Ok(new { Message = "Produto criado", ProdutoId = id });
-        }
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Produto>> Get(string id)
+    {
+        var produto = await _produtoService.BuscarProdutoPorIdAsync(id);
+        if (produto == null) return NotFound();
+        return Ok(produto);
+    }
 
-        [HttpGet("listar")]
-        public async Task<IActionResult> Listar()
-        {
-            var produtos = await _firebaseService.ListarTodosAsync();
-            return Ok(produtos);
-        }
+    [HttpPost]
+    public async Task<ActionResult> Post([FromBody] Produto produto)
+    {
+        var key = await _produtoService.SalvarProdutoAsync(produto);
+        return CreatedAtAction(nameof(Get), new { id = key }, produto);
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Buscar(string id)
-        {
-            var produto = await _firebaseService.BuscarPorIdAsync(id);
-            if (produto == null) return NotFound("Produto não encontrado");
-            return Ok(produto);
-        }
+    [HttpPut("{id}")]
+    public async Task<ActionResult> Put(string id, [FromBody] Produto produto)
+    {
+        await _produtoService.AtualizarProdutoAsync(id, produto);
+        return NoContent();
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(string id, [FromBody] ProdutoDTO dto)
-        {
-            var sucesso = await _firebaseService.AtualizarAsync(id, dto);
-            if (!sucesso) return NotFound("Produto não encontrado");
-            return Ok("Produto atualizado com sucesso");
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Deletar(string id)
-        {
-            var sucesso = await _firebaseService.RemoverAsync(id);
-            if (!sucesso) return NotFound("Produto não encontrado");
-            return Ok("Produto removido com sucesso");
-        }
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(string id)
+    {
+        await _produtoService.DeletarProdutoAsync(id);
+        return NoContent();
     }
 }
