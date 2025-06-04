@@ -1,53 +1,48 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Pet_shop.Models;
+using Pet_shop.DTOs;
 using Pet_shop.Services;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-[ApiController]
 [Route("api/[controller]")]
-public class ProdutoController : ControllerBase
+[ApiController]
+public class ProdutosController : ControllerBase
 {
+    private readonly CloudinaryService _cloudinaryService;
     private readonly ProdutoService _produtoService;
 
-    public ProdutoController(ProdutoService produtoService)
+    public ProdutosController(CloudinaryService cloudinaryService, ProdutoService produtoService)
     {
+        _cloudinaryService = cloudinaryService;
         _produtoService = produtoService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<Produto>>> Get()
-    {
-        var produtos = await _produtoService.BuscarTodosProdutosAsync();
-        return Ok(produtos);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Produto>> Get(string id)
-    {
-        var produto = await _produtoService.BuscarProdutoPorIdAsync(id);
-        if (produto == null) return NotFound();
-        return Ok(produto);
-    }
-
     [HttpPost]
-    public async Task<ActionResult> Post([FromBody] Produto produto)
+    public async Task<IActionResult> CadastrarProduto([FromForm] ProdutoDTO produto, IFormFile imagem)
     {
-        var key = await _produtoService.SalvarProdutoAsync(produto);
-        return CreatedAtAction(nameof(Get), new { id = key }, produto);
+        if (produto == null)
+            return BadRequest("Produto é null");
+
+        if (imagem == null || imagem.Length == 0)
+            return BadRequest("Imagem inválida ou não enviada");
+
+        // Opcional: Logue dados recebidos para debug
+        Console.WriteLine($"Nome: {produto.Nome}");
+        Console.WriteLine($"Descrição: {produto.Descricao}");
+        Console.WriteLine($"Preço: {produto.Preco}");
+        Console.WriteLine($"Categoria: {produto.Categoria}");
+
+        var urlImagem = await _cloudinaryService.UploadImagemAsync(imagem);
+        produto.ImagemUrl = urlImagem;
+
+        await _produtoService.AdicionarProdutoAsync(produto);
+
+        return Ok(new { mensagem = "Produto cadastrado com sucesso!", produto });
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult> Put(string id, [FromBody] Produto produto)
-    {
-        await _produtoService.AtualizarProdutoAsync(id, produto);
-        return NoContent();
-    }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(string id)
+    [HttpGet]
+    public async Task<IActionResult> ListarProdutos()
     {
-        await _produtoService.DeletarProdutoAsync(id);
-        return NoContent();
+        var produtos = await _produtoService.ObterProdutosAsync();
+        return Ok(produtos);
     }
 }

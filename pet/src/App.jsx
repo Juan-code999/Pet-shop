@@ -11,6 +11,7 @@ import Contatos from './pages/Contatos';
 import Produtos from './pages/Produtos';
 import AdminPage from './pages/AdminPage'; // Adicionando a importação da página de admin
 import Empresa from './pages/Empresa';
+import FormProduto from './components/FormProduto';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/agendamentos" element={<Agendamentos />} />
         <Route path="/settings" element={<ProfilePage />} />
         <Route path="/empresa" element={<Empresa />} />
+        <Route path="/Formprodutos" element={<FormProduto />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         <Route path="*" element={<h1>Página não encontrada</h1>} />
       </Routes>

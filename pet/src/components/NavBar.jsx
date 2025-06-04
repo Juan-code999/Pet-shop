@@ -110,8 +110,19 @@ const NavBar = () => {
             onClick={closeMenu}
           >
             <FaStore /> Produtos
+          </Link>          
+        </li>
+
+        <li>
+          <Link
+            to="/Formprodutos"
+            className={location.pathname === "/Formprodutos" ? "active" : ""}
+            onClick={closeMenu}
+          >
+            <FaStore /> Adicionar
           </Link>
         </li>
+
 
         <li>
           <Link
