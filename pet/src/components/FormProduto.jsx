@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 function FormProduto() {
   const [nome, setNome] = useState("");
@@ -10,45 +11,49 @@ function FormProduto() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!imagem) {
-      alert("Selecione uma imagem");
-      return;
-    }
-
-   const formData = new FormData();
-    formData.append("Nome", nome);
-    formData.append("Descricao", descricao);
-    formData.append("Preco", preco.toString().replace(",", "."));
-    formData.append("Categoria", categoria);
-    formData.append("imagem", imagem);  // 'imagem' tem que bater com o name do input e do parâmetro no controller
-
     try {
-      const response = await fetch("http://localhost:5005/api/Produtos", {
-        method: "POST",
-        body: formData, // multipart/form-data automaticamente
-      });
+      // 1 - Upload da imagem para o Cloudinary
+      const formDataCloudinary = new FormData();
+      formDataCloudinary.append("file", imagem);
+      formDataCloudinary.append("upload_preset", "LatMiau"); // Substitua pelo seu preset do Cloudinary
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Erro ao cadastrar produto");
-      }
+      const cloudinaryResponse = await axios.post(
+        "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
+        formDataCloudinary
+      );
 
-      const data = await response.json();
+      const imageUrl = cloudinaryResponse.data.secure_url;
+
+      // 2 - Preparar os dados do produto com a imagem
+      const produtoData = {
+        nome,
+        descricao,
+        preco: parseFloat(preco),
+        categoria,
+        imagemUrl: imageUrl, // ⚠️ Verifique se sua API espera exatamente "imagemUrl"
+      };
+
+      console.log("Enviando para API:", produtoData);
+
+      // 3 - Enviar dados para sua API ASP.NET Core
+      await axios.post("http://localhost:5005/api/Produtos", produtoData);
+
       alert("Produto cadastrado com sucesso!");
-      // Limpa formulário
+
+      // 4 - Limpar formulário
       setNome("");
       setDescricao("");
       setPreco("");
       setCategoria("");
       setImagem(null);
-      e.target.reset(); // limpa input file também
     } catch (error) {
-      alert("Erro: " + error.message);
+      console.error("Erro ao cadastrar produto:", error);
+      alert("Erro ao cadastrar produto. Verifique o console.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} encType="multipart/form-data">
+    <form onSubmit={handleSubmit}>
       <input
         type="text"
         placeholder="Nome"
@@ -79,7 +84,6 @@ function FormProduto() {
       />
       <input
         type="file"
-        name="imagem"
         accept="image/*"
         onChange={(e) => setImagem(e.target.files[0])}
         required

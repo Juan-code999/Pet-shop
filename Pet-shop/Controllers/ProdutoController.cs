@@ -2,47 +2,38 @@
 using Pet_shop.DTOs;
 using Pet_shop.Services;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class ProdutosController : ControllerBase
 {
-    private readonly CloudinaryService _cloudinaryService;
     private readonly ProdutoService _produtoService;
 
-    public ProdutosController(CloudinaryService cloudinaryService, ProdutoService produtoService)
+    public ProdutosController(ProdutoService produtoService)
     {
-        _cloudinaryService = cloudinaryService;
         _produtoService = produtoService;
     }
 
     [HttpPost]
-    public async Task<IActionResult> CadastrarProduto([FromForm] ProdutoDTO produto, IFormFile imagem)
+    public async Task<IActionResult> CadastrarProduto([FromBody] ProdutoDTO produto)
     {
         if (produto == null)
-            return BadRequest("Produto é null");
+            return BadRequest("Produto inválido.");
 
-        if (imagem == null || imagem.Length == 0)
-            return BadRequest("Imagem inválida ou não enviada");
-
-        // Opcional: Logue dados recebidos para debug
-        Console.WriteLine($"Nome: {produto.Nome}");
-        Console.WriteLine($"Descrição: {produto.Descricao}");
-        Console.WriteLine($"Preço: {produto.Preco}");
-        Console.WriteLine($"Categoria: {produto.Categoria}");
-
-        var urlImagem = await _cloudinaryService.UploadImagemAsync(imagem);
-        produto.ImagemUrl = urlImagem;
-
+        // Salva produto no Firebase
         await _produtoService.AdicionarProdutoAsync(produto);
 
         return Ok(new { mensagem = "Produto cadastrado com sucesso!", produto });
     }
 
-
     [HttpGet]
     public async Task<IActionResult> ListarProdutos()
     {
-        var produtos = await _produtoService.ObterProdutosAsync();
+        var produtos = await _produtoService.ListarProdutosAsync();
         return Ok(produtos);
     }
+
+
+
+
 }
+

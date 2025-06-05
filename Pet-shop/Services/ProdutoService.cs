@@ -23,7 +23,7 @@ public class ProdutoService
             .PostAsync(produto);
     }
 
-    public async Task<List<ProdutoDTO>> ObterProdutosAsync()
+    public async Task<List<ProdutoDTO>> ListarProdutosAsync()
     {
         var produtos = await _firebase
             .Child("produtos")
@@ -31,4 +31,6 @@ public class ProdutoService
 
         return produtos.Select(p => p.Object).ToList();
     }
+
+
 }
