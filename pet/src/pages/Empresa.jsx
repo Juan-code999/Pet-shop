@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/Empresa.css';
-import heroDog from '../img/dog_empresa.png';
+import heroDog from '../img/Dog_3.png';
 import pawIcon from '../img/paws.png';
 
 export default function Empresa() {
