@@ -32,5 +32,16 @@ public class ProdutoService
         return produtos.Select(p => p.Object).ToList();
     }
 
+    public async Task<ProdutoDTO?> BuscarPorId(string id)
+    {
+        var produto = await _firebase
+            .Child("produtos")
+            .Child(id)
+            .OnceSingleAsync<ProdutoDTO>();
+
+        return produto;
+    }
+
+
 
 }

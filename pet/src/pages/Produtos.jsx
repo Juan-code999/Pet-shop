@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/Produtos.css"; // CSS será criado abaixo
+import { useNavigate } from "react-router-dom"; // Importa o hook para navegação
+import "../styles/Produtos.css"; // Seu arquivo de estilos personalizado
 
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
+  const navigate = useNavigate(); // Hook do React Router para redirecionar
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -17,6 +19,10 @@ const Produtos = () => {
 
     fetchProdutos();
   }, []);
+
+  const handleCardClick = (id) => {
+    navigate(`/produtos/${id}`); // Redireciona para a rota de detalhes do produto
+  };
 
   return (
     <div className="container-produtos">
@@ -51,27 +57,33 @@ const Produtos = () => {
         </div>
 
         <div className="filtro">
-  <h4>PRICE</h4>
-  <div className="price-range">
-    <div className="price-slider">
-      <span>$0</span>
-      <input type="range" min="0" max="500" />
-      <span>$500</span>
-    </div>
-    <button className="reset-btn">All Reset</button>
-  </div>
-</div>
-
+          <h4>PRICE</h4>
+          <div className="price-range">
+            <div className="price-slider">
+              <span>R$0</span>
+              <input type="range" min="0" max="500" />
+              <span>R$500</span>
+            </div>
+            <button className="reset-btn">Resetar</button>
+          </div>
+        </div>
       </aside>
 
       <section className="produtos-grid">
         {produtos.map((produto, index) => (
-          <div className="card-produto" key={index}>
+          <div
+            className="card-produto"
+            key={index}
+            onClick={() => handleCardClick(produto.id)}
+            style={{ cursor: "pointer" }}
+          >
             <div className="badge-desconto">20% OFF</div>
             <img src={produto.imagemUrl} alt={produto.nome} />
             <h3>{produto.nome}</h3>
             <p className="precos">
-              <span className="preco-original">R$ {(produto.preco * 1.25).toFixed(2)}</span>
+              <span className="preco-original">
+                R$ {(produto.preco * 1.25).toFixed(2)}
+              </span>
               <span className="preco-atual">R$ {produto.preco.toFixed(2)}</span>
             </p>
             <div className="bolinhas-cores">
