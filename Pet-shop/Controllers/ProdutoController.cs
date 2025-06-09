@@ -19,11 +19,11 @@ public class ProdutosController : ControllerBase
         if (produto == null)
             return BadRequest("Produto inválido.");
 
-        // Salva produto no Firebase
-        await _produtoService.AdicionarProdutoAsync(produto);
+        var produtoSalvo = await _produtoService.AdicionarProdutoAsync(produto);
 
-        return Ok(new { mensagem = "Produto cadastrado com sucesso!", produto });
+        return Ok(new { mensagem = "Produto cadastrado com sucesso!", produto = produtoSalvo });
     }
+ 
 
     [HttpGet]
     public async Task<IActionResult> ListarProdutos()
@@ -39,10 +39,6 @@ public class ProdutosController : ControllerBase
             return NotFound();
         return Ok(produto);
     }
-
-
-
-
 
 }
 

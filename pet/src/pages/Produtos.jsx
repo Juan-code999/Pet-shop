@@ -72,8 +72,11 @@ const Produtos = () => {
             style={{ textDecoration: "none", color: "inherit" }}
           >
             <div className="card-produto" style={{ cursor: "pointer" }}>
-              <div className="badge-desconto">20% OFF</div>
-              <img src={produto.imagemUrl} alt={produto.nome} />
+              <div className="badge-desconto">20% OFF</div><img
+                src={produto.imagensUrl?.[0] || "https://via.placeholder.com/150"}
+                alt={produto.nome}
+              />
+
               <h3>{produto.nome}</h3>
               <p className="precos">
                 <span className="preco-original">

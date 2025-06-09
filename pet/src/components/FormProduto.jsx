@@ -6,36 +6,40 @@ function FormProduto() {
   const [descricao, setDescricao] = useState("");
   const [preco, setPreco] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [imagem, setImagem] = useState(null);
+  const [imagens, setImagens] = useState([]); // agora é array
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // 1 - Upload da imagem para o Cloudinary
-      const formDataCloudinary = new FormData();
-      formDataCloudinary.append("file", imagem);
-      formDataCloudinary.append("upload_preset", "LatMiau"); // Substitua pelo seu preset do Cloudinary
+      // 1 - Upload das imagens para Cloudinary
+      const imagensUrl = [];
 
-      const cloudinaryResponse = await axios.post(
-        "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
-        formDataCloudinary
-      );
+      for (const imagem of imagens) {
+        const formDataCloudinary = new FormData();
+        formDataCloudinary.append("file", imagem);
+        formDataCloudinary.append("upload_preset", "LatMiau");
 
-      const imageUrl = cloudinaryResponse.data.secure_url;
+        const cloudinaryResponse = await axios.post(
+          "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
+          formDataCloudinary
+        );
 
-      // 2 - Preparar os dados do produto com a imagem
+        imagensUrl.push(cloudinaryResponse.data.secure_url);
+      }
+
+      // 2 - Preparar dados do produto com array de URLs
       const produtoData = {
         nome,
         descricao,
         preco: parseFloat(preco),
         categoria,
-        imagemUrl: imageUrl, // ⚠️ Verifique se sua API espera exatamente "imagemUrl"
+        imagensUrl, // agora é um array de URLs
       };
 
       console.log("Enviando para API:", produtoData);
 
-      // 3 - Enviar dados para sua API ASP.NET Core
+      // 3 - Enviar para API
       await axios.post("http://localhost:5005/api/Produtos", produtoData);
 
       alert("Produto cadastrado com sucesso!");
@@ -45,12 +49,19 @@ function FormProduto() {
       setDescricao("");
       setPreco("");
       setCategoria("");
-      setImagem(null);
+      setImagens([]);
     } catch (error) {
       console.error("Erro ao cadastrar produto:", error);
       alert("Erro ao cadastrar produto. Verifique o console.");
     }
   };
+
+  // Para atualizar o estado com múltiplos arquivos selecionados:
+  const handleFileChange = (e) => {
+  const arquivosNovos = Array.from(e.target.files);
+  setImagens(prevImagens => [...prevImagens, ...arquivosNovos]);
+};
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -85,9 +96,23 @@ function FormProduto() {
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => setImagem(e.target.files[0])}
+        multiple
+        onChange={handleFileChange}
         required
       />
+
+      {/* Mostrar nomes das imagens selecionadas */}
+      {imagens.length > 0 && (
+        <div>
+          <h4>Imagens selecionadas:</h4>
+          <ul>
+            {imagens.map((img, index) => (
+              <li key={index}>{img.name}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <button type="submit">Cadastrar Produto</button>
     </form>
   );
