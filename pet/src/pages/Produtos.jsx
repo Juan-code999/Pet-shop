@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Importa o hook para navegação
+import { Link } from "react-router-dom"; // Substitui useNavigate
 import "../styles/Produtos.css"; // Seu arquivo de estilos personalizado
 
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
-  const navigate = useNavigate(); // Hook do React Router para redirecionar
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -19,10 +18,6 @@ const Produtos = () => {
 
     fetchProdutos();
   }, []);
-
-  const handleCardClick = (id) => {
-    navigate(`/produtos/${id}`); // Redireciona para a rota de detalhes do produto
-  };
 
   return (
     <div className="container-produtos">
@@ -71,27 +66,30 @@ const Produtos = () => {
 
       <section className="produtos-grid">
         {produtos.map((produto, index) => (
-          <div
-            className="card-produto"
+          <Link
+            to={`/produto/${produto.id}`}
             key={index}
-            onClick={() => handleCardClick(produto.id)}
-            style={{ cursor: "pointer" }}
+            style={{ textDecoration: "none", color: "inherit" }}
           >
-            <div className="badge-desconto">20% OFF</div>
-            <img src={produto.imagemUrl} alt={produto.nome} />
-            <h3>{produto.nome}</h3>
-            <p className="precos">
-              <span className="preco-original">
-                R$ {(produto.preco * 1.25).toFixed(2)}
-              </span>
-              <span className="preco-atual">R$ {produto.preco.toFixed(2)}</span>
-            </p>
-            <div className="bolinhas-cores">
-              <span style={{ backgroundColor: "#000" }}></span>
-              <span style={{ backgroundColor: "#f00" }}></span>
-              <span style={{ backgroundColor: "#00f" }}></span>
+            <div className="card-produto" style={{ cursor: "pointer" }}>
+              <div className="badge-desconto">20% OFF</div>
+              <img src={produto.imagemUrl} alt={produto.nome} />
+              <h3>{produto.nome}</h3>
+              <p className="precos">
+                <span className="preco-original">
+                  R$ {(produto.preco * 1.25).toFixed(2)}
+                </span>
+                <span className="preco-atual">
+                  R$ {produto.preco.toFixed(2)}
+                </span>
+              </p>
+              <div className="bolinhas-cores">
+                <span style={{ backgroundColor: "#000" }}></span>
+                <span style={{ backgroundColor: "#f00" }}></span>
+                <span style={{ backgroundColor: "#00f" }}></span>
+              </div>
             </div>
-          </div>
+          </Link>
         ))}
       </section>
     </div>
