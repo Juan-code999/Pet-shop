@@ -1,0 +1,106 @@
+.form-produto {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+}
+
+.form-produto h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.form-produto label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+.form-produto input,
+.form-produto textarea,
+.form-produto button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.form-produto textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-produto input[type="checkbox"] {
+  width: auto;
+  margin-right: 5px;
+}
+
+.tamanhos-container {
+  margin-top: 1rem;
+}
+
+.tamanho-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.tamanho-item input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.imagens-preview {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.imagem-preview {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.imagem-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagem-preview .remover {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.form-produto button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.form-produto button[type="submit"]:hover {
+  background-color: #0056b3;
+}

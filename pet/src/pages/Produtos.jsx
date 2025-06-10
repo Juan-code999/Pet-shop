@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom"; // Substitui useNavigate
-import "../styles/Produtos.css"; // Seu arquivo de estilos personalizado
+import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import "../styles/Produtos.css";
 
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
@@ -23,27 +23,27 @@ const Produtos = () => {
     <div className="container-produtos">
       <aside className="sidebar-filtros">
         <div className="filtro">
-          <h4>CATEGORIES</h4>
+          <h4>CATEGORIAS</h4>
           <ul>
-            <li><input type="radio" name="cat" /> Electronics</li>
+            <li><input type="radio" name="cat" /> Eletrônicos</li>
             <li><input type="radio" name="cat" /> PET</li>
-            <li><input type="radio" name="cat" /> Jewelry</li>
-            <li><input type="radio" name="cat" /> Fashion</li>
-            <li><input type="radio" name="cat" /> Furniture</li>
+            <li><input type="radio" name="cat" /> Joias</li>
+            <li><input type="radio" name="cat" /> Moda</li>
+            <li><input type="radio" name="cat" /> Móveis</li>
           </ul>
         </div>
 
         <div className="filtro">
-          <h4>GENDER</h4>
+          <h4>GÊNERO</h4>
           <ul>
-            <li><input type="radio" name="gender" /> Men</li>
-            <li><input type="radio" name="gender" /> Women</li>
-            <li><input type="radio" name="gender" /> Unisex</li>
+            <li><input type="radio" name="gender" /> Masculino</li>
+            <li><input type="radio" name="gender" /> Feminino</li>
+            <li><input type="radio" name="gender" /> Unissex</li>
           </ul>
         </div>
 
         <div className="filtro">
-          <h4>SIZE</h4>
+          <h4>TAMANHOS</h4>
           <div className="sizes">
             {["4XL", "3XL", "XXL", "XL", "L", "M", "S", "XS"].map((size, i) => (
               <button key={i}>{size}</button>
@@ -52,7 +52,7 @@ const Produtos = () => {
         </div>
 
         <div className="filtro">
-          <h4>PRICE</h4>
+          <h4>PREÇO</h4>
           <div className="price-range">
             <div className="price-slider">
               <span>R$0</span>
@@ -66,33 +66,47 @@ const Produtos = () => {
 
       <section className="produtos-grid">
         {produtos.map((produto, index) => (
-          <Link
-            to={`/produto/${produto.id}`}
-            key={index}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <div className="card-produto" style={{ cursor: "pointer" }}>
-              <div className="badge-desconto">20% OFF</div><img
+          <div className="card-produto" key={index}>
+            <FaHeart className="icon-favorito" />
+
+            <div className="img-wrapper">
+              <img
                 src={produto.imagensUrl?.[0] || "https://via.placeholder.com/150"}
                 alt={produto.nome}
               />
-
-              <h3>{produto.nome}</h3>
-              <p className="precos">
-                <span className="preco-original">
-                  R$ {(produto.preco * 1.25).toFixed(2)}
-                </span>
-                <span className="preco-atual">
-                  R$ {produto.preco.toFixed(2)}
-                </span>
-              </p>
-              <div className="bolinhas-cores">
-                <span style={{ backgroundColor: "#000" }}></span>
-                <span style={{ backgroundColor: "#f00" }}></span>
-                <span style={{ backgroundColor: "#00f" }}></span>
-              </div>
             </div>
-          </Link>
+
+            <div className="info-produto">
+              <div className="avaliacao">
+                {[1, 2, 3, 4, 5].map((i) =>
+                  i <= 4 ? (
+                    <FaStar key={i} color="#f5a623" size={14} />
+                  ) : (
+                    <FaRegStar key={i} color="#ccc" size={14} />
+                  )
+                )}
+              </div>
+
+              <h3 className="nome-produto">{produto.nome}</h3>
+
+              <p className="precos">
+                {produto.tamanhos?.[0] ? (
+                  <>
+                    <span className="preco-atual">
+                      R$ {produto.tamanhos[0].precoTotal.toFixed(2)}
+                    </span>
+                    <span className="preco-original">
+                      R$ {(produto.tamanhos[0].precoTotal * 1.25).toFixed(2)}
+                    </span>
+                  </>
+                ) : (
+                  <span>Preço indisponível</span>
+                )}
+              </p>
+
+              <button className="btn-cart">Add to cart</button>
+            </div>
+          </div>
         ))}
       </section>
     </div>

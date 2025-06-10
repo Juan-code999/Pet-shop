@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import "../styles/FormProduto.css";
 
 function FormProduto() {
   const [nome, setNome] = useState("");
@@ -29,7 +30,13 @@ function FormProduto() {
 
   const handleFileChange = (e) => {
     const arquivosNovos = Array.from(e.target.files);
-    setImagens(prev => [...prev, ...arquivosNovos]);
+    setImagens((prev) => [...prev, ...arquivosNovos]);
+  };
+
+  const handleRemoveImagem = (index) => {
+    const novas = [...imagens];
+    novas.splice(index, 1);
+    setImagens(novas);
   };
 
   const handleSubmit = async (e) => {
@@ -60,22 +67,29 @@ function FormProduto() {
         desconto: parseFloat(desconto),
         disponivel,
         imagensUrl,
-        tamanhos: tamanhos.map(t => ({
+        tamanhos: tamanhos.map((t) => ({
           tamanho: t.tamanho,
           precoPorKg: parseFloat(t.precoPorKg),
           precoTotal: parseFloat(t.precoTotal)
         }))
       };
 
-      console.log("Enviando para API:", produtoData);
       await axios.post("http://localhost:5005/api/Produtos", produtoData);
       alert("Produto cadastrado com sucesso!");
 
       // Limpar
-      setNome(""); setDescricao(""); setCategoria(""); setMarca("");
-      setEspecieAnimal(""); setIdadeRecomendada(""); setPorteAnimal("");
-      setDestaque(false); setDesconto(0); setDisponivel(true);
-      setImagens([]); setTamanhos([{ tamanho: "", precoPorKg: "", precoTotal: "" }]);
+      setNome("");
+      setDescricao("");
+      setCategoria("");
+      setMarca("");
+      setEspecieAnimal("");
+      setIdadeRecomendada("");
+      setPorteAnimal("");
+      setDestaque(false);
+      setDesconto(0);
+      setDisponivel(true);
+      setImagens([]);
+      setTamanhos([{ tamanho: "", precoPorKg: "", precoTotal: "" }]);
     } catch (error) {
       console.error("Erro:", error);
       alert("Erro ao cadastrar produto.");
@@ -83,60 +97,88 @@ function FormProduto() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} required />
-      <textarea placeholder="Descrição" value={descricao} onChange={e => setDescricao(e.target.value)} required />
-      <input placeholder="Categoria" value={categoria} onChange={e => setCategoria(e.target.value)} required />
-      <input placeholder="Marca" value={marca} onChange={e => setMarca(e.target.value)} required />
-      <input placeholder="Espécie Animal" value={especieAnimal} onChange={e => setEspecieAnimal(e.target.value)} />
-      <input placeholder="Idade Recomendada" value={idadeRecomendada} onChange={e => setIdadeRecomendada(e.target.value)} />
-      <input placeholder="Porte do Animal" value={porteAnimal} onChange={e => setPorteAnimal(e.target.value)} />
+    <form className="form-produto" onSubmit={handleSubmit}>
+      <h2>Cadastrar Produto</h2>
 
-      <label>
-        Destaque
-        <input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} />
-      </label>
+      <label>Nome</label>
+      <input value={nome} onChange={(e) => setNome(e.target.value)} required />
 
-      <input
-        type="number"
-        placeholder="Desconto (%)"
-        value={desconto}
-        onChange={e => setDesconto(e.target.value)}
+      <label>Descrição</label>
+      <textarea
+        value={descricao}
+        onChange={(e) => setDescricao(e.target.value)}
+        required
       />
 
+      <label>Categoria</label>
+      <input value={categoria} onChange={(e) => setCategoria(e.target.value)} required />
+
+      <label>Marca</label>
+      <input value={marca} onChange={(e) => setMarca(e.target.value)} required />
+
+      <label>Espécie Animal</label>
+      <input value={especieAnimal} onChange={(e) => setEspecieAnimal(e.target.value)} />
+
+      <label>Idade Recomendada</label>
+      <input value={idadeRecomendada} onChange={(e) => setIdadeRecomendada(e.target.value)} />
+
+      <label>Porte do Animal</label>
+      <input value={porteAnimal} onChange={(e) => setPorteAnimal(e.target.value)} />
+
       <label>
+        <input type="checkbox" checked={destaque} onChange={(e) => setDestaque(e.target.checked)} />
+        Destaque
+      </label>
+
+      <label>Desconto (%)</label>
+      <input type="number" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
+
+      <label>
+        <input type="checkbox" checked={disponivel} onChange={(e) => setDisponivel(e.target.checked)} />
         Disponível
-        <input type="checkbox" checked={disponivel} onChange={e => setDisponivel(e.target.checked)} />
       </label>
 
       <h4>Tamanhos:</h4>
-      {tamanhos.map((t, index) => (
-        <div key={index}>
-          <input
-            placeholder="Tamanho (ex: 2,5 Kg)"
-            value={t.tamanho}
-            onChange={e => handleTamanhoChange(index, "tamanho", e.target.value)}
-            required
-          />
-          <input
-            placeholder="Preço por Kg"
-            type="number"
-            value={t.precoPorKg}
-            onChange={e => handleTamanhoChange(index, "precoPorKg", e.target.value)}
-            required
-          />
-          <input
-            placeholder="Preço Total"
-            type="number"
-            value={t.precoTotal}
-            onChange={e => handleTamanhoChange(index, "precoTotal", e.target.value)}
-            required
-          />
-        </div>
-      ))}
-      <button type="button" onClick={handleAddTamanho}>+ Adicionar Tamanho</button>
+      <div className="tamanhos-container">
+        {tamanhos.map((t, index) => (
+          <div className="tamanho-item" key={index}>
+            <input
+              placeholder="Tamanho (ex: 2,5 Kg)"
+              value={t.tamanho}
+              onChange={(e) => handleTamanhoChange(index, "tamanho", e.target.value)}
+              required
+            />
+            <input
+              placeholder="Preço por Kg"
+              type="number"
+              value={t.precoPorKg}
+              onChange={(e) => handleTamanhoChange(index, "precoPorKg", e.target.value)}
+              required
+            />
+            <input
+              placeholder="Preço Total"
+              type="number"
+              value={t.precoTotal}
+              onChange={(e) => handleTamanhoChange(index, "precoTotal", e.target.value)}
+              required
+            />
+          </div>
+        ))}
+        <button type="button" onClick={handleAddTamanho}>+ Adicionar Tamanho</button>
+      </div>
 
+      <label>Imagens do Produto</label>
       <input type="file" multiple accept="image/*" onChange={handleFileChange} required />
+
+      <div className="imagens-preview">
+        {imagens.map((img, index) => (
+          <div key={index} className="imagem-preview">
+            <img src={URL.createObjectURL(img)} alt={`preview-${index}`} />
+            <button type="button" className="remover" onClick={() => handleRemoveImagem(index)}>×</button>
+          </div>
+        ))}
+      </div>
+
       <button type="submit">Cadastrar Produto</button>
     </form>
   );

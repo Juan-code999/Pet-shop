@@ -15,7 +15,7 @@ const ProdutoDetalhes = () => {
         const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
         setProduto(response.data);
         if (response.data.imagensUrl && response.data.imagensUrl.length > 0) {
-          setImagemPrincipal(response.data.imagensUrl[0]); // primeira imagem como padrão
+          setImagemPrincipal(response.data.imagensUrl[0]);
         }
       } catch (error) {
         console.error("Erro ao buscar o produto:", error);
@@ -60,7 +60,12 @@ const ProdutoDetalhes = () => {
           <p className="descricao-secundaria">
             2 lugares • Estrutura em metal • Tecido premium
           </p>
-          <p className="preco">R$ {produto.preco.toFixed(2)}</p>
+
+          {produto.tamanhos?.[0] ? (
+            <p className="preco">R$ {produto.tamanhos[0].precoTotal.toFixed(2)}</p>
+          ) : (
+            <p className="preco">Preço indisponível</p>
+          )}
 
           <button className="btn-comprar">ADICIONAR AO CARRINHO</button>
 
