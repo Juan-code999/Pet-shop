@@ -19,21 +19,38 @@ public class ProdutoService
 
     public async Task<Produto> AdicionarProdutoAsync(ProdutoDTO produtoDto)
     {
-        var post = await _firebase
-            .Child("produtos")
-            .PostAsync(produtoDto);
-
+        // Criação do objeto Produto com todos os campos
         var produto = new Produto
         {
-            Id = post.Key,
             Nome = produtoDto.Nome,
             Descricao = produtoDto.Descricao,
-            Preco = produtoDto.Preco,
             Categoria = produtoDto.Categoria,
-            ImagensUrl = produtoDto.ImagensUrl  // lista
+            EspecieAnimal = produtoDto.EspecieAnimal,
+            Marca = produtoDto.Marca,
+            ImagensUrl = produtoDto.ImagensUrl,
+            Tamanhos = produtoDto.Tamanhos?.Select(t => new TamanhoPreco
+            {
+                Tamanho = t.Tamanho,
+                PrecoPorKg = t.PrecoPorKg,
+                PrecoTotal = t.PrecoTotal
+            }).ToList(),
+            IdadeRecomendada = produtoDto.IdadeRecomendada,
+            PorteAnimal = produtoDto.PorteAnimal,
+            Destaque = produtoDto.Destaque,
+            Desconto = produtoDto.Desconto,
+            Disponivel = produtoDto.Disponivel,
+            DataCadastro = DateTime.UtcNow
         };
 
-        
+        // Salva no Firebase e obtém a Key
+        var post = await _firebase
+            .Child("produtos")
+            .PostAsync(produto);
+
+        // Atribui o Id gerado (key do Firebase)
+        produto.Id = post.Key;
+
+        // Atualiza o mesmo produto já com o ID
         await _firebase
             .Child("produtos")
             .Child(post.Key)
@@ -44,22 +61,20 @@ public class ProdutoService
 
 
 
+
     public async Task<List<Produto>> ListarProdutosAsync()
     {
         var produtos = await _firebase
             .Child("produtos")
-            .OnceAsync<ProdutoDTO>();
+            .OnceAsync<Produto>();
 
-        return produtos.Select(p => new Produto
-        {
-            Id = p.Key,
-            Nome = p.Object.Nome,
-            Descricao = p.Object.Descricao,
-            Preco = p.Object.Preco,
-            Categoria = p.Object.Categoria,
-            ImagensUrl = p.Object.ImagensUrl
+        return produtos.Select(p => {
+            var produto = p.Object;
+            produto.Id = p.Key;
+            return produto;
         }).ToList();
     }
+
 
     public async Task<Produto?> BuscarPorId(string id)
     {
@@ -67,8 +82,9 @@ public class ProdutoService
             .Child("produtos")
             .Child(id)
             .OnceSingleAsync<Produto>();
-
+        produto.Id = id;
         return produto;
     }
+
 }
 

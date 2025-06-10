@@ -9,7 +9,7 @@ import Agendamentos from './pages/Agendamentos';
 import ProfilePage from './components/ProfilePage';
 import Contatos from './pages/Contatos';
 import Produtos from './pages/Produtos';
-import AdminPage from './pages/AdminPage'; // Adicionando a importação da página de admin
+import AdminPage from './pages/Admin/AdminPage'; // Adicionando a importação da página de admin
 import Empresa from './pages/Empresa';
 import FormProduto from './components/FormProduto';
 import ProdutosDetalhes from './pages/ProdutoDetalhes';
