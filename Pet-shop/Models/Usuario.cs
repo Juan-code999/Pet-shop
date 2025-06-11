@@ -7,7 +7,7 @@
         public string Email { get; set; }
         public string Senha { get; set; }
         public string Telefone { get; set; }
-        public string Endereco { get; set; }
+        public Endereco Endereco { get; set; }   // mudou de string para objeto Endereco
         public bool IsAdmin { get; set; }
     }
 }

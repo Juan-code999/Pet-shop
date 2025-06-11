@@ -20,7 +20,7 @@ namespace Pet_shop.DTOs
         public string Telefone { get; set; }
 
         [Required]
-        public string Endereco { get; set; }
+        public EnderecoDTO Endereco { get; set; }  // aqui mudou
 
         public bool IsAdmin { get; set; } = false;
     }
