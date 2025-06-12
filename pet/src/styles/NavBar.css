@@ -1,251 +1,74 @@
-/* Container principal da Navbar */
-.Nav__Container {
-  background-color: #ffffff;
+.navbar {
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+}
+
+.navbar__top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 20px; /* Diminuí o padding */
-  height: 64px; /* Altura fixa mais baixa */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 100;
+  padding: 10px 40px;
 }
 
-/* Logo */
-.Nav__logo__wrapper {
+.navbar__logo img {
+  height: 40px;
+}
+
+.navbar__center {
+  flex-grow: 1;
+}
+
+.navbar__user {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.Nav__logo {
-  width: 100px; /* Diminuí um pouco o tamanho da logo */
-  height: auto;
-}
-
-/* Menu principal */
-.Nav__Bar {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.Nav__Bar li {
-  position: relative;
-}
-
-.Nav__Bar a {
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  padding: 6px 10px; /* Ajustei o padding interno */
-  transition: color 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.Nav__Bar a:hover,
-.Nav__Bar a.active {
-  color: #007bff;
-}
-
-/* Seção de login / usuário */
-.Nav__Login__Desktop {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.Nav__Login__Mobile {
-  display: none;
-}
-
-/* Botão de login */
-.Nav__Login__Button {
-  background-color: #007bff;
-  color: white;
-  padding: 6px 14px; /* Menor */
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.Nav__Login__Button:hover {
-  background-color: #0056b3;
-}
-
-/* Dropdown do usuário */
-.Nav__User__Dropdown {
-  position: relative;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.Nav__User__Name {
-  margin-left: 8px;
-  position: relative;
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.Nav__Dropdown__Content {
-  display: none;
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background-color: #ffffff;
-  min-width: 160px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  overflow: hidden;
-  z-index: 10;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  pointer-events: none;
-}
-
-.Nav__Dropdown__Content a,
-.Nav__Dropdown__Content button {
-  width: 100%;
-  padding: 10px 16px;
-  text-align: left;
-  background: none;
-  border: none;
-  color: #333;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Espaçamento entre ícones e texto */
-}
-
-.Nav__Dropdown__Content a:hover,
-.Nav__Dropdown__Content button:hover {
-  background-color: #f0f0f0;
-}
-
-.Nav__User__Dropdown:hover .Nav__Dropdown__Content {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* Avatar */
-.Nav__User__Avatar {
-  width: 30px;
-  height: 30px;
+.user-avatar {
+  height: 35px;
+  width: 35px;
   border-radius: 50%;
-  object-fit: cover;
 }
 
-/* Botão de hamburguer (menu mobile) */
-.Nav__Hamburger {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: none;
-  flex-direction: column;
-  justify-content: center;
+.user-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.navbar__bottom {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 8px;
+  padding: 0 40px;
+  background-color: #f8f8f8;
+  height: 50px;
 }
 
-.Hamburger__Box {
-  width: 24px;
-  height: 18px;
-  position: relative;
+.all-departments {
+  background-color: orange;
+  padding: 10px;
+  color: white;
+  font-weight: bold;
 }
 
-.Hamburger__Inner,
-.Hamburger__Inner::before,
-.Hamburger__Inner::after {
-  background-color: #333;
-  position: absolute;
-  width: 100%;
-  height: 3px;
-  transition: all 0.3s ease;
-  border-radius: 2px;
+.navbar__links a {
+  margin: 0 10px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.Hamburger__Inner {
-  top: 50%;
-  transform: translateY(-50%);
+.navbar__links .active {
+  border-bottom: 2px solid orange;
 }
 
-.Hamburger__Inner::before {
-  content: "";
-  top: -8px;
-}
-
-.Hamburger__Inner::after {
-  content: "";
-  top: 8px;
-}
-
-/* Animação do hambúrguer quando aberto */
-.Nav__Hamburger.open .Hamburger__Inner {
-  background-color: transparent;
-}
-
-.Nav__Hamburger.open .Hamburger__Inner::before {
-  transform: rotate(45deg);
-  top: 0;
-}
-
-.Nav__Hamburger.open .Hamburger__Inner::after {
-  transform: rotate(-45deg);
-  top: 0;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .Nav__Bar {
-    position: absolute;
-    top: 64px; /* Ajustei para combinar com a nova altura da navbar */
-    left: 0;
-    right: 0;
-    background-color: #ffffff;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 20px 0;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .Nav__Bar.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .Nav__Login__Desktop {
-    display: none;
-  }
-
-  .Nav__Login__Mobile {
-    display: block;
-  }
-
-  .Nav__Hamburger {
-    display: flex;
-  }
-}
-
-/* Estilo do link de 'Página Adm' (opcional) */
-.Nav__Bar a.admin-link {
-  color: #d9534f; /* Um vermelho suave */
-  font-weight: 600;
-}
-
-.Nav__Bar a.admin-link:hover {
-  color: #c9302c;
+.navbar__icons a {
+  margin-left: 15px;
+  color: #333;
+  font-size: 18px;
 }

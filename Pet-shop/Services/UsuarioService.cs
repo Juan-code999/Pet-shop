@@ -18,16 +18,22 @@ namespace Pet_shop.Services
         // Salvar novo usuário
         public async Task<string> SalvarUsuarioAsync(UsuarioDTO usuarioDTO)
         {
+            var existente = await BuscarUsuarioPorEmailAsync(usuarioDTO.Email);
+            if (existente != null)
+                return null;
+
             var usuario = new Usuario
             {
                 Nome = usuarioDTO.Nome,
                 Email = usuarioDTO.Email.ToLower(),
-                Senha = usuarioDTO.Senha,
+                Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDTO.Senha),
                 Telefone = usuarioDTO.Telefone,
                 Endereco = new Endereco
                 {
                     Rua = usuarioDTO.Endereco.Rua,
                     Numero = usuarioDTO.Endereco.Numero,
+                    Complemento = usuarioDTO.Endereco.Complemento,
+                    Bairro = usuarioDTO.Endereco.Bairro,
                     Cidade = usuarioDTO.Endereco.Cidade,
                     Estado = usuarioDTO.Endereco.Estado,
                     Cep = usuarioDTO.Endereco.Cep
@@ -43,6 +49,7 @@ namespace Pet_shop.Services
 
             return id;
         }
+
 
         // Atualizar usuário existente
         public async Task<bool> AtualizarUsuarioAsync(string id, UsuarioDTO dto)
@@ -69,6 +76,8 @@ namespace Pet_shop.Services
                     {
                         Rua = dto.Endereco.Rua,
                         Numero = dto.Endereco.Numero,
+                        Complemento = dto.Endereco.Complemento,
+                        Bairro = dto.Endereco.Bairro,
                         Cidade = dto.Endereco.Cidade,
                         Estado = dto.Endereco.Estado,
                         Cep = dto.Endereco.Cep
@@ -104,6 +113,8 @@ namespace Pet_shop.Services
                     Endereco = new EnderecoDTO
                     {
                         Rua = usuario.Endereco?.Rua,
+                        Complemento = usuario.Endereco.Complemento,
+                        Bairro = usuario.Endereco.Bairro,
                         Numero = usuario.Endereco?.Numero,
                         Cidade = usuario.Endereco?.Cidade,
                         Estado = usuario.Endereco?.Estado,
@@ -142,6 +153,8 @@ namespace Pet_shop.Services
                     Endereco = new EnderecoDTO
                     {
                         Rua = usuario.Endereco?.Rua,
+                        Complemento = usuario.Endereco.Complemento,
+                        Bairro = usuario.Endereco.Bairro,
                         Numero = usuario.Endereco?.Numero,
                         Cidade = usuario.Endereco?.Cidade,
                         Estado = usuario.Endereco?.Estado,
@@ -175,6 +188,8 @@ namespace Pet_shop.Services
                         Endereco = new EnderecoDTO
                         {
                             Rua = obj.Endereco?.Rua,
+                            Complemento = obj.Endereco.Complemento,
+                            Bairro = obj.Endereco.Bairro,
                             Numero = obj.Endereco?.Numero,
                             Cidade = obj.Endereco?.Cidade,
                             Estado = obj.Endereco?.Estado,

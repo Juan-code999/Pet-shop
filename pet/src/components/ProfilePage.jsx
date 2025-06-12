@@ -1,82 +1,114 @@
 import React, { useEffect, useState } from "react";
 import "../styles/ProfilePage.css";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const ProfilePage = () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-
   const [usuarioId, setUsuarioId] = useState("");
   const [form, setForm] = useState({
     nome: "",
-    sobrenome: "",
     telefone: "",
     email: "",
+    rua: "",
+    numero: "",
     cidade: "",
     estado: "",
     cep: "",
     pais: "Brasil",
+    bairro: "",
+    complemento: ""
   });
 
   useEffect(() => {
-    const carregarDados = async () => {
-      if (!user || !user.email) return;
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser || !currentUser.email) return;
 
       try {
-        const resId = await fetch(`http://localhost:5005/api/Usuario/email/${user.email}`);
+        // Busca o usuário pelo email para pegar o id
+        const resId = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(currentUser.email)}`);
+        if (!resId.ok) {
+          console.error("Erro ao buscar usuário por email");
+          return;
+        }
         const dataId = await resId.json();
+        console.log("Dados do usuário por email:", dataId);
+
+        if (!dataId.id) {
+          console.error("ID do usuário não encontrado na resposta.");
+          return;
+        }
         setUsuarioId(dataId.id);
 
+        // Busca os dados completos do usuário pelo id
         const resDados = await fetch(`http://localhost:5005/api/Usuario/${dataId.id}`);
+        if (!resDados.ok) {
+          console.error("Erro ao buscar dados do usuário pelo id");
+          return;
+        }
         const data = await resDados.json();
 
-        const [nome, sobrenome] = (data.nome || "").split(" ");
-
         setForm({
-          nome: nome || "",
-          sobrenome: sobrenome || "",
+          nome: data.nome || "",
           telefone: data.telefone || "",
           email: data.email || "",
+          rua: data.endereco?.rua || "",
+          numero: data.endereco?.numero || "",
           cidade: data.endereco?.cidade || "",
           estado: data.endereco?.estado || "",
           cep: data.endereco?.cep || "",
           pais: data.endereco?.pais || "Brasil",
+          bairro: data.endereco?.bairro || "",
+          complemento: data.endereco?.complemento || ""
         });
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
-    };
+    });
 
-    carregarDados();
-  }, [user]);
+    return () => unsubscribe();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleAtualizar = async () => {
+    if (!usuarioId) {
+      alert("ID do usuário não está carregado ainda. Tente novamente em alguns segundos.");
+      return;
+    }
+
     if (!window.confirm("Deseja atualizar os dados?")) return;
 
     try {
       const body = {
-        nome: `${form.nome} ${form.sobrenome}`,
+        id: usuarioId,
+        nome: form.nome,
         email: form.email,
         telefone: form.telefone,
-        senha: "",
+        senha: "", // deixar vazio se não for atualizar
         endereco: {
+          rua: form.rua,
+          numero: form.numero,
+          complemento: form.complemento,
+          bairro: form.bairro,
           cidade: form.cidade,
           estado: form.estado,
           cep: form.cep,
-          pais: form.pais,
+          pais: form.pais
         },
-        isAdmin: false,
+        isAdmin: false
       };
 
-      await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
+      const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
+      if (!response.ok) {
+        throw new Error("Falha na atualização");
+      }
 
       alert("Dados atualizados com sucesso!");
     } catch (error) {
@@ -84,6 +116,10 @@ const ProfilePage = () => {
       alert("Erro ao atualizar os dados.");
     }
   };
+
+  // Pegando foto do usuário firebase para mostrar
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
   return (
     <div className="profile-page">
@@ -93,10 +129,10 @@ const ProfilePage = () => {
       <div className="content">
         <div className="sidebar">
           <img
-            src={user?.photoURL || "https://randomuser.me/api/portraits/men/75.jpg"}
+            src={currentUser?.photoURL || "https://randomuser.me/api/portraits/men/75.jpg"}
             alt="Perfil"
           />
-          <h2>{form.nome} {form.sobrenome}</h2>
+          <h2>{form.nome}</h2>
           <p>Conta Pessoal</p>
           <button>Ver Perfil Público</button>
           <a href="#">https://minhaplataforma.com</a>
@@ -109,16 +145,20 @@ const ProfilePage = () => {
               <input type="text" name="nome" value={form.nome} onChange={handleChange} />
             </div>
             <div className="form-group">
-              <label>Sobrenome</label>
-              <input type="text" name="sobrenome" value={form.sobrenome} onChange={handleChange} />
-            </div>
-            <div className="form-group">
               <label>Telefone</label>
               <input type="text" name="telefone" value={form.telefone} onChange={handleChange} />
             </div>
             <div className="form-group">
               <label>Email</label>
               <input type="email" name="email" value={form.email} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Rua</label>
+              <input type="text" name="rua" value={form.rua} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Número</label>
+              <input type="text" name="numero" value={form.numero} onChange={handleChange} />
             </div>
             <div className="form-group">
               <label>Cidade</label>
@@ -139,6 +179,14 @@ const ProfilePage = () => {
                 <option>Estados Unidos</option>
                 <option>Canadá</option>
               </select>
+            </div>
+            <div className="form-group">
+              <label>Bairro</label>
+              <input type="text" name="bairro" value={form.bairro} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Complemento</label>
+              <input type="text" name="complemento" value={form.complemento} onChange={handleChange} />
             </div>
           </div>
           <button className="update" onClick={handleAtualizar}>

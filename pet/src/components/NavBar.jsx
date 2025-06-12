@@ -6,28 +6,22 @@ import {
   FaUser,
   FaBuilding,
   FaStore,
+  FaShoppingCart,
+  FaCog,
 } from "react-icons/fa";
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 const NavBar = () => {
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-
-  const toggleMenu = () => setIsOpen(!isOpen);
-  const closeMenu = () => setIsOpen(false);
 
   useEffect(() => {
     const auth = getAuth();
-
-    // Sincroniza estado do usuário com Firebase Auth e localStorage
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        // Tenta carregar dados do usuário do localStorage (salvo no login)
         const nome = localStorage.getItem("usuarioNome") || currentUser.displayName || "Usuário";
         const isAdmin = localStorage.getItem("isAdmin") === "true";
-
         setUser({
           name: nome,
           photo: currentUser.photoURL,
@@ -45,134 +39,67 @@ const NavBar = () => {
     const auth = getAuth();
     try {
       await signOut(auth);
-      localStorage.removeItem("usuarioNome");
-      localStorage.removeItem("usuarioId");
-      localStorage.removeItem("isAdmin");
+      localStorage.clear();
       setUser(null);
-      closeMenu();
     } catch (error) {
       console.error("Erro ao sair:", error);
     }
   };
 
-  // Renderiza seção de login / usuário logado com dropdown
-  const renderLoginSection = () =>
-    user ? (
-      <div className="Nav__User__Dropdown">
-        {user.photo && (
-          <img src={user.photo} alt="Avatar" className="Nav__User__Avatar" />
-        )}
-        <div className="Nav__User__Name">
-          {user.name}
-          <div className="Nav__Dropdown__Content">
-            <Link to="/profile" onClick={closeMenu}>
-              Perfil
-            </Link>
-            <Link to="/settings" onClick={closeMenu}>
-              Configurações
-            </Link>
-            {user.isAdmin && (
-              <Link to="/admin" onClick={closeMenu}>
-                Página Admin
-              </Link>
-            )}
-            <button onClick={handleLogout}>Sair</button>
-          </div>
+  return (
+    <header className="navbar">
+      <div className="navbar__top">
+        <div className="navbar__logo">
+          <Link to="/">
+            <img src="src/img/logo.png" alt="Logo" />
+          </Link>
+        </div>
+
+        {/* Centro vazio (onde era a busca) */}
+        <div className="navbar__center"></div>
+
+        {/* Info do usuário no canto direito */}
+        <div className="navbar__user">
+          {user?.photo && <img src={user.photo} alt="Avatar" className="user-avatar" />}
+          <div className="user-name">{user?.name || "Bem-vindo"}</div>
         </div>
       </div>
-    ) : (
-      <Link to="/login" className="Nav__Login__Button" onClick={closeMenu}>
-        Login
-      </Link>
-    );
 
-  return (
-    <nav className="Nav__Container">
-      <Link to="/" className="Nav__logo__wrapper" onClick={closeMenu}>
-        <img src="src/img/logo.png" alt="Logo" className="Nav__logo" />
-      </Link>
+      <div className="navbar__bottom">
+        <div className="navbar__left">
+          <span className="all-departments">ALL DEPARTMENTS</span>
+        </div>
 
-      <ul className={`Nav__Bar ${isOpen ? "active" : ""}`}>
-        <li>
-          <Link
-            to="/"
-            className={location.pathname === "/" ? "active" : ""}
-            onClick={closeMenu}
-          >
+        <nav className="navbar__links">
+          <Link to="/" className={location.pathname === "/" ? "active" : ""}>
             <FaHome /> Home
           </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/produtos"
-            className={location.pathname === "/produtos" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""}>
             <FaStore /> Produtos
-          </Link>          
-        </li>
-
-        <li>
-          <Link
-            to="/Formprodutos"
-            className={location.pathname === "/Formprodutos" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          </Link>
+          <Link to="/Formprodutos" className={location.pathname === "/Formprodutos" ? "active" : ""}>
             <FaStore /> Adicionar
           </Link>
-        </li>
-
-
-        <li>
-          <Link
-            to="/contatos"
-            className={location.pathname === "/contatos" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""}>
             <FaUser /> Contatos
           </Link>
-        </li>
-
-        <li>
-          <Link
-            to="/empresa"
-            className={location.pathname === "/empresa" ? "active" : ""}
-            onClick={closeMenu}
-          >
+          <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""}>
             <FaBuilding /> Empresa
           </Link>
-        </li>
-
-        {user && user.isAdmin && (
-          <li>
-            <Link
-              to="/admin"
-              className={location.pathname.startsWith("/admin") ? "active" : ""}
-              onClick={closeMenu}
-            >
+          {user?.isAdmin && (
+            <Link to="/admin" className={location.pathname.startsWith("/admin") ? "active" : ""}>
               <FaProjectDiagram /> Página Admin
             </Link>
-          </li>
-        )}
+          )}
+        </nav>
 
-        {/* Mobile login */}
-        <li className="Nav__Login__Mobile">{renderLoginSection()}</li>
-      </ul>
-
-      {/* Desktop login */}
-      <div className="Nav__Login__Desktop">{renderLoginSection()}</div>
-
-      <button
-        className={`Nav__Hamburger ${isOpen ? "open" : ""}`}
-        onClick={toggleMenu}
-        aria-label="Menu"
-      >
-        <div className="Hamburger__Box">
-          <div className="Hamburger__Inner"></div>
+        <div className="navbar__icons">
+          <Link to="/contatos"><FaUser /></Link>
+          <Link to="/carrinho"><FaShoppingCart /></Link>
+          <Link to="/settings"><FaCog /></Link>
         </div>
-      </button>
-    </nav>
+      </div>
+    </header>
   );
 };
 

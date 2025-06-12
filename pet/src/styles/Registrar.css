@@ -93,21 +93,45 @@
 }
 
 .message-box {
-  position: fixed;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1e90ff; /* azul */
-  color: white;
-  padding: 12px 20px;
-  border-radius: 6px;
+  position: absolute;
+  top: 40px;       /* distância do topo */
+  right: 40px;     /* agora fica 40px da direita */
+  z-index: 1000;
   display: flex;
   align-items: center;
-  font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  z-index: 9999;
-  max-width: 90%;
+  background-color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  max-width: 480px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  font-size: 15px;
+  animation: slideIn 0.4s ease-out;
+  transition: opacity 0.3s ease-in-out;
 }
+
+/* Ícone */
+.message-box svg {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+
+
+/* Animação de entrada */
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 
 
 @media (max-width: 768px) {
