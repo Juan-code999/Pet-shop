@@ -26,7 +26,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registrar" element={<Registrar />} />
         <Route path="/agendamentos" element={<Agendamentos />} />
-        <Route path="/settings" element={<ProfilePage />} />
+        <Route path="/perfil" element={<ProfilePage />} />
         <Route path="/empresa" element={<Empresa />} />
         <Route path="/Formprodutos" element={<FormProduto />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}

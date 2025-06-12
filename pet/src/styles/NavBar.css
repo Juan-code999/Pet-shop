@@ -1,74 +1,212 @@
-.navbar {
+/* Estilo Revo NavBar */
+.revo-navbar {
   width: 100%;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  font-family: sans-serif;
+  font-family: 'Arial', sans-serif;
+  background-color: white;
+  color: black;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px 0;
 }
 
-.navbar__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 40px;
-}
-
-.navbar__logo img {
-  height: 40px;
-}
-
-.navbar__center {
-  flex-grow: 1;
-}
-
-.navbar__user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar {
-  height: 35px;
-  width: 35px;
-  border-radius: 50%;
-}
-
-.user-name {
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.navbar__bottom {
+/* Middle Section */
+.revo-navbar-middle {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
-  background-color: #f8f8f8;
-  height: 50px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.all-departments {
-  background-color: orange;
-  padding: 10px;
-  color: white;
+.revo-logo-container {
+  flex: 1;
+}
+
+.revo-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+}
+
+.revo-logo-img {
+  height: 40px;
+  width: auto;
+}
+
+.logo-text {
+  color: #007BFF; /* Azul principal */
   font-weight: bold;
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: 1px;
 }
 
-.navbar__links a {
-  margin: 0 10px;
+.revo-nav-center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.revo-nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.revo-nav-links a {
   color: #333;
   text-decoration: none;
+  font-size: 13px;
   font-weight: 500;
-  display: inline-flex;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
 }
 
-.navbar__links .active {
-  border-bottom: 2px solid orange;
+.nav-icon {
+  font-size: 14px;
+  color: #555;
+  transition: color 0.3s;
 }
 
-.navbar__icons a {
-  margin-left: 15px;
+.revo-nav-links a:hover {
+  color: #007BFF;
+}
+
+.revo-nav-links a:hover .nav-icon {
+  color: #007BFF;
+}
+
+.revo-nav-links a.active {
+  color: #007BFF;
+  font-weight: 600;
+}
+
+.revo-nav-links a.active .nav-icon {
+  color: #007BFF;
+}
+
+.revo-nav-icons {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-icon-link {
   color: #333;
+  transition: color 0.3s;
   font-size: 18px;
+}
+
+.nav-icon-link:hover {
+  color: #007BFF;
+}
+
+/* User Info */
+.revo-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 15px;
+}
+
+.revo-user-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e1e1e1;
+}
+
+.user-placeholder {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  color: #555;
+  border: 1px solid #e1e1e1;
+}
+
+.revo-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Login Button */
+.login-button {
+  background-color: #007BFF; /* Azul principal */
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: 15px;
+}
+
+.login-button:hover {
+  background-color: #0056b3; /* Azul hover */
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .revo-nav-links {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .revo-navbar-middle {
+    padding: 0 20px;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .revo-logo {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .revo-nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .revo-nav-icons {
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .revo-nav-links a {
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+  
+  .login-button {
+    padding: 6px 15px;
+    font-size: 12px;
+  }
+  
+  .revo-user-name {
+    max-width: 80px;
+  }
 }

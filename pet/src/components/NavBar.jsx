@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import {
-  FaHome,
-  FaProjectDiagram,
-  FaUser,
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  FaHome, 
+  FaBoxOpen, 
+  FaEnvelope, 
   FaBuilding,
-  FaStore,
+  FaUserCog,
+  FaUser,
   FaShoppingCart,
-  FaCog,
+  FaHeart
 } from "react-icons/fa";
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 const NavBar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [shortName, setShortName] = useState("");
 
   useEffect(() => {
     const auth = getAuth();
@@ -22,6 +25,14 @@ const NavBar = () => {
       if (currentUser) {
         const nome = localStorage.getItem("usuarioNome") || currentUser.displayName || "Usuário";
         const isAdmin = localStorage.getItem("isAdmin") === "true";
+        
+        // Formatar nome para mostrar apenas primeiro e último nome
+        const nameParts = nome.split(' ');
+        const formattedName = nameParts.length > 1 
+          ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+          : nome;
+        
+        setShortName(formattedName);
         setUser({
           name: nome,
           photo: currentUser.photoURL,
@@ -29,74 +40,66 @@ const NavBar = () => {
         });
       } else {
         setUser(null);
+        setShortName("");
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    const auth = getAuth();
-    try {
-      await signOut(auth);
-      localStorage.clear();
-      setUser(null);
-    } catch (error) {
-      console.error("Erro ao sair:", error);
-    }
+  const handleLogin = () => {
+    navigate("/login");
   };
 
   return (
-    <header className="navbar">
-      <div className="navbar__top">
-        <div className="navbar__logo">
-          <Link to="/">
-            <img src="src/img/logo.png" alt="Logo" />
-          </Link>
+    <header className="revo-navbar">
+      <div className="revo-navbar-middle">
+        <div className="revo-logo-container">
+          <div className="revo-logo">
+            <img src="src/img/logop.png" alt="Logo" className="revo-logo-img" />
+            <p className="logo-text">Lat Miau</p>
+          </div>
         </div>
 
-        {/* Centro vazio (onde era a busca) */}
-        <div className="navbar__center"></div>
-
-        {/* Info do usuário no canto direito */}
-        <div className="navbar__user">
-          {user?.photo && <img src={user.photo} alt="Avatar" className="user-avatar" />}
-          <div className="user-name">{user?.name || "Bem-vindo"}</div>
-        </div>
-      </div>
-
-      <div className="navbar__bottom">
-        <div className="navbar__left">
-          <span className="all-departments">ALL DEPARTMENTS</span>
-        </div>
-
-        <nav className="navbar__links">
-          <Link to="/" className={location.pathname === "/" ? "active" : ""}>
-            <FaHome /> Home
-          </Link>
-          <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""}>
-            <FaStore /> Produtos
-          </Link>
-          <Link to="/Formprodutos" className={location.pathname === "/Formprodutos" ? "active" : ""}>
-            <FaStore /> Adicionar
-          </Link>
-          <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""}>
-            <FaUser /> Contatos
-          </Link>
-          <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""}>
-            <FaBuilding /> Empresa
-          </Link>
-          {user?.isAdmin && (
-            <Link to="/admin" className={location.pathname.startsWith("/admin") ? "active" : ""}>
-              <FaProjectDiagram /> Página Admin
+        <div className="revo-nav-center">
+          <nav className="revo-nav-links">
+            <Link to="/" className={location.pathname === "/" ? "active" : ""}>
+              <FaHome className="nav-icon" /> HOME
             </Link>
-          )}
-        </nav>
+            <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""}>
+              <FaBoxOpen className="nav-icon" /> PRODUTOS
+            </Link>
+            <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""}>
+              <FaEnvelope className="nav-icon" /> CONTATOS
+            </Link>
+            <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""}>
+              <FaBuilding className="nav-icon" /> EMPRESA
+            </Link>
+          </nav>
+        </div>
 
-        <div className="navbar__icons">
-          <Link to="/contatos"><FaUser /></Link>
-          <Link to="/carrinho"><FaShoppingCart /></Link>
-          <Link to="/settings"><FaCog /></Link>
+        <div className="revo-nav-icons">
+          <Link to="/favoritos" className="nav-icon-link">
+            <FaHeart className="nav-icon" />
+          </Link>
+          <Link to="/carrinho" className="nav-icon-link">
+            <FaShoppingCart className="nav-icon" />
+          </Link>
+          
+          {user ? (
+            <div className="revo-user-info">
+              {user?.photo ? (
+                <img src={user.photo} alt="User" className="revo-user-photo" />
+              ) : (
+                <FaUser className="user-placeholder" />
+              )}
+              <span className="revo-user-name">{shortName}</span>
+            </div>
+          ) : (
+            <button className="login-button" onClick={handleLogin}>
+              Login
+            </button>
+          )}
         </div>
       </div>
     </header>
