@@ -1,7 +1,8 @@
+/* Estilos gerais */
 .produto-detalhes-wrapper {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 20px;
   font-family: 'Arial', sans-serif;
   color: #333;
 }
@@ -13,52 +14,84 @@
 }
 
 .produto-detalhes-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 30px;
 }
 
+.carregando, .nao-encontrado {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+/* Galeria de Imagens */
 .produto-galeria {
-  flex: 1;
-  min-width: 300px;
-}
-
-.imagem-principal {
-  width: 100%;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.miniaturas {
   display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.miniaturas-vertical {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.miniaturas img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: border-color 0.3s;
+.imagem-principal-container {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
 }
 
-.miniaturas img:hover {
+.imagem-principal {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.miniatura-wrapper {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  transition: all 0.2s;
+}
+
+.miniatura-wrapper:hover {
   border-color: #007BFF;
 }
 
-.miniatura-ativa {
-  border-color: #007BFF !important;
+.miniatura-wrapper.miniatura-ativa {
+  border-color: #007BFF;
+  background-color: #e7f1ff;
 }
 
-.produto-info {
-  flex: 1;
-  min-width: 300px;
+.miniatura {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
-.produto-info h1 {
+/* Informações do Produto */
+.produto-info-central {
+  padding: 0 20px;
+}
+
+.produto-info-central h1 {
   font-size: 24px;
   margin-bottom: 10px;
   color: #222;
@@ -92,15 +125,91 @@
   line-height: 1.5;
 }
 
+/* Tamanhos */
+.tamanhos-container {
+  margin-bottom: 20px;
+}
+
+.tamanhos-container h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.tamanhos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.tamanho-opcao {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tamanho-opcao:hover {
+  border-color: #007BFF;
+  background-color: #f0f7ff;
+}
+
+.tamanho-opcao.tamanho-selecionado {
+  border-color: #007BFF;
+  background-color: #e7f1ff;
+}
+
+.tamanho-opcao span {
+  display: block;
+}
+
+.tamanho-opcao span:first-child {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.preco-kg {
+  font-size: 12px;
+  color: #666;
+  margin-top: 3px;
+}
+
+/* Estoque físico */
+.estoque-fisico {
+  margin-top: 20px;
+}
+
+.btn-consultar {
+  background-color: transparent;
+  color: #007BFF;
+  border: 1px solid #007BFF;
+  padding: 8px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.btn-consultar:hover {
+  background-color: #007BFF;
+  color: white;
+}
+
+/* Resumo do Pedido */
+.resumo-pedido {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
 .precos {
   margin-bottom: 20px;
 }
 
 .preco-recorencia {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .preco-recorencia .valor {
@@ -115,13 +224,21 @@
   font-size: 14px;
   color: #666;
   display: block;
+  margin-bottom: 10px;
 }
 
-.preco-recorencia .beneficio {
+.beneficios {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.beneficio {
   font-size: 12px;
   color: #666;
-  display: block;
-  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .preco-normal .valor {
@@ -131,6 +248,7 @@
   text-decoration: line-through;
 }
 
+/* Quantidade */
 .quantidade-container {
   margin-bottom: 20px;
 }
@@ -146,8 +264,10 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+  width: 100%;
 }
 
+/* Botão de compra */
 .btn-comprar {
   background-color: #007BFF;
   color: white;
@@ -166,11 +286,12 @@
   background-color: #0056b3;
 }
 
+/* Clube de descontos */
 .clube-descontos {
-  background-color: #f8f9fa;
+  background-color: #e7f1ff;
   padding: 15px;
   border-radius: 6px;
-  margin-bottom: 20px;
+  border: 1px solid #b6d4fe;
 }
 
 .clube-descontos span {
@@ -186,66 +307,39 @@
   margin: 0;
 }
 
-.tamanhos-container {
-  margin-bottom: 20px;
+/* Responsividade */
+@media (max-width: 992px) {
+  .produto-detalhes-container {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .produto-info-central {
+    grid-column: span 2;
+    order: 3;
+    margin-top: 20px;
+  }
 }
 
-.tamanhos-container h3 {
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-.tamanhos-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.tamanho-opcao {
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 4px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.tamanho-opcao:hover {
-  border-color: #007BFF;
-  background-color: #f0f7ff;
-}
-
-.tamanho-opcao span {
-  display: block;
-}
-
-.tamanho-opcao span:first-child {
-  font-weight: bold;
-}
-
-.estoque-fisico {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.estoque-fisico span {
-  font-size: 14px;
-}
-
-.btn-consultar {
-  background-color: transparent;
-  color: #007BFF;
-  border: 1px solid #007BFF;
-  padding: 8px 15px;
-  font-size: 14px;
-  cursor: pointer;
-  border-radius: 4px;
-  align-self: flex-start;
-  transition: all 0.3s;
-}
-
-.btn-consultar:hover {
-  background-color: #007BFF;
-  color: white;
+@media (max-width: 768px) {
+  .produto-detalhes-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .produto-info-central {
+    grid-column: span 1;
+  }
+  
+  .imagem-principal-container {
+    height: 300px;
+  }
+  
+  .miniaturas-vertical {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  
+  .miniatura-wrapper {
+    min-width: 70px;
+  }
 }
