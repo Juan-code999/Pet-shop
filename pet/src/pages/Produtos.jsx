@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import "../styles/Produtos.css";
 
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -19,55 +21,89 @@ const Produtos = () => {
     fetchProdutos();
   }, []);
 
+  const handleProductClick = (id) => {
+    navigate(`/produto/${id}`);
+  };
+
+  const handleFavoritar = (e, id) => {
+    e.stopPropagation();
+    // Lógica para favoritar o produto
+    console.log(`Produto ${id} favoritado`);
+  };
+
   return (
     <div className="container-produtos">
       <aside className="sidebar-filtros">
         <div className="filtro">
+          <h4>FAIXA DE PREÇO</h4>
+          <div className="price-range">
+            <div className="price-inputs">
+              <input type="text" placeholder="R$0" />
+              <input type="text" placeholder="R$1000" />
+            </div>
+          </div>
+        </div>
+
+        <div className="filtro">
           <h4>CATEGORIAS</h4>
           <ul>
-            <li><input type="radio" name="cat" /> Eletrônicos</li>
-            <li><input type="radio" name="cat" /> PET</li>
-            <li><input type="radio" name="cat" /> Joias</li>
-            <li><input type="radio" name="cat" /> Moda</li>
-            <li><input type="radio" name="cat" /> Móveis</li>
-          </ul>
-        </div>
-
-        <div className="filtro">
-          <h4>GÊNERO</h4>
-          <ul>
-            <li><input type="radio" name="gender" /> Masculino</li>
-            <li><input type="radio" name="gender" /> Feminino</li>
-            <li><input type="radio" name="gender" /> Unissex</li>
-          </ul>
-        </div>
-
-        <div className="filtro">
-          <h4>TAMANHOS</h4>
-          <div className="sizes">
-            {["4XL", "3XL", "XXL", "XL", "L", "M", "S", "XS"].map((size, i) => (
-              <button key={i}>{size}</button>
+            {["Ração", "Brinquedos", "Coleiras", "Acessórios", "Higiene", "Petiscos", "Medicamentos", "Camas"].map((cat, i) => (
+              <li key={i}>
+                <input type="radio" name="cat" id={`cat-${i}`} />
+                <label htmlFor={`cat-${i}`}>{cat}</label>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <div className="filtro">
-          <h4>PREÇO</h4>
-          <div className="price-range">
-            <div className="price-slider">
-              <span>R$0</span>
-              <input type="range" min="0" max="500" />
-              <span>R$500</span>
-            </div>
-            <button className="reset-btn">Resetar</button>
-          </div>
+          <h4>TIPO DE ANIMAL</h4>
+          <ul>
+            {["Cachorro", "Gato", "Pássaro", "Peixe", "Roedor", "Réptil"].map((animal, i) => (
+              <li key={i}>
+                <input type="radio" name="animal" id={`animal-${i}`} />
+                <label htmlFor={`animal-${i}`}>{animal}</label>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="filtro">
+          <h4>MARCAS</h4>
+          <ul>
+            {["Pedigree", "Whiskas", "Royal Canin", "Premier", "Golden", "N&D", "Friskies", "Purina"].map((marca, i) => (
+              <li key={i}>
+                <input type="radio" name="marca" id={`marca-${i}`} />
+                <label htmlFor={`marca-${i}`}>{marca}</label>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="filtro">
+          <h4>IDADE</h4>
+          <ul>
+            {["Filhote", "Adulto", "Sênior"].map((idade, i) => (
+              <li key={i}>
+                <input type="radio" name="idade" id={`idade-${i}`} />
+                <label htmlFor={`idade-${i}`}>{idade}</label>
+              </li>
+            ))}
+          </ul>
         </div>
       </aside>
 
       <section className="produtos-grid">
         {produtos.map((produto, index) => (
-          <div className="card-produto" key={index}>
-            <FaHeart className="icon-favorito" />
+          <div
+            className="card-produto"
+            key={index}
+            onClick={() => handleProductClick(produto.id)}
+          >
+            <FaHeart
+              className="icon-favorito"
+              onClick={(e) => handleFavoritar(e, produto.id)}
+            />
 
             <div className="img-wrapper">
               <img
@@ -85,6 +121,7 @@ const Produtos = () => {
                     <FaRegStar key={i} color="#ccc" size={14} />
                   )
                 )}
+                <span className="num-avaliacoes">(50)</span>
               </div>
 
               <h3 className="nome-produto">{produto.nome}</h3>
@@ -104,7 +141,15 @@ const Produtos = () => {
                 )}
               </p>
 
-              <button className="btn-cart">Add to cart</button>
+              <button
+                className="btn-cart"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Lógica para adicionar ao carrinho
+                }}
+              >
+                Adicionar ao carrinho
+              </button>
             </div>
           </div>
         ))}

@@ -1,59 +1,66 @@
-/* Estilo Revo NavBar */
-.revo-navbar {
+/* NavBar.css - Complete Updated Version */
+
+.nav {
   width: 100%;
   font-family: 'Arial', sans-serif;
   background-color: white;
   color: black;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 15px 0;
+  position: relative;
+  z-index: 1000;
 }
 
-/* Middle Section */
-.revo-navbar-middle {
+.nav-middle {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
 }
 
-.revo-logo-container {
-  flex: 1;
+.nav-logo-container {
+  flex: 0;
 }
 
-.revo-logo {
+.nav-logo {
   display: flex;
   align-items: center;
   gap: 10px;
   width: fit-content;
 }
 
-.revo-logo-img {
+.nav-logo-img {
   height: 40px;
   width: auto;
 }
 
 .logo-text {
-  color: #007BFF; /* Azul principal */
+  color: #007BFF;
   font-weight: bold;
   font-size: 20px;
   margin: 0;
   letter-spacing: 1px;
 }
 
-.revo-nav-center {
-  flex: 2;
+/* Navigation Links */
+.nav-content {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  flex: 1;
 }
 
-.revo-nav-links {
+.nav-links {
   display: flex;
   gap: 30px;
+  justify-content: center;
+  flex: 1;
+  margin: 0 auto;
 }
 
-.revo-nav-links a {
+.nav-links a {
   color: #333;
   text-decoration: none;
   font-size: 13px;
@@ -72,25 +79,26 @@
   transition: color 0.3s;
 }
 
-.revo-nav-links a:hover {
+.nav-links a:hover {
   color: #007BFF;
 }
 
-.revo-nav-links a:hover .nav-icon {
+.nav-links a:hover .nav-icon {
   color: #007BFF;
 }
 
-.revo-nav-links a.active {
+.nav-links a.active {
   color: #007BFF;
   font-weight: 600;
 }
 
-.revo-nav-links a.active .nav-icon {
+.nav-links a.active .nav-icon {
   color: #007BFF;
 }
 
-.revo-nav-icons {
-  flex: 1;
+/* Right Side Icons */
+.nav-icons {
+  flex: 0;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -101,6 +109,8 @@
   color: #333;
   transition: color 0.3s;
   font-size: 18px;
+  display: flex;
+  align-items: center;
 }
 
 .nav-icon-link:hover {
@@ -108,14 +118,26 @@
 }
 
 /* User Info */
-.revo-user-info {
+.nav-user-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.nav-user-info {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-left: 15px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
 }
 
-.revo-user-photo {
+.nav-user-info:hover {
+  background-color: #f5f5f5;
+}
+
+.nav-user-photo {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -133,19 +155,96 @@
   border: 1px solid #e1e1e1;
 }
 
-.revo-user-name {
+.nav-user-name {
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  max-width: 100px;
+  max-width: 120px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* User Dropdown Menu - Fixed Version */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 10px;
+  background-color: white;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 180px;
+  max-width: calc(100vw - 40px);
+  z-index: 100;
+  margin-top: 10px;
+  animation: fadeIn 0.2s ease;
+  padding-top: 10px;
+  margin-top: -10px;
+}
+
+.user-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: transparent;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 15px;
+  width: 100%;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f8f8;
+  color: #007BFF;
+}
+
+.dropdown-item span {
+  flex: 1;
+}
+
+.dropdown-icon {
+  font-size: 14px;
+  color: #555;
+  width: 20px;
+  text-align: center;
+}
+
+.dropdown-item:hover .dropdown-icon {
+  color: #007BFF;
 }
 
 /* Login Button */
 .login-button {
-  background-color: #007BFF; /* Azul principal */
+  background-color: #007BFF;
   color: white;
   border: none;
   padding: 8px 20px;
@@ -157,56 +256,149 @@
 }
 
 .login-button:hover {
-  background-color: #0056b3; /* Azul hover */
+  background-color: #0056b3;
 }
 
-/* Responsividade */
+/* Mobile Menu Button */
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 5px;
+}
+
+/* Mobile Styles */
 @media (max-width: 1024px) {
-  .revo-nav-links {
+  .nav-links {
+    gap: 15px;
+  }
+  
+  .nav-icons {
     gap: 15px;
   }
 }
 
 @media (max-width: 768px) {
-  .revo-navbar-middle {
-    padding: 0 20px;
+  .mobile-menu-button {
+    display: block;
+  }
+
+  .nav-content {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background-color: white;
     flex-direction: column;
+    align-items: flex-start;
+    padding: 80px 20px 20px;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+
+  .nav-content.mobile-menu-open {
+    right: 0;
+  }
+
+  .nav-content.mobile-menu-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
     gap: 15px;
+    margin-bottom: 20px;
+    justify-content: flex-start;
   }
 
-  .revo-logo {
-    justify-content: center;
+  .nav-icons {
+    flex-direction: column;
+    align-items: flex-start;
     width: 100%;
+    gap: 15px;
+    margin-top: 20px;
   }
 
-  .revo-nav-links {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .revo-nav-icons {
-    justify-content: center;
+  .nav-user-container {
     width: 100%;
-    margin-top: 10px;
+    margin-left: 0;
+  }
+
+  .nav-user-info {
+    margin-left: 0;
+    padding: 10px 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-user-name {
+    max-width: 200px;
+  }
+
+  .login-button {
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+  }
+
+  .nav-icon-link {
+    padding: 10px 0;
+    font-size: 16px;
+  }
+
+  .user-dropdown.mobile-dropdown {
+    position: relative;
+    width: 100%;
+    right: auto;
+    max-width: 100%;
+    margin-top: 5px;
+    box-shadow: none;
+    border: none;
+    border-top: 1px solid #e1e1e1;
+    border-radius: 0;
+    animation: none;
   }
 }
 
 @media (max-width: 480px) {
-  .revo-nav-links a {
-    font-size: 11px;
-    gap: 5px;
+  .nav-middle {
+    padding: 0 20px;
+  }
+
+  .nav-logo-img {
+    height: 35px;
   }
 
   .logo-text {
-    font-size: 16px;
+    font-size: 18px;
   }
-  
-  .login-button {
-    padding: 6px 15px;
-    font-size: 12px;
+
+  .nav-content {
+    width: 85%;
   }
-  
-  .revo-user-name {
-    max-width: 80px;
+}
+
+/* Extra Small Screens - Dropdown Positioning */
+@media (max-width: 400px) {
+  .user-dropdown:not(.mobile-dropdown) {
+    right: auto;
+    left: 10px;
   }
 }

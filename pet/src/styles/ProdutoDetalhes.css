@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 40px 20px;
   font-family: 'Arial', sans-serif;
+  color: #333;
 }
 
 .breadcrumb {
@@ -26,6 +27,7 @@
   width: 100%;
   border-radius: 6px;
   margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .miniaturas {
@@ -37,9 +39,18 @@
   width: 60px;
   height: 60px;
   object-fit: cover;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.miniaturas img:hover {
+  border-color: #007BFF;
+}
+
+.miniatura-ativa {
+  border-color: #007BFF !important;
 }
 
 .produto-info {
@@ -48,53 +59,193 @@
 }
 
 .produto-info h1 {
-  font-size: 28px;
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.avaliacao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.estrelas {
+  color: #FFC107;
+  font-size: 16px;
+}
+
+.nota {
+  font-weight: bold;
+}
+
+.reviews {
+  color: #666;
+  font-size: 14px;
+}
+
+.descricao {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.precos {
+  margin-bottom: 20px;
+}
+
+.preco-recorencia {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
   margin-bottom: 10px;
 }
 
-.descricao-secundaria {
-  color: #888;
-  font-size: 16px;
+.preco-recorencia .valor {
+  font-size: 22px;
+  font-weight: bold;
+  color: #007BFF;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.preco-recorencia .label {
+  font-size: 14px;
+  color: #666;
+  display: block;
+}
+
+.preco-recorencia .beneficio {
+  font-size: 12px;
+  color: #666;
+  display: block;
+  margin-top: 5px;
+}
+
+.preco-normal .valor {
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+  text-decoration: line-through;
+}
+
+.quantidade-container {
   margin-bottom: 20px;
 }
 
-.preco {
-  font-size: 26px;
-  font-weight: bold;
-  color: #222;
-  margin-bottom: 20px;
+.quantidade-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.quantidade-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .btn-comprar {
-  background-color: #28a745;
+  background-color: #007BFF;
   color: white;
   border: none;
   padding: 15px 30px;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
   margin-bottom: 20px;
   border-radius: 4px;
+  width: 100%;
+  transition: background-color 0.3s;
 }
 
-.beneficios {
-  list-style: none;
-  padding: 0;
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 30px;
+.btn-comprar:hover {
+  background-color: #0056b3;
 }
 
-.beneficios li {
+.clube-descontos {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.clube-descontos span {
+  font-weight: bold;
+  color: #007BFF;
+  display: block;
   margin-bottom: 5px;
 }
 
-.entrega-info {
-  border-top: 1px solid #ddd;
-  padding-top: 20px;
+.clube-descontos p {
   font-size: 14px;
-  color: #333;
+  color: #666;
+  margin: 0;
 }
 
-.entrega-info div {
+.tamanhos-container {
+  margin-bottom: 20px;
+}
+
+.tamanhos-container h3 {
+  font-size: 16px;
   margin-bottom: 10px;
+}
+
+.tamanhos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tamanho-opcao {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tamanho-opcao:hover {
+  border-color: #007BFF;
+  background-color: #f0f7ff;
+}
+
+.tamanho-opcao span {
+  display: block;
+}
+
+.tamanho-opcao span:first-child {
+  font-weight: bold;
+}
+
+.estoque-fisico {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.estoque-fisico span {
+  font-size: 14px;
+}
+
+.btn-consultar {
+  background-color: transparent;
+  color: #007BFF;
+  border: 1px solid #007BFF;
+  padding: 8px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  align-self: flex-start;
+  transition: all 0.3s;
+}
+
+.btn-consultar:hover {
+  background-color: #007BFF;
+  color: white;
 }
