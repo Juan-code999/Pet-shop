@@ -17,7 +17,6 @@ const ProdutoDetalhes = () => {
         const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
         const dadosProduto = response.data;
         
-        // Garantir que os preços são números
         if (dadosProduto.tamanhos) {
           dadosProduto.tamanhos = dadosProduto.tamanhos.map(tamanho => ({
             ...tamanho,
@@ -25,11 +24,6 @@ const ProdutoDetalhes = () => {
             precoPorKg: parseFloat(tamanho.precoPorKg) || 0,
             tamanho: tamanho.tamanho.trim()
           }));
-        }
-        
-        // Definir preço recorrente padrão (10% de desconto)
-        if (dadosProduto.tamanhos?.[0]?.precoTotal) {
-          dadosProduto.precoRecorrente = dadosProduto.tamanhos[0].precoTotal * 0.9;
         }
         
         setProduto(dadosProduto);
@@ -51,13 +45,13 @@ const ProdutoDetalhes = () => {
   }, [id]);
 
   const calcularPrecoTotal = () => {
-    if (!tamanhoSelecionado) return (0).toFixed(2);
+    if (!tamanhoSelecionado) return "0.00";
     return (tamanhoSelecionado.precoTotal * quantidade).toFixed(2);
   };
 
   const calcularPrecoRecorrente = () => {
-    if (!tamanhoSelecionado) return (0).toFixed(2);
-    return (tamanhoSelecionado.precoTotal * quantidade * 0.9).toFixed(2);
+    if (!tamanhoSelecionado) return "0.00";
+    return (tamanhoSelecionado.precoTotal * 0.9 * quantidade).toFixed(2);
   };
 
   if (loading) return <div className="carregando">Carregando produto...</div>;
@@ -70,6 +64,13 @@ const ProdutoDetalhes = () => {
       <div className="produto-detalhes-container">
         {/* Galeria de Imagens - Lateral Esquerda */}
         <div className="produto-galeria">
+          <div className="imagem-principal-container">
+            <img
+              className="imagem-principal"
+              src={imagemPrincipal || "https://via.placeholder.com/500"}
+              alt={produto.nome}
+            />
+          </div>
           <div className="miniaturas-vertical">
             {produto.imagensUrl?.map((url, i) => (
               <div 
@@ -81,19 +82,11 @@ const ProdutoDetalhes = () => {
               </div>
             ))}
           </div>
-          
-          <div className="imagem-principal-container">
-            <img
-              className="imagem-principal"
-              src={imagemPrincipal || "https://via.placeholder.com/500"}
-              alt={produto.nome}
-            />
-          </div>
         </div>
 
         {/* Informações do Produto - Parte Central */}
         <div className="produto-info-central">
-          <h1>{produto.nome}</h1>
+          <h1 className="titulo-produto">{produto.nome}</h1>
           
           <div className="avaliacao">
             <span className="estrelas">★★★★★</span>
@@ -101,8 +94,26 @@ const ProdutoDetalhes = () => {
             <span className="reviews">({produto.numeroAvaliacoes || 25} reviews)</span>
           </div>
           
-          <div className="descricao" dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }} />
-          
+          <div className="descricao-resumida">
+            <p>{produto.descricao?.split('.')[0] || 'Descrição não disponível'}.</p>
+          </div>
+
+          <div className="beneficios-lista">
+            {produto.descricao?.split(';').filter(part => part.includes('-')).map((beneficio, index) => (
+              <div key={index} className="beneficio-item">
+                <span className="beneficio-icone">✔</span>
+                <span className="beneficio-texto">{beneficio.replace('-', '').trim()}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="especificacoes">
+            <p><strong>Sabor:</strong> {produto.sabor || 'Frango & Carne'}</p>
+            <p><strong>Embalagem:</strong> {produto.tamanhos?.map(t => t.tamanho).join(' e ') || '15kg e 20kg'}</p>
+            <p><strong>Tamanho do grão:</strong> {produto.tamanhoGrao || '13,5mm'}</p>
+            <p><strong>Indicado para:</strong> {produto.indicadoPara || 'Cães adultos de raças médias e grandes'}</p>
+          </div>
+
           <div className="tamanhos-container">
             <h3>Tamanhos</h3>
             <div className="tamanhos-grid">
@@ -113,16 +124,14 @@ const ProdutoDetalhes = () => {
                   onClick={() => setTamanhoSelecionado(tamanho)}
                 >
                   <span>{tamanho.tamanho}</span>
-                  <span>R${tamanho.precoTotal.toFixed(2)}</span>
-                  <span className="preco-kg">(R${tamanho.precoPorKg.toFixed(2)}/kg)</span>
+                  <span className="preco-total">R$ {tamanho.precoTotal.toFixed(2)}</span>
+                  <span className="preco-kg">(R$ {tamanho.precoPorKg.toFixed(2)}/kg)</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="estoque-fisico">
-            <button className="btn-consultar">Consultar estoque nas lojas físicas</button>
-          </div>
+          <button className="btn-consultar">Consultar estoque nas lojas físicas</button>
         </div>
 
         {/* Resumo do Pedido - Lateral Direita */}
