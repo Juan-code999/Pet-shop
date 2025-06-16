@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FiShoppingCart } from "react-icons/fi";
+import { BiCart } from "react-icons/bi"
 import axios from "axios";
 import "../styles/ProdutoDetalhes.css";
 
@@ -16,7 +18,7 @@ const ProdutoDetalhes = () => {
       try {
         const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
         const dadosProduto = response.data;
-        
+
         // Garantir que os preços são números
         if (dadosProduto.tamanhos) {
           dadosProduto.tamanhos = dadosProduto.tamanhos.map(tamanho => ({
@@ -26,14 +28,14 @@ const ProdutoDetalhes = () => {
             tamanho: tamanho.tamanho.trim()
           }));
         }
-        
+
         // Definir preço recorrente padrão (10% de desconto)
         if (dadosProduto.tamanhos?.[0]?.precoTotal) {
           dadosProduto.precoRecorrente = dadosProduto.tamanhos[0].precoTotal * 0.9;
         }
-        
+
         setProduto(dadosProduto);
-        
+
         if (dadosProduto.imagensUrl?.length > 0) {
           setImagemPrincipal(dadosProduto.imagensUrl[0]);
         }
@@ -49,6 +51,16 @@ const ProdutoDetalhes = () => {
 
     fetchProduto();
   }, [id]);
+
+  const calcularPrecoComDesconto = () => {
+    if (!tamanhoSelecionado || !produto) return (0).toFixed(2);
+
+    const desconto = produto.desconto || 0; // usa o valor do banco, ou 0 se não houver
+    const precoSemDesconto = tamanhoSelecionado.precoTotal * quantidade;
+    const precoComDesconto = precoSemDesconto * (1 - desconto / 100);
+
+    return precoComDesconto.toFixed(2);
+  };
 
   const calcularPrecoTotal = () => {
     if (!tamanhoSelecionado) return (0).toFixed(2);
@@ -72,8 +84,8 @@ const ProdutoDetalhes = () => {
         <div className="produto-galeria">
           <div className="miniaturas-vertical">
             {produto.imagensUrl?.map((url, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`miniatura-wrapper ${imagemPrincipal === url ? "miniatura-ativa" : ""}`}
                 onClick={() => setImagemPrincipal(url)}
               >
@@ -81,7 +93,7 @@ const ProdutoDetalhes = () => {
               </div>
             ))}
           </div>
-          
+
           <div className="imagem-principal-container">
             <img
               className="imagem-principal"
@@ -94,20 +106,20 @@ const ProdutoDetalhes = () => {
         {/* Informações do Produto - Parte Central */}
         <div className="produto-info-central">
           <h1>{produto.nome}</h1>
-          
+
           <div className="avaliacao">
             <span className="estrelas">★★★★★</span>
             <span className="nota">{produto.avaliacao?.toFixed(1) || "4.9"}</span>
             <span className="reviews">({produto.numeroAvaliacoes || 25} reviews)</span>
           </div>
-          
+
           <div className="descricao" dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }} />
-          
+
           <div className="tamanhos-container">
             <h3>Tamanhos</h3>
             <div className="tamanhos-grid">
               {produto.tamanhos?.map((tamanho, index) => (
-                <div 
+                <div
                   key={index}
                   className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho ? "tamanho-selecionado" : ""}`}
                   onClick={() => setTamanhoSelecionado(tamanho)}
@@ -127,43 +139,56 @@ const ProdutoDetalhes = () => {
 
         {/* Resumo do Pedido - Lateral Direita */}
         <div className="resumo-pedido">
+          <div className="btn-comprar">
+            <FiShoppingCart size={24} color="#000" />
+            <span>Comprar</span>
+          </div>
+
           <div className="precos">
-            <div className="preco-recorencia">
-              <span className="valor">R$ {calcularPrecoRecorrente()}</span>
-              <span className="label">Comprar com recorrência</span>
-              <div className="beneficios">
-                <span className="beneficio">✔ Ganhe 10% OFF em todos produtos</span>
-                <span className="beneficio">✔ Cancele quando quiser, sem taxas</span>
-              </div>
-            </div>
-            
             <div className="preco-normal">
-              <span className="valor">R$ {calcularPrecoTotal()}</span>
+              <span className="preco-original">R$ {calcularPrecoTotal()}</span>
+              <span className="preco-desconto">R$ {calcularPrecoComDesconto()}</span>
+              <span className="selo-desconto">-{produto.desconto || 0}%</span>
             </div>
+
           </div>
 
           <div className="quantidade-container">
-            <label>Quantas unidades?</label>
-            <select 
-              value={quantidade}
-              onChange={(e) => setQuantidade(parseInt(e.target.value))}
-              className="quantidade-select"
-            >
-              {[1, 2, 3, 4, 5].map(num => (
-                <option key={num} value={num}>{num}</option>
-              ))}
-            </select>
+
+            <label className="quantidade-label">Quantidade</label>
+            <div className="quantidade-control">
+              <button
+                className="quantidade-btn"
+                onClick={() => setQuantidade(prev => Math.max(1, prev - 1))}
+              >-</button>
+              <input
+                type="number"
+                className="quantidade-input"
+                value={quantidade}
+                onChange={(e) =>
+                  setQuantidade(Math.max(1, parseInt(e.target.value) || 1))
+                }
+              />
+              <button
+                className="quantidade-btn"
+                onClick={() => setQuantidade(prev => prev + 1)}
+              >+</button>
+            </div>
           </div>
 
-          <button className="btn-comprar">
-            ADICIONAR AO CARRINHO POR R$ {calcularPrecoTotal()}
+          <button className="btn-add-carrinho">
+            <FiShoppingCart size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Adicionar ao carrinho
           </button>
 
-          <div className="clube-descontos">
-            <span>Clube de Descontos</span>
-            <p>Ganhe 15% OFF neste item</p>
+
+          <div className="recorrencia-info">
+            <p>• Escolha a frequência de entrega.</p>
+            <p>• Altere ou cancele, sem taxas.</p>
+            <p className="nota">Descontos não cumulativos. O maior desconto elegível será aplicado no carrinho.</p>
           </div>
         </div>
+
       </div>
     </div>
   );
