@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FiShoppingCart } from "react-icons/fi";
+import { FaMinus, FaPlus } from 'react-icons/fa';
+import { BiCart } from "react-icons/bi"
 import axios from "axios";
 import "../styles/ProdutoDetalhes.css";
 
@@ -16,7 +19,8 @@ const ProdutoDetalhes = () => {
       try {
         const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
         const dadosProduto = response.data;
-        
+
+        // Garantir que os preços são números
         if (dadosProduto.tamanhos) {
           dadosProduto.tamanhos = dadosProduto.tamanhos.map(tamanho => ({
             ...tamanho,
@@ -25,9 +29,14 @@ const ProdutoDetalhes = () => {
             tamanho: tamanho.tamanho.trim()
           }));
         }
-        
+
+        // Definir preço recorrente padrão (10% de desconto)
+        if (dadosProduto.tamanhos?.[0]?.precoTotal) {
+          dadosProduto.precoRecorrente = dadosProduto.tamanhos[0].precoTotal * 0.9;
+        }
+
         setProduto(dadosProduto);
-        
+
         if (dadosProduto.imagensUrl?.length > 0) {
           setImagemPrincipal(dadosProduto.imagensUrl[0]);
         }
@@ -44,14 +53,24 @@ const ProdutoDetalhes = () => {
     fetchProduto();
   }, [id]);
 
+  const calcularPrecoComDesconto = () => {
+    if (!tamanhoSelecionado || !produto) return (0).toFixed(2);
+
+    const desconto = produto.desconto || 0; // usa o valor do banco, ou 0 se não houver
+    const precoSemDesconto = tamanhoSelecionado.precoTotal * quantidade;
+    const precoComDesconto = precoSemDesconto * (1 - desconto / 100);
+
+    return precoComDesconto.toFixed(2);
+  };
+
   const calcularPrecoTotal = () => {
-    if (!tamanhoSelecionado) return "0.00";
+    if (!tamanhoSelecionado) return (0).toFixed(2);
     return (tamanhoSelecionado.precoTotal * quantidade).toFixed(2);
   };
 
   const calcularPrecoRecorrente = () => {
-    if (!tamanhoSelecionado) return "0.00";
-    return (tamanhoSelecionado.precoTotal * 0.9 * quantidade).toFixed(2);
+    if (!tamanhoSelecionado) return (0).toFixed(2);
+    return (tamanhoSelecionado.precoTotal * quantidade * 0.9).toFixed(2);
   };
 
   if (loading) return <div className="carregando">Carregando produto...</div>;
@@ -64,17 +83,10 @@ const ProdutoDetalhes = () => {
       <div className="produto-detalhes-container">
         {/* Galeria de Imagens - Lateral Esquerda */}
         <div className="produto-galeria">
-          <div className="imagem-principal-container">
-            <img
-              className="imagem-principal"
-              src={imagemPrincipal || "https://via.placeholder.com/500"}
-              alt={produto.nome}
-            />
-          </div>
           <div className="miniaturas-vertical">
             {produto.imagensUrl?.map((url, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`miniatura-wrapper ${imagemPrincipal === url ? "miniatura-ativa" : ""}`}
                 onClick={() => setImagemPrincipal(url)}
               >
@@ -82,99 +94,106 @@ const ProdutoDetalhes = () => {
               </div>
             ))}
           </div>
+          <div className="imagem-principal-container">
+            <img
+              className="imagem-principal"
+              src={imagemPrincipal || "https://via.placeholder.com/500"}
+              alt={produto.nome}
+            />
+          </div>
         </div>
 
         {/* Informações do Produto - Parte Central */}
         <div className="produto-info-central">
-          <h1 className="titulo-produto">{produto.nome}</h1>
-          
+          <h1>{produto.nome}</h1>
+
           <div className="avaliacao">
             <span className="estrelas">★★★★★</span>
             <span className="nota">{produto.avaliacao?.toFixed(1) || "4.9"}</span>
             <span className="reviews">({produto.numeroAvaliacoes || 25} reviews)</span>
           </div>
-          
-          <div className="descricao-resumida">
-            <p>{produto.descricao?.split('.')[0] || 'Descrição não disponível'}.</p>
-          </div>
 
-          <div className="beneficios-lista">
-            {produto.descricao?.split(';').filter(part => part.includes('-')).map((beneficio, index) => (
-              <div key={index} className="beneficio-item">
-                <span className="beneficio-icone">✔</span>
-                <span className="beneficio-texto">{beneficio.replace('-', '').trim()}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="especificacoes">
-            <p><strong>Sabor:</strong> {produto.sabor || 'Frango & Carne'}</p>
-            <p><strong>Embalagem:</strong> {produto.tamanhos?.map(t => t.tamanho).join(' e ') || '15kg e 20kg'}</p>
-            <p><strong>Tamanho do grão:</strong> {produto.tamanhoGrao || '13,5mm'}</p>
-            <p><strong>Indicado para:</strong> {produto.indicadoPara || 'Cães adultos de raças médias e grandes'}</p>
-          </div>
+          <div className="descricao" dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }} />
 
           <div className="tamanhos-container">
             <h3>Tamanhos</h3>
             <div className="tamanhos-grid">
               {produto.tamanhos?.map((tamanho, index) => (
-                <div 
+                <div
                   key={index}
-                  className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho ? "tamanho-selecionado" : ""}`}
+                  className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho &&
+                      tamanhoSelecionado?.precoPorKg === tamanho.precoPorKg
+                      ? "tamanho-selecionado"
+                      : ""
+                    }`}
                   onClick={() => setTamanhoSelecionado(tamanho)}
                 >
                   <span>{tamanho.tamanho}</span>
-                  <span className="preco-total">R$ {tamanho.precoTotal.toFixed(2)}</span>
-                  <span className="preco-kg">(R$ {tamanho.precoPorKg.toFixed(2)}/kg)</span>
+                  <span className="preco-kg">(R${tamanho.precoPorKg.toFixed(2)}/kg)</span>
                 </div>
               ))}
+
+              -
             </div>
           </div>
 
-          <button className="btn-consultar">Consultar estoque nas lojas físicas</button>
+
+          <div className="estoque-fisico">
+            <button className="btn-consultar">Consultar estoque nas lojas físicas</button>
+          </div>
         </div>
 
         {/* Resumo do Pedido - Lateral Direita */}
         <div className="resumo-pedido">
+          <div className="btn-comprar">
+            <FiShoppingCart size={24} color="#000" />
+            <span>Comprar</span>
+          </div>
+
           <div className="precos">
-            <div className="preco-recorencia">
-              <span className="valor">R$ {calcularPrecoRecorrente()}</span>
-              <span className="label">Comprar com recorrência</span>
-              <div className="beneficios">
-                <span className="beneficio">✔ Ganhe 10% OFF em todos produtos</span>
-                <span className="beneficio">✔ Cancele quando quiser, sem taxas</span>
-              </div>
-            </div>
-            
             <div className="preco-normal">
-              <span className="valor">R$ {calcularPrecoTotal()}</span>
+              <span className="preco-original">R$ {calcularPrecoTotal()}</span>
+              <span className="preco-desconto">R$ {calcularPrecoComDesconto()}</span>
+              <span className="selo-desconto">-{produto.desconto || 0}%</span>
             </div>
+
           </div>
 
           <div className="quantidade-container">
-            <label>Quantas unidades?</label>
-            <select 
-              value={quantidade}
-              onChange={(e) => setQuantidade(parseInt(e.target.value))}
-              className="quantidade-select"
-            >
-              {[1, 2, 3, 4, 5].map(num => (
-                <option key={num} value={num}>{num}</option>
-              ))}
-            </select>
-          </div>
+            <div className="quantidade-control">
+              <span className="quantidade-label">Quantidade</span>
 
-          <button className="btn-comprar">
-            ADICIONAR AO CARRINHO POR R$ {calcularPrecoTotal()}
+              <button
+                className="quantidade-btn"
+                onClick={() => setQuantidade(prev => Math.max(1, prev - 1))}
+              >
+                <FaMinus />
+              </button>
+
+              <span className="quantidade-display">{quantidade}</span>
+
+              <button
+                className="quantidade-btn"
+                onClick={() => setQuantidade(prev => prev + 1)}
+              >
+                <FaPlus />
+              </button>
+            </div>
+          </div>
+          <button className="btn-add-carrinho">
+            <BiCart size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Adicionar ao carrinho
           </button>
 
-          <div className="clube-descontos">
-            <span>Clube de Descontos</span>
-            <p>Ganhe 15% OFF neste item</p>
+          <div className="recorrencia-info">
+            <p>• Escolha a frequência de entrega.</p>
+            <p>• Altere ou cancele, sem taxas.</p>
+            <p className="nota">Descontos não cumulativos. O maior desconto elegível será aplicado no carrinho.</p>
           </div>
         </div>
+
       </div>
-    </div>
+    </div >
   );
 };
 
