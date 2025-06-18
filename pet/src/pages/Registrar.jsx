@@ -149,6 +149,7 @@ const Registrar = () => {
           Telefone: formDataUsuario.Telefone,
           Endereco: formDataUsuario.Endereco,
           IsAdmin: formDataUsuario.IsAdmin,
+           Foto: '',  // campo Foto vazio
         }),
       });
 

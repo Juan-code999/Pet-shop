@@ -28,6 +28,7 @@ namespace Pet_shop.Services
                 Email = usuarioDTO.Email.ToLower(),
                 Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDTO.Senha),
                 Telefone = usuarioDTO.Telefone,
+                Foto = usuarioDTO.Foto,
                 Endereco = new Endereco
                 {
                     Rua = usuarioDTO.Endereco.Rua,
@@ -72,6 +73,7 @@ namespace Pet_shop.Services
                     Email = dto.Email.ToLower(),
                     Senha = senhaHash,
                     Telefone = dto.Telefone,
+                    Foto = dto.Foto,
                     Endereco = new Endereco
                     {
                         Rua = dto.Endereco.Rua,
@@ -110,6 +112,7 @@ namespace Pet_shop.Services
                     Nome = usuario.Nome,
                     Email = usuario.Email,
                     Telefone = usuario.Telefone,
+                    Foto = usuario.Foto,
                     Endereco = new EnderecoDTO
                     {
                         Rua = usuario.Endereco?.Rua,
@@ -150,6 +153,7 @@ namespace Pet_shop.Services
                     Nome = usuario.Nome,
                     Email = usuario.Email,
                     Telefone = usuario.Telefone,
+                    Foto = usuario.Foto,
                     Endereco = new EnderecoDTO
                     {
                         Rua = usuario.Endereco?.Rua,
@@ -185,6 +189,7 @@ namespace Pet_shop.Services
                         Nome = obj.Nome,
                         Email = obj.Email,
                         Telefone = obj.Telefone,
+                        Foto = obj.Foto,
                         Endereco = new EnderecoDTO
                         {
                             Rua = obj.Endereco?.Rua,

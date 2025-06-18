@@ -19,6 +19,8 @@ namespace Pet_shop.DTOs
         [Required]
         public string Telefone { get; set; }
 
+        public string Foto { get; set; } // <-- isso aqui
+
         [Required]
         public EnderecoDTO Endereco { get; set; }  // aqui mudou
 

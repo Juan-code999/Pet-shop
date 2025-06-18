@@ -123,19 +123,13 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      <div className="cover">
-        <button className="change-cover">📷 Mudar Capa</button>
-      </div>
       <div className="content">
         <div className="sidebar">
           <img
-            src={currentUser?.photoURL || "https://randomuser.me/api/portraits/men/75.jpg"}
+            src={currentUser?.photoURL}
             alt="Perfil"
           />
           <h2>{form.nome}</h2>
-          <p>Conta Pessoal</p>
-          <button>Ver Perfil Público</button>
-          <a href="#">https://minhaplataforma.com</a>
         </div>
         <div className="main">
           <h3>Configurações da Conta</h3>
