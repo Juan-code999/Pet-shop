@@ -129,7 +129,7 @@ const ProdutoDetalhes = () => {
                   onClick={() => setTamanhoSelecionado(tamanho)}
                 >
                   <span>{tamanho.tamanho}</span>
-                  <span className="preco-kg">(R${tamanho.precoPorKg.toFixed(2)}/kg)</span>
+                  <span className="preco-kg">(R${tamanho.precoPorKg.toFixed(2)})</span>
                 </div>
               ))}
 
