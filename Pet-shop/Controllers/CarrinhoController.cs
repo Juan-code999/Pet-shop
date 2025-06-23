@@ -1,57 +1,51 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Pet_shop.DTOs;
+using Pet_shop.Services;
 
-[ApiController]
-[Route("api/[controller]")]
-public class CarrinhoController : ControllerBase
+namespace Pet_shop.Controllers
 {
-    private readonly IConfiguration _configuration;
-
-    public CarrinhoController(IConfiguration configuration)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CarrinhoController : ControllerBase
     {
-        _configuration = configuration;
-    }
+        private readonly CarrinhoService _carrinhoService;
 
-    // POST api/Carrinho/{usuarioId}
-    [HttpPost("{usuarioId}")]
-    public async Task<IActionResult> SalvarCarrinho(string usuarioId, [FromBody] CarrinhoDTO dto)
-    {
-        // Extrai token do header Authorization (espera "Bearer <token>")
-        var authHeader = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-            return Unauthorized("Token de autenticação não fornecido.");
+        public CarrinhoController(CarrinhoService carrinhoService)
+        {
+            _carrinhoService = carrinhoService;
+        }
 
-        var token = authHeader.Replace("Bearer ", "");
+        // POST: api/Carrinho/{usuarioId}
+        [HttpPost("{usuarioId}")]
+        public async Task<IActionResult> SalvarCarrinho(string usuarioId, [FromBody] CarrinhoDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        // Verifique se o usuarioId do caminho confere com dto.UsuarioId (evita alterar outro carrinho)
-        if (usuarioId != dto.UsuarioId)
-            return BadRequest("Usuário inválido.");
+            if (dto == null || dto.Itens == null || dto.Itens.Count == 0)
+                return BadRequest("Carrinho vazio ou inválido.");
 
-        // Cria serviço com o token para autenticar no Firebase
-        var carrinhoService = new CarrinhoService(_configuration["Firebase:DatabaseUrl"], token);
+            if (usuarioId != dto.UsuarioId)
+                return BadRequest("ID do usuário não corresponde.");
 
-        await carrinhoService.SalvarCarrinhoAsync(usuarioId, dto);
+            await _carrinhoService.SalvarCarrinhoAsync(usuarioId, dto);
 
-        return Ok(new { mensagem = "Carrinho salvo com sucesso" });
-    }
+            return Ok(new { mensagem = "Carrinho salvo com sucesso." });
+        }
 
-    // GET api/Carrinho/{usuarioId}
-    [HttpGet("{usuarioId}")]
-    public async Task<IActionResult> ObterCarrinho(string usuarioId)
-    {
-        var authHeader = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-            return Unauthorized("Token de autenticação não fornecido.");
+        // GET: api/Carrinho/{usuarioId}
+        [HttpGet("{usuarioId}")]
+        public async Task<IActionResult> ObterCarrinho(string usuarioId)
+        {
+            if (string.IsNullOrWhiteSpace(usuarioId))
+                return BadRequest("ID do usuário é obrigatório.");
 
-        var token = authHeader.Replace("Bearer ", "");
+            var carrinho = await _carrinhoService.ObterCarrinhoAsync(usuarioId);
 
-        var carrinhoService = new CarrinhoService(_configuration["Firebase:DatabaseUrl"], token);
+            if (carrinho == null || carrinho.Itens == null || carrinho.Itens.Count == 0)
+                return NotFound("Carrinho não encontrado ou vazio.");
 
-        var carrinho = await carrinhoService.ObterCarrinhoAsync(usuarioId);
-        if (carrinho == null)
-            return NotFound();
-
-        return Ok(carrinho);
+            return Ok(carrinho);
+        }
     }
 }
