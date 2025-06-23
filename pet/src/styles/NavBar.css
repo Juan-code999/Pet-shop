@@ -21,10 +21,6 @@
   position: relative;
 }
 
-.nav-logo-container {
-  flex: 0;
-}
-
 .nav-logo {
   display: flex;
   align-items: center;

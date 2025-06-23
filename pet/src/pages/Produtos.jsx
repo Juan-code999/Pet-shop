@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -7,11 +7,9 @@ import "../styles/Produtos.css";
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
 
-  // Agora arrays para múltipla seleção
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
   const [tiposAnimalSelecionados, setTiposAnimalSelecionados] = useState([]);
   const [idadesSelecionadas, setIdadesSelecionadas] = useState([]);
-
   const [precoMin, setPrecoMin] = useState("");
   const [precoMax, setPrecoMax] = useState("");
 
@@ -38,7 +36,6 @@ const Produtos = () => {
     console.log(`Produto ${id} favoritado`);
   };
 
-  // Função para limpar filtros
   const limparFiltros = () => {
     setCategoriasSelecionadas([]);
     setTiposAnimalSelecionados([]);
@@ -47,7 +44,6 @@ const Produtos = () => {
     setPrecoMax("");
   };
 
-  // Função para alterar múltipla seleção: adiciona ou remove da lista
   const toggleSelecao = (valor, array, setArray) => {
     if (array.includes(valor)) {
       setArray(array.filter((item) => item !== valor));
@@ -56,10 +52,21 @@ const Produtos = () => {
     }
   };
 
-  const produtosFiltrados = produtos.filter((produto) => {
-    const preco = produto.Tamanhos?.[0]?.PrecoTotal || 0;
+  const removerFiltro = (valor, array, setArray) => {
+    setArray(array.filter((item) => item !== valor));
+  };
 
-    // Se vazio, aceita todos
+  const produtosFiltrados = produtos.filter((produto) => {
+    const tamanhos = produto.tamanhos || [];
+
+    const atendePrecoMin =
+      !precoMin ||
+      tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) >= parseFloat(precoMin));
+
+    const atendePrecoMax =
+      !precoMax ||
+      tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) <= parseFloat(precoMax));
+
     const atendeCategoria =
       categoriasSelecionadas.length === 0 ||
       categoriasSelecionadas.includes(produto.categoria);
@@ -68,15 +75,10 @@ const Produtos = () => {
       tiposAnimalSelecionados.length === 0 ||
       tiposAnimalSelecionados.includes(produto.especieAnimal);
 
-    // Aqui considera "Todas" como válido se o produto tem IdadeRecomendada == "Todas"
     const atendeIdade =
       idadesSelecionadas.length === 0 ||
       idadesSelecionadas.includes(produto.idadeRecomendada) ||
-      produto.IdadeRecomendada === "Todas";
-
-    const atendePrecoMin = !precoMin || produto.Tamanhos?.some(t => t.PrecoTotal >= parseFloat(precoMin));
-    const atendePrecoMax = !precoMax || produto.Tamanhos?.some(t => t.PrecoTotal <= parseFloat(precoMax));
-
+      produto.idadeRecomendada === "Todas";
 
     return (
       atendeCategoria &&
@@ -87,55 +89,128 @@ const Produtos = () => {
     );
   });
 
-  // Função para exibir texto das opções selecionadas
-  const exibirSelecionados = (array) =>
-    array.length === 0 ? "Todos" : array.join(", ");
-
   return (
     <div className="container-produtos">
       <aside className="sidebar-filtros">
-        <div style={{ marginBottom: "15px" }}>
-          <button onClick={limparFiltros} className="btn-limpar-filtros">
-            Limpar filtros
-          </button>
-        </div>
-
-        <div className="filtro">
-          <h4>FAIXA DE PREÇO</h4>
-          <div className="price-range">
-            <div className="price-values">
-              <span>R$ {precoMin || 0}</span> - <span>R$ {precoMax || 1000}</span>
-            </div>
-            <div className="price-sliders">
-              <input
-                type="range"
-                min="0"
-                max="1000"
-                step="10"
-                value={precoMin || 0}
-                onChange={(e) => {
-                  const val = Math.min(Number(e.target.value), precoMax || 1000);
-                  setPrecoMin(val);
+        {/* FILTROS APLICADOS */}
+        <div style={{ marginBottom: "20px" }}>
+          <strong>FILTROS APLICADOS:</strong>
+          <span style={{ marginLeft: 10 }}>
+            <button
+              onClick={limparFiltros}
+              style={{
+                fontSize: "0.85rem",
+                color: "#007BFF",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Limpar tudo
+            </button>
+          </span>
+          <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {categoriasSelecionadas.map((cat) => (
+              <span
+                key={`filtro-cat-${cat}`}
+                style={{
+                  backgroundColor: "#e1e4e8",
+                  padding: "4px 8px",
+                  borderRadius: "5px",
+                  fontSize: "0.85rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
-              />
-              <input
-                type="range"
-                min="0"
-                max="1000"
-                step="10"
-                value={precoMax || 1000}
-                onChange={(e) => {
-                  const val = Math.max(Number(e.target.value), precoMin || 1000);
-                  setPrecoMax(val);
+              >
+                {cat}
+                <button
+                  onClick={() => removerFiltro(cat, categoriasSelecionadas, setCategoriasSelecionadas)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#555",
+                    fontWeight: "bold",
+                    padding: 0,
+                    marginLeft: 2,
+                  }}
+                  aria-label={`Remover filtro categoria ${cat}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {tiposAnimalSelecionados.map((animal) => (
+              <span
+                key={`filtro-animal-${animal}`}
+                style={{
+                  backgroundColor: "#e1e4e8",
+                  padding: "4px 8px",
+                  borderRadius: "5px",
+                  fontSize: "0.85rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
-              />
-            </div>
+              >
+                {animal}
+                <button
+                  onClick={() => removerFiltro(animal, tiposAnimalSelecionados, setTiposAnimalSelecionados)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#555",
+                    fontWeight: "bold",
+                    padding: 0,
+                    marginLeft: 2,
+                  }}
+                  aria-label={`Remover filtro tipo de animal ${animal}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {idadesSelecionadas.map((idade) => (
+              <span
+                key={`filtro-idade-${idade}`}
+                style={{
+                  backgroundColor: "#e1e4e8",
+                  padding: "4px 8px",
+                  borderRadius: "5px",
+                  fontSize: "0.85rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {idade}
+                <button
+                  onClick={() => removerFiltro(idade, idadesSelecionadas, setIdadesSelecionadas)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#555",
+                    fontWeight: "bold",
+                    padding: 0,
+                    marginLeft: 2,
+                  }}
+                  aria-label={`Remover filtro idade ${idade}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
           </div>
         </div>
 
+
+        {/* CATEGORIAS */}
         <div className="filtro">
           <h4>CATEGORIAS</h4>
-          <p>Selecionado: {exibirSelecionados(categoriasSelecionadas)}</p>
           <ul>
             {[
               "Ração",
@@ -162,9 +237,9 @@ const Produtos = () => {
           </ul>
         </div>
 
+        {/* TIPO DE ANIMAL */}
         <div className="filtro">
           <h4>TIPO DE ANIMAL</h4>
-          <p>Selecionado: {exibirSelecionados(tiposAnimalSelecionados)}</p>
           <ul>
             {[
               "Cachorro",
@@ -189,9 +264,9 @@ const Produtos = () => {
           </ul>
         </div>
 
+        {/* IDADE */}
         <div className="filtro">
           <h4>IDADE</h4>
-          <p>Selecionado: {exibirSelecionados(idadesSelecionadas)}</p>
           <ul>
             {["Filhote", "Adulto", "Sênior"].map((idade, i) => (
               <li key={i}>
@@ -208,8 +283,43 @@ const Produtos = () => {
             ))}
           </ul>
         </div>
+
+            {/* FAIXA DE PREÇO */}
+        <div className="filtro">
+          <h4>FAIXA DE PREÇO</h4>
+          <div className="price-range">
+            <div className="price-values">
+              <span>R$ {precoMin || 0}</span> - <span>R$ {precoMax || 1000}</span>
+            </div>
+            <div className="price-sliders">
+              <input
+                type="range"
+                min="0"
+                max="1000"
+                step="10"
+                value={precoMin || 0}
+                onChange={(e) => {
+                  const val = Math.min(Number(e.target.value), precoMax || 1000);
+                  setPrecoMin(val);
+                }}
+              />
+              <input
+                type="range"
+                min="0"
+                max="1000"
+                step="10"
+                value={precoMax || 1000}
+                onChange={(e) => {
+                  const val = Math.max(Number(e.target.value), precoMin || 0);
+                  setPrecoMax(val);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </aside>
 
+      {/* PRODUTOS */}
       <section className="produtos-grid">
         {produtosFiltrados.length === 0 ? (
           <p>Nenhum produto encontrado com os filtros selecionados.</p>

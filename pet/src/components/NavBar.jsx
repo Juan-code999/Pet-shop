@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { 
-  FaHome, 
-  FaBoxOpen, 
-  FaEnvelope, 
+import {
+  FaHome,
+  FaBoxOpen,
+  FaEnvelope,
   FaBuilding,
   FaUserCog,
   FaUser,
@@ -50,12 +50,12 @@ const NavBar = () => {
       if (currentUser) {
         const nome = localStorage.getItem("usuarioNome") || currentUser.displayName || "Usuário";
         const isAdmin = localStorage.getItem("isAdmin") === "true";
-        
+
         const nameParts = nome.split(' ');
-        const formattedName = nameParts.length > 1 
+        const formattedName = nameParts.length > 1
           ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
           : nome;
-        
+
         setShortName(formattedName);
         setUser({
           name: nome,
@@ -108,8 +108,8 @@ const NavBar = () => {
   // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (mobileMenuOpen && !document.querySelector('.nav-content').contains(e.target) && 
-          !document.querySelector('.mobile-menu-button').contains(e.target)) {
+      if (mobileMenuOpen && !document.querySelector('.nav-content').contains(e.target) &&
+        !document.querySelector('.mobile-menu-button').contains(e.target)) {
         closeAllMenus();
       }
     };
@@ -126,10 +126,10 @@ const NavBar = () => {
     <header className="nav">
       <div className="nav-middle">
         <div className="nav-logo-container">
-          <div className="nav-logo">
+          <Link to="/" className="nav-logo" style={{ textDecoration: 'none' }}>
             <img src="src/img/logop.png" alt="Logo" className="nav-logo-img" />
             <p className="logo-text">Lat Miau</p>
-          </div>
+          </Link>
         </div>
 
         <button className="mobile-menu-button" onClick={toggleMobileMenu}>
@@ -164,9 +164,9 @@ const NavBar = () => {
             <Link to="/carrinho" className="nav-icon-link" onClick={closeAllMenus}>
               <FaShoppingCart className="nav-icon" />
             </Link>
-            
+
             {user ? (
-              <div 
+              <div
                 className="nav-user-container"
                 onMouseEnter={() => !isMobile && setShowUserMenu(true)}
                 onMouseLeave={() => !isMobile && setShowUserMenu(false)}
@@ -184,21 +184,21 @@ const NavBar = () => {
                 </div>
 
                 {(showUserMenu || (!isMobile && showUserMenu)) && (
-                  <div 
+                  <div
                     className={`user-dropdown ${isMobile ? 'mobile-dropdown' : ''}`}
                     onMouseEnter={() => !isMobile && setShowUserMenu(true)}
                     onMouseLeave={() => !isMobile && setShowUserMenu(false)}
                   >
-                    <Link 
-                      to="/perfil" 
-                      className="dropdown-item" 
+                    <Link
+                      to="/perfil"
+                      className="dropdown-item"
                       onClick={closeAllMenus}
                     >
                       <FaUserCircle className="dropdown-icon" />
                       <span>Perfil</span>
                     </Link>
-                    <button 
-                      onClick={handleLogout} 
+                    <button
+                      onClick={handleLogout}
                       className="dropdown-item"
                     >
                       <FaSignOutAlt className="dropdown-icon" />

@@ -71,28 +71,230 @@
   color: #2c3e50;
 }
 
-/* Price Range */
-.price-range {
-  margin-top: 10px;
+/* Sidebar de Filtros */
+.sidebar-filtros {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: #fff;
+  padding: 25px 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  position: sticky;
+  top: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.price-inputs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.price-inputs input {
+/* Botão Limpar Filtros */
+.btn-limpar-filtros {
+  background-color: #e0f0ff;
+  color: #007BFF;
+  border: 2px solid #007BFF;
+  padding: 8px 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s, box-shadow 0.25s;
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  text-align: center;
 }
 
-.price-inputs input:focus {
+.btn-limpar-filtros:hover,
+.btn-limpar-filtros:focus {
+  background-color: #007BFF;
+  color: white;
   outline: none;
-  border-color: #007BFF; /* Alterado para azul */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.7);
+}
+
+/* Cada filtro separado */
+.filtro {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid #ddd;
+}
+
+.filtro:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Títulos dos filtros */
+.filtro h4 {
+  font-size: 18px;
+  color: #1a2637;
+  margin-bottom: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Texto "Selecionado" mais sutil e com margem */
+.filtro > p {
+  font-size: 13px;
+  color: #6c7a89;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+/* Lista de checkboxes */
+.filtro ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Cada item do checkbox */
+.filtro li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+/* Checkbox customizado */
+.filtro input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007BFF;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.filtro input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
+/* Label ao lado do checkbox */
+.filtro label {
+  font-size: 15px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+  flex-grow: 1;
+}
+
+.filtro label:hover {
+  color: #007BFF;
+}
+
+/* Faixa de preço */
+.price-range {
+  width: 100%;
+  padding: 8px 0 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.price-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  user-select: none;
+}
+
+/* Sliders container */
+.price-sliders {
+  position: relative;
+  height: 30px;
+}
+
+/* Base dos sliders - track */
+.price-sliders input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  pointer-events: none; /* desativa clique no track */
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* Permite interação nos thumbs */
+.price-sliders input[type="range"]:first-child {
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.price-sliders input[type="range"]:last-child {
+  pointer-events: auto;
+  z-index: 2;
+}
+
+/* Track base para ambos sliders (aparece por trás) */
+.price-sliders::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #d3d3d3;
+  border-radius: 3px;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* Track ativo entre os dois thumbs */
+.price-sliders::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  background-color: #007BFF;
+  border-radius: 3px;
+  transform: translateY(-50%);
+  z-index: 1;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  transition: left 0.15s ease, right 0.15s ease;
+}
+
+/* Thumb estilizado Webkit */
+.price-sliders input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: #007BFF;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -8px;
+  border: 2px solid white;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.7);
+  transition: background-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  z-index: 4;
+}
+
+.price-sliders input[type="range"]::-webkit-slider-thumb:hover {
+  background-color: #0056b3;
+  box-shadow: 0 0 10px rgba(0, 86, 179, 0.9);
+}
+
+/* Thumb estilizado Firefox */
+.price-sliders input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: #007BFF;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.7);
+  transition: background-color 0.25s, box-shadow 0.25s;
+}
+
+.price-sliders input[type="range"]::-moz-range-thumb:hover {
+  background-color: #0056b3;
+  box-shadow: 0 0 10px rgba(0, 86, 179, 0.9);
 }
 
 /* Grid de Produtos */
@@ -150,6 +352,7 @@
   background-color: #f9f9f9;
   flex-shrink: 0;
 }
+
 
 .img-wrapper img {
   width: 100%;

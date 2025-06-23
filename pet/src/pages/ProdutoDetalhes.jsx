@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
-import { FaMinus, FaPlus } from 'react-icons/fa';
+import { FaMinus, FaPlus, FaHome  } from 'react-icons/fa';
 import { BiCart } from "react-icons/bi"
 import axios from "axios";
 import "../styles/ProdutoDetalhes.css";
@@ -78,8 +79,24 @@ const ProdutoDetalhes = () => {
 
   return (
     <div className="produto-detalhes-wrapper">
-      <div className="breadcrumb">Home / {produto.categoria || 'Produtos'} / {produto.nome}</div>
+      <div className="breadcrumb">
+  <Link to="/" className="breadcrumb-link">
+    <FaHome size={14} style={{ marginBottom: "-2px" }} />
+  </Link>
+  <span className="breadcrumb-separator">›</span>
 
+  <Link to="/produtos" className="breadcrumb-link">Produtos</Link>
+  <span className="breadcrumb-separator">›</span>
+
+  <Link to="/produtos" className="breadcrumb-link">
+    {produto.categoria || "Categoria"}
+  </Link>
+  <span className="breadcrumb-separator">›</span>
+
+  <Link to="/produtos" className="breadcrumb-link">
+    {produto.nome || "Produto"}
+  </Link>
+</div>
       <div className="produto-detalhes-container">
         {/* Galeria de Imagens - Lateral Esquerda */}
         <div className="produto-galeria">
@@ -135,11 +152,6 @@ const ProdutoDetalhes = () => {
 
               -
             </div>
-          </div>
-
-
-          <div className="estoque-fisico">
-            <button className="btn-consultar">Consultar estoque nas lojas físicas</button>
           </div>
         </div>
 
