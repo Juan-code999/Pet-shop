@@ -68,7 +68,8 @@ public class ProdutoService
             .Child("produtos")
             .OnceAsync<Produto>();
 
-        return produtos.Select(p => {
+        return produtos.Select(p =>
+        {
             var produto = p.Object;
             produto.Id = p.Key;
             return produto;
@@ -85,6 +86,22 @@ public class ProdutoService
         produto.Id = id;
         return produto;
     }
+
+    public async Task<List<Produto>> ObterTodosAsync()
+    {
+        var produtos = await _firebase
+            .Child("produtos")
+            .OnceAsync<Produto>();
+
+        return produtos.Select(p =>
+        {
+            var produto = p.Object;
+            produto.Id = p.Key;
+            return produto;
+        }).ToList();
+    }
+
+
 
 }
 

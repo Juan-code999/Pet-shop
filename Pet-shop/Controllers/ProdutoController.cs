@@ -6,6 +6,7 @@ using Pet_shop.Services;
 [Route("api/[controller]")]
 public class ProdutosController : ControllerBase
 {
+    private readonly CurtidaService _curtidaService;
     private readonly ProdutoService _produtoService;
 
     public ProdutosController(ProdutoService produtoService)
@@ -23,7 +24,7 @@ public class ProdutosController : ControllerBase
 
         return Ok(new { mensagem = "Produto cadastrado com sucesso!", produto = produtoSalvo });
     }
- 
+
 
     [HttpGet]
     public async Task<IActionResult> ListarProdutos()
@@ -39,6 +40,20 @@ public class ProdutosController : ControllerBase
             return NotFound();
         return Ok(produto);
     }
+
+    [HttpGet("usuario/{usuarioId}")]
+    public async Task<IActionResult> GetCurtidos(string usuarioId)
+    {
+        var idsCurtidos = await _curtidaService.ObterProdutosCurtidosAsync(usuarioId);
+        var todosProdutos = await _produtoService.ObterTodosAsync();
+
+        var produtosCurtidos = todosProdutos
+            .Where(p => idsCurtidos.Contains(p.Id))
+            .ToList();
+
+        return Ok(produtosCurtidos);
+    }
+
 
 }
 

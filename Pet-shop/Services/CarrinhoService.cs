@@ -2,40 +2,36 @@
 using Firebase.Database.Query;
 using Pet_shop.DTOs;
 
-public class CarrinhoService
+namespace Pet_shop.Services
 {
-    private readonly FirebaseClient _firebase;
-
-    // Recebe o token do usuário autenticado para usar nas requisições Firebase
-    public CarrinhoService(string databaseUrl, string token)
+    public class CarrinhoService
     {
-        _firebase = new FirebaseClient(
-            databaseUrl,
-            new FirebaseOptions
-            {
-                AuthTokenAsyncFactory = () => Task.FromResult(token)
-            });
-    }
+        private readonly FirebaseClient _firebase;
 
-    public async Task<bool> SalvarCarrinhoAsync(string usuarioId, CarrinhoDTO dto)
-    {
-        dto.DataAtualizacao = DateTime.UtcNow;
+        public CarrinhoService(IConfiguration configuration)
+        {
+            var databaseUrl = configuration["Firebase:DatabaseUrl"];
+            _firebase = new FirebaseClient(databaseUrl);
+        }
 
-        await _firebase
-            .Child("carrinhos")
-            .Child(usuarioId)
-            .PutAsync(dto);
+        public async Task<bool> SalvarCarrinhoAsync(string usuarioId, CarrinhoDTO dto)
+        {
+            dto.DataAtualizacao = DateTime.UtcNow;
 
-        return true;
-    }
+            await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .PutAsync(dto);
 
-    public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
-    {
-        var carrinho = await _firebase
-            .Child("carrinhos")
-            .Child(usuarioId)
-            .OnceSingleAsync<CarrinhoDTO>();
+            return true;
+        }
 
-        return carrinho;
+        public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
+        {
+            return await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .OnceSingleAsync<CarrinhoDTO>();
+        }
     }
 }

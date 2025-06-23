@@ -13,6 +13,8 @@ import AdminPage from './pages/Admin/AdminPage'; // Adicionando a importação d
 import Empresa from './pages/Empresa';
 import FormProduto from './components/FormProduto';
 import ProdutosDetalhes from './pages/ProdutoDetalhes';
+import Carrinho from './pages/Carrinho';
+import Curtidas from './pages/Curtidas';
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
         <Route path="/perfil" element={<ProfilePage />} />
         <Route path="/empresa" element={<Empresa />} />
         <Route path="/Formprodutos" element={<FormProduto />} />
+        <Route path="/Carrinho" element={<Carrinho />} />
+        <Route path="/Curtida" element={<Curtidas />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         
         <Route path="*" element={<h1>Página não encontrada</h1>} />
