@@ -33,6 +33,7 @@ function App() {
         <Route path="/Formprodutos" element={<FormProduto />} />
         <Route path="/Carrinho" element={<Carrinho />} />
         <Route path="/favoritos" element={<Curtidas />} />
+        <Route path="/favoritos" element={<Curtidas />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         
         <Route path="*" element={<h1>Página não encontrada</h1>} />
