@@ -15,37 +15,18 @@ namespace Pet_shop.Controllers
             _carrinhoService = carrinhoService;
         }
 
-        // POST: api/Carrinho/{usuarioId}
-        [HttpPost("{usuarioId}")]
-        public async Task<IActionResult> SalvarCarrinho(string usuarioId, [FromBody] CarrinhoDTO dto)
+        // POST: api/Carrinho/{usuarioId}/adicionar
+        [HttpPost("{usuarioId}/adicionar")]
+        public async Task<IActionResult> AdicionarItem(string usuarioId, [FromBody] ItemCarrinhoDTO item)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(usuarioId) || item == null)
+                return BadRequest("Dados inválidos.");
 
-            if (dto == null || dto.Itens == null || dto.Itens.Count == 0)
-                return BadRequest("Carrinho vazio ou inválido.");
+            if (item.Quantidade <= 0)
+                return BadRequest("A quantidade deve ser maior que zero.");
 
-            if (usuarioId != dto.UsuarioId)
-                return BadRequest("ID do usuário não corresponde.");
-
-            await _carrinhoService.SalvarCarrinhoAsync(usuarioId, dto);
-
-            return Ok(new { mensagem = "Carrinho salvo com sucesso." });
-        }
-
-        // GET: api/Carrinho/{usuarioId}
-        [HttpGet("{usuarioId}")]
-        public async Task<IActionResult> ObterCarrinho(string usuarioId)
-        {
-            if (string.IsNullOrWhiteSpace(usuarioId))
-                return BadRequest("ID do usuário é obrigatório.");
-
-            var carrinho = await _carrinhoService.ObterCarrinhoAsync(usuarioId);
-
-            if (carrinho == null || carrinho.Itens == null || carrinho.Itens.Count == 0)
-                return NotFound("Carrinho não encontrado ou vazio.");
-
-            return Ok(carrinho);
+            await _carrinhoService.AdicionarItemAsync(usuarioId, item);
+            return Ok(new { mensagem = "Item adicionado ao carrinho." });
         }
     }
 }

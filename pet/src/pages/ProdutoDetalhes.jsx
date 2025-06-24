@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
-import { FaMinus, FaPlus, FaHome  } from 'react-icons/fa';
+import { FaMinus, FaPlus, FaHome } from 'react-icons/fa';
 import { BiCart } from "react-icons/bi"
 import axios from "axios";
 import "../styles/ProdutoDetalhes.css";
@@ -21,7 +21,6 @@ const ProdutoDetalhes = () => {
         const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
         const dadosProduto = response.data;
 
-        // Garantir que os preços são números
         if (dadosProduto.tamanhos) {
           dadosProduto.tamanhos = dadosProduto.tamanhos.map(tamanho => ({
             ...tamanho,
@@ -31,13 +30,11 @@ const ProdutoDetalhes = () => {
           }));
         }
 
-        // Definir preço recorrente padrão (10% de desconto)
         if (dadosProduto.tamanhos?.[0]?.precoTotal) {
           dadosProduto.precoRecorrente = dadosProduto.tamanhos[0].precoTotal * 0.9;
         }
 
         setProduto(dadosProduto);
-
         if (dadosProduto.imagensUrl?.length > 0) {
           setImagemPrincipal(dadosProduto.imagensUrl[0]);
         }
@@ -56,11 +53,9 @@ const ProdutoDetalhes = () => {
 
   const calcularPrecoComDesconto = () => {
     if (!tamanhoSelecionado || !produto) return (0).toFixed(2);
-
-    const desconto = produto.desconto || 0; // usa o valor do banco, ou 0 se não houver
+    const desconto = produto.desconto || 0;
     const precoSemDesconto = tamanhoSelecionado.precoTotal * quantidade;
     const precoComDesconto = precoSemDesconto * (1 - desconto / 100);
-
     return precoComDesconto.toFixed(2);
   };
 
@@ -77,26 +72,55 @@ const ProdutoDetalhes = () => {
   if (loading) return <div className="carregando">Carregando produto...</div>;
   if (!produto) return <div className="nao-encontrado">Produto não encontrado.</div>;
 
+  const adicionarAoCarrinho = async () => {
+  const usuarioId = localStorage.getItem("usuarioId");
+  if (!usuarioId) return alert("Você precisa estar logado.");
+
+  if (!tamanhoSelecionado) return alert("Selecione um tamanho.");
+
+  const itemCarrinho = {
+    Itens: [
+      {
+        ProdutoId: produto.id,
+        Tamanho: tamanhoSelecionado.tamanho,
+        Quantidade: Number(quantidade) // garantir que é número
+      }
+    ]
+  };
+
+  console.log("Payload para carrinho:", JSON.stringify(itemCarrinho, null, 2));
+
+  try {
+    await axios.post(`http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+    alert("Produto adicionado ao carrinho!");
+  } catch (error) {
+    console.error("Erro ao adicionar ao carrinho:", error);
+    alert("Erro ao adicionar ao carrinho.");
+  }
+};
+
+
+
   return (
     <div className="produto-detalhes-wrapper">
       <div className="breadcrumb">
-  <Link to="/" className="breadcrumb-link">
-    <FaHome size={14} style={{ marginBottom: "-2px" }} />
-  </Link>
-  <span className="breadcrumb-separator">›</span>
+        <Link to="/" className="breadcrumb-link">
+          <FaHome size={14} style={{ marginBottom: "-2px" }} />
+        </Link>
+        <span className="breadcrumb-separator">›</span>
 
-  <Link to="/produtos" className="breadcrumb-link">Produtos</Link>
-  <span className="breadcrumb-separator">›</span>
+        <Link to="/produtos" className="breadcrumb-link">Produtos</Link>
+        <span className="breadcrumb-separator">›</span>
 
-  <Link to="/produtos" className="breadcrumb-link">
-    {produto.categoria || "Categoria"}
-  </Link>
-  <span className="breadcrumb-separator">›</span>
---
-  <Link to="/produtos" className="breadcrumb-link">
-    {produto.nome || "Produto"}
-  </Link>
-</div>
+        <Link to="/produtos" className="breadcrumb-link">
+          {produto.categoria || "Categoria"}
+        </Link>
+        <span className="breadcrumb-separator">›</span>
+        --
+        <Link to="/produtos" className="breadcrumb-link">
+          {produto.nome || "Produto"}
+        </Link>
+      </div>
       <div className="produto-detalhes-container">
         {/* Galeria de Imagens - Lateral Esquerda */}
         <div className="produto-galeria">
@@ -139,9 +163,9 @@ const ProdutoDetalhes = () => {
                 <div
                   key={index}
                   className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho &&
-                      tamanhoSelecionado?.precoPorKg === tamanho.precoPorKg
-                      ? "tamanho-selecionado"
-                      : ""
+                    tamanhoSelecionado?.precoPorKg === tamanho.precoPorKg
+                    ? "tamanho-selecionado"
+                    : ""
                     }`}
                   onClick={() => setTamanhoSelecionado(tamanho)}
                 >
@@ -192,10 +216,11 @@ const ProdutoDetalhes = () => {
               </button>
             </div>
           </div>
-          <button className="btn-add-carrinho">
+          <button className="btn-add-carrinho" onClick={adicionarAoCarrinho}>
             <BiCart size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
             Adicionar ao carrinho
           </button>
+
 
           <div className="recorrencia-info">
             <p>• Escolha a frequência de entrega.</p>

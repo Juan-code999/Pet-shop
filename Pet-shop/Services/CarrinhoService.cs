@@ -14,24 +14,36 @@ namespace Pet_shop.Services
             _firebase = new FirebaseClient(databaseUrl);
         }
 
-        public async Task<bool> SalvarCarrinhoAsync(string usuarioId, CarrinhoDTO dto)
-        {
-            dto.DataAtualizacao = DateTime.UtcNow;
-
-            await _firebase
-                .Child("carrinhos")
-                .Child(usuarioId)
-                .PutAsync(dto);
-
-            return true;
-        }
-
         public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
         {
             return await _firebase
                 .Child("carrinhos")
                 .Child(usuarioId)
                 .OnceSingleAsync<CarrinhoDTO>();
+        }
+
+        public async Task AdicionarItemAsync(string usuarioId, ItemCarrinhoDTO novoItem)
+        {
+            var carrinho = await ObterCarrinhoAsync(usuarioId) ?? new CarrinhoDTO
+            {
+                UsuarioId = usuarioId,
+                Itens = new List<ItemCarrinhoDTO>()
+            };
+
+            var itemExistente = carrinho.Itens.FirstOrDefault(i =>
+                i.ProdutoId == novoItem.ProdutoId && i.Tamanho == novoItem.Tamanho);
+
+            if (itemExistente != null)
+                itemExistente.Quantidade += novoItem.Quantidade;
+            else
+                carrinho.Itens.Add(novoItem);
+
+            carrinho.DataAtualizacao = DateTime.UtcNow;
+
+            await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .PutAsync(carrinho);
         }
     }
 }

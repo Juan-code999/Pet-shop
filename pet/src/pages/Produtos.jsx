@@ -6,13 +6,11 @@ import "../styles/Produtos.css";
 
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
-
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
   const [tiposAnimalSelecionados, setTiposAnimalSelecionados] = useState([]);
   const [idadesSelecionadas, setIdadesSelecionadas] = useState([]);
   const [precoMin, setPrecoMin] = useState("");
   const [precoMax, setPrecoMax] = useState("");
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,24 +54,45 @@ const Produtos = () => {
     setArray(array.filter((item) => item !== valor));
   };
 
+  // ✅ MOVIDO PARA FORA
+  const adicionarAoCarrinho = async (produto) => {
+    const usuarioId = localStorage.getItem("usuarioId");
+    if (!usuarioId) return alert("Você precisa estar logado.");
+
+    const itemCarrinho = {
+      UsuarioId: usuarioId,
+      Itens: [
+        {
+          ProdutoId: produto.id,
+          Tamanho: produto.tamanhos?.[0]?.tamanho || "Único",
+          Quantidade: 1
+        }
+      ]
+    };
+
+    try {
+      await axios.post(`https://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      alert("Produto adicionado ao carrinho!");
+    } catch (error) {
+      console.error("Erro ao adicionar ao carrinho:", error);
+      alert("Erro ao adicionar ao carrinho.");
+    }
+  };
+
   const produtosFiltrados = produtos.filter((produto) => {
     const tamanhos = produto.tamanhos || [];
 
     const atendePrecoMin =
-      !precoMin ||
-      tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) >= parseFloat(precoMin));
+      !precoMin || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) >= parseFloat(precoMin));
 
     const atendePrecoMax =
-      !precoMax ||
-      tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) <= parseFloat(precoMax));
+      !precoMax || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) <= parseFloat(precoMax));
 
     const atendeCategoria =
-      categoriasSelecionadas.length === 0 ||
-      categoriasSelecionadas.includes(produto.categoria);
+      categoriasSelecionadas.length === 0 || categoriasSelecionadas.includes(produto.categoria);
 
     const atendeAnimal =
-      tiposAnimalSelecionados.length === 0 ||
-      tiposAnimalSelecionados.includes(produto.especieAnimal);
+      tiposAnimalSelecionados.length === 0 || tiposAnimalSelecionados.includes(produto.especieAnimal);
 
     const atendeIdade =
       idadesSelecionadas.length === 0 ||
@@ -284,7 +303,7 @@ const Produtos = () => {
           </ul>
         </div>
 
-            {/* FAIXA DE PREÇO */}
+        {/* FAIXA DE PREÇO */}
         <div className="filtro">
           <h4>FAIXA DE PREÇO</h4>
           <div className="price-range">
@@ -375,11 +394,12 @@ const Produtos = () => {
                   className="btn-cart"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Lógica para adicionar ao carrinho
+                    adicionarAoCarrinho(produto);
                   }}
                 >
                   Adicionar ao carrinho
                 </button>
+
               </div>
             </div>
           ))
