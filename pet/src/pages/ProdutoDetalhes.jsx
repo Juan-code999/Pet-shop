@@ -92,7 +92,7 @@ const ProdutoDetalhes = () => {
     {produto.categoria || "Categoria"}
   </Link>
   <span className="breadcrumb-separator">›</span>
-
+--
   <Link to="/produtos" className="breadcrumb-link">
     {produto.nome || "Produto"}
   </Link>
