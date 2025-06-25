@@ -2,74 +2,145 @@ import React from 'react';
 import '../styles/Empresa.css';
 import heroDog from '../img/Dog_3.png';
 import pawIcon from '../img/paws.png';
+import pawPrint from '../img/paw-print.png';
+import puppyImg from '../img/Dog_3.png';
+import familyDog from '../img/Dog_3.png';
 
 export default function Empresa() {
+  // Gerador de patinhas dinâmicas
+  const generatePaws = (count) => {
+    return [...Array(count)].map((_, i) => {
+      const size = Math.random() * 20 + 15;
+      const rotation = Math.random() * 30 - 15;
+      const delay = Math.random() * 3;
+      const left = Math.random() * 90 + 5;
+      const top = Math.random() * 90 + 5;
+      
+      return (
+        <img 
+          key={`paw-${i}`}
+          src={i % 2 === 0 ? pawIcon : pawPrint}
+          className="paw"
+          alt=""
+          aria-hidden="true"
+          style={{
+            width: `${size}px`,
+            height: `${size}px`,
+            transform: `rotate(${rotation}deg)`,
+            animationDelay: `${delay}s`,
+            opacity: 0.7 - (i * 0.03),
+            left: `${left}%`,
+            top: `${top}%`
+          }}
+        />
+      );
+    });
+  };
+
   return (
     <div className="empresa-container">
-      {/* HERO - SOBRE A EMPRESA */}
-      <section className="empresa-hero">
-        <div className="empresa-hero-text">
-          <h1><span>Especialistas</span><br />em Cuidado Animal</h1>
-          <p>
-            Somos apaixonados por pets! Na nossa loja, você encontra tudo o que seu melhor amigo precisa: carinho, produtos de qualidade e atendimento diferenciado.
-          </p>
-          <div className="empresa-buttons">
-            <button className="empresa-btn-orange">Conheça Agora</button>
-            <button className="empresa-btn-white">Fale Conosco</button>
-          </div>
+      {/* SEÇÃO HERO */}
+      <section className="empresa-hero" aria-labelledby="hero-heading">
+        <div className="paw-decorations">
+          {generatePaws(15)}
         </div>
-        <div className="empresa-hero-image">
-          <img src={heroDog} alt="Cães felizes" />
-          <img className="empresa-paw paw1" src={pawIcon} alt="Patinha" />
-          <img className="empresa-paw paw2" src={pawIcon} alt="Patinha" />
-          <img className="empresa-paw paw3" src={pawIcon} alt="Patinha" />
-        </div>
-      </section>
 
-      {/* SERVIÇOS / MISSÃO DA EMPRESA */}
-      <section className="empresa-servicos">
-        <h2>Mais que uma loja, um cuidado especial</h2>
-        <p>Nosso compromisso vai além da venda. Queremos proporcionar bem-estar e felicidade para o seu pet todos os dias.</p>
-
-        <div className="empresa-servicos-grid">
-          <div className="empresa-servico-img">
-            <img src="/images/puppy2.png" alt="Filhote feliz" />
+        <div className="empresa-hero-content">
+          <div className="empresa-hero-text">
+            <h1 id="hero-heading">
+              <span className="highlight">Especialistas</span><br />
+              em Cuidado Animal
+            </h1>
+            <p className="hero-description">
+              Somos apaixonados por pets! Na nossa loja, você encontra tudo o que seu melhor amigo precisa.
+            </p>
+            <div className="empresa-buttons">
+              <button className="empresa-btn-primary">Conheça Agora</button>
+              <button className="empresa-btn-secondary">Fale Conosco</button>
+            </div>
           </div>
-
-          <div className="empresa-servico-card">
-            <h3>Produtos de Qualidade</h3>
-            <p>Selecionamos os melhores itens do mercado, com foco na saúde e segurança dos animais.</p>
-            <button>Ver Produtos</button>
-          </div>
-
-          <div className="empresa-servico-card">
-            <h3>Atendimento Especializado</h3>
-            <p>Nossa equipe é treinada para ajudar você a escolher o melhor para seu companheiro de quatro patas.</p>
-            <button>Fale com um Especialista</button>
+          <div className="empresa-hero-image">
+            <img 
+              src={heroDog} 
+              alt="Cachorro sorrindo" 
+              loading="lazy"
+              width="500"
+              height="500"
+            />
           </div>
         </div>
       </section>
 
-      {/* INFORMAÇÕES ADICIONAIS */}
-      <section className="empresa-info">
-        <div className="empresa-info-texto">
-          <h2>Por que escolher a nossa Petshop?</h2>
-          <p>Somos apaixonados por pets e nossa missão é garantir que cada animal receba o cuidado e carinho que merece.</p>
-          <ul>
-            <li>Quem somos</li>
-            <li>Adoção de pets</li>
-            <li>Serviços e produtos exclusivos</li>
-          </ul>
-          <img src="/images/family-dog.png" alt="Família com cachorro" />
-        </div>
+      {/* SEÇÃO SERVIÇOS */}
+      <section className="empresa-servicos" aria-labelledby="services-heading">
+        <div className="servicos-container">
+          <header className="servicos-header">
+            <h2 id="services-heading">Mais que uma loja, um cuidado especial</h2>
+            <p className="servicos-subtitle">
+              Nosso compromisso vai além da venda. Queremos proporcionar bem-estar e felicidade para o seu pet.
+            </p>
+          </header>
 
-        <div className="empresa-info-cta">
-          <h3>Atendimento com Amor e Responsabilidade</h3>
-          <p>
-            Seja na escolha da ração ideal, em um acessório novo ou nos nossos serviços de cuidados, estamos prontos para ajudar.
-            Conte com uma equipe dedicada, pronta para orientar você em cada etapa. Venha nos visitar ou entre em contato online!
-          </p>
-          <button>Entre em Contato</button>
+          <div className="empresa-servicos-grid">
+            <div className="empresa-servico-img">
+              <img 
+                src={puppyImg} 
+                alt="Filhote de cachorro feliz" 
+                loading="lazy"
+                width="300"
+                height="300"
+              />
+            </div>
+
+            <article className="empresa-servico-card">
+              <h3>Produtos de Qualidade</h3>
+              <p>
+                Selecionamos os melhores itens do mercado, com foco na saúde e segurança dos animais.
+              </p>
+              <button className="servico-card-btn">Ver Produtos</button>
+            </article>
+
+            <article className="empresa-servico-card">
+              <h3>Atendimento Especializado</h3>
+              <p>
+                Nossa equipe é treinada para ajudar você a escolher o melhor para seu companheiro.
+              </p>
+              <button className="servico-card-btn">Fale com um Especialista</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* SEÇÃO INFORMAÇÕES */}
+      <section className="empresa-info" aria-labelledby="info-heading">
+        <div className="info-container">
+          <article className="empresa-info-texto">
+            <h2 id="info-heading">Por que escolher a nossa Petshop?</h2>
+            <p className="info-description">
+              Somos apaixonados por pets e nossa missão é garantir o melhor cuidado para seu animal.
+            </p>
+            <ul className="info-list">
+              <li className="info-list-item">Quem somos</li>
+              <li className="info-list-item">Adoção de pets</li>
+              <li className="info-list-item">Serviços exclusivos</li>
+            </ul>
+            <img 
+              src={familyDog} 
+              alt="Família brincando com cachorro" 
+              className="info-image"
+              loading="lazy"
+              width="400"
+              height="300"
+            />
+          </article>
+
+          <aside className="empresa-info-cta" aria-labelledby="cta-heading">
+            <h3 id="cta-heading">Atendimento com Amor e Responsabilidade</h3>
+            <p className="cta-description">
+              Conte com uma equipe dedicada, pronta para orientar você em cada etapa.
+            </p>
+            <button className="cta-button">Entre em Contato</button>
+          </aside>
         </div>
       </section>
     </div>
