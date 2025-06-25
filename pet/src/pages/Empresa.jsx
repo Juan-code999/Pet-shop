@@ -2,7 +2,7 @@ import React from 'react';
 import '../styles/Empresa.css';
 import heroDog from '../img/Dog_3.png';
 import pawIcon from '../img/paws.png';
-import pawPrint from '../img/paw-print.png';
+import pawPrint from '../img/paws.png';
 import puppyImg from '../img/Dog_3.png';
 import familyDog from '../img/Dog_3.png';
 
