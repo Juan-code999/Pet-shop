@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaStar, FaRegStar, FaHeart, FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "../styles/Produtos.css";
 
@@ -13,8 +13,7 @@ const Produtos = () => {
   const [precoMin, setPrecoMin] = useState("");
   const [precoMax, setPrecoMax] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
-  const produtosPorPagina = 8;
+  const produtosPorPagina = 12;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +22,6 @@ const Produtos = () => {
         const response = await axios.get("http://localhost:5005/api/Produtos");
         setProdutos(response.data);
         setProdutosFiltrados(response.data);
-        calcularTotalPaginas(response.data);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
       }
@@ -31,10 +29,7 @@ const Produtos = () => {
     fetchProdutos();
   }, []);
 
-  const calcularTotalPaginas = (produtos) => {
-    const total = Math.ceil(produtos.length / produtosPorPagina);
-    setTotalPaginas(total);
-  };
+  const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
 
   const handleProductClick = (id) => {
     navigate(`/produto/${id}`);
@@ -52,8 +47,6 @@ const Produtos = () => {
     setPrecoMin("");
     setPrecoMax("");
     setPaginaAtual(1);
-    setProdutosFiltrados(produtos);
-    calcularTotalPaginas(produtos);
   };
 
   const toggleSelecao = (valor, array, setArray) => {
@@ -93,142 +86,81 @@ const Produtos = () => {
   };
 
   useEffect(() => {
-    const filtrarProdutos = () => {
-      const filtrados = produtos.filter((produto) => {
-        const tamanhos = produto.tamanhos || [];
+    const filtrados = produtos.filter((produto) => {
+      const tamanhos = produto.tamanhos || [];
+      const atendePrecoMin = !precoMin || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) >= parseFloat(precoMin));
+      const atendePrecoMax = !precoMax || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) <= parseFloat(precoMax));
+      const atendeCategoria = categoriasSelecionadas.length === 0 || categoriasSelecionadas.includes(produto.categoria);
+      const atendeAnimal = tiposAnimalSelecionados.length === 0 || tiposAnimalSelecionados.includes(produto.especieAnimal);
+      const atendeIdade = idadesSelecionadas.length === 0 || idadesSelecionadas.includes(produto.idadeRecomendada) || produto.idadeRecomendada === "Todas";
 
-        const atendePrecoMin =
-          !precoMin || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) >= parseFloat(precoMin));
+      return atendeCategoria && atendeAnimal && atendeIdade && atendePrecoMin && atendePrecoMax;
+    });
 
-        const atendePrecoMax =
-          !precoMax || tamanhos.some((t) => parseFloat(t.precoTotal ?? 0) <= parseFloat(precoMax));
-
-        const atendeCategoria =
-          categoriasSelecionadas.length === 0 || categoriasSelecionadas.includes(produto.categoria);
-
-        const atendeAnimal =
-          tiposAnimalSelecionados.length === 0 || tiposAnimalSelecionados.includes(produto.especieAnimal);
-
-        const atendeIdade =
-          idadesSelecionadas.length === 0 ||
-          idadesSelecionadas.includes(produto.idadeRecomendada) ||
-          produto.idadeRecomendada === "Todas";
-
-        return (
-          atendeCategoria &&
-          atendeAnimal &&
-          atendeIdade &&
-          atendePrecoMin &&
-          atendePrecoMax
-        );
-      });
-
-      setProdutosFiltrados(filtrados);
-      calcularTotalPaginas(filtrados);
-      setPaginaAtual(1);
-    };
-
-    filtrarProdutos();
+    setProdutosFiltrados(filtrados);
+    setPaginaAtual(1);
   }, [produtos, categoriasSelecionadas, tiposAnimalSelecionados, idadesSelecionadas, precoMin, precoMax]);
 
   const indiceInicial = (paginaAtual - 1) * produtosPorPagina;
   const indiceFinal = indiceInicial + produtosPorPagina;
   const produtosPaginaAtual = produtosFiltrados.slice(indiceInicial, indiceFinal);
 
-  const mudarPagina = (novaPagina) => {
-    if (novaPagina > 0 && novaPagina <= totalPaginas) {
-      setPaginaAtual(novaPagina);
+  const mudarPagina = (pagina) => {
+    if (pagina >= 1 && pagina <= totalPaginas) {
+      setPaginaAtual(pagina);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const renderizarPaginacao = () => {
-    if (totalPaginas <= 1) return null;
+  const renderPaginacao = () => {
+    if (produtosFiltrados.length <= produtosPorPagina) return null;
 
     const paginas = [];
-    const maxPaginasVisiveis = 5;
-    let inicio = Math.max(1, paginaAtual - Math.floor(maxPaginasVisiveis / 2));
-    const fim = Math.min(totalPaginas, inicio + maxPaginasVisiveis - 1);
-
-    if (fim - inicio + 1 < maxPaginasVisiveis) {
-      inicio = Math.max(1, fim - maxPaginasVisiveis + 1);
+    const maxPaginasVisiveis = 3;
+    
+    let inicio = 1;
+    let fim = Math.min(maxPaginasVisiveis, totalPaginas);
+    
+    if (paginaAtual > totalPaginas - 1) {
+      inicio = Math.max(1, totalPaginas - 2);
+      fim = totalPaginas;
+    } else if (paginaAtual > 1) {
+      inicio = paginaAtual - 1;
+      fim = Math.min(paginaAtual + 1, totalPaginas);
     }
-
-    // Botão anterior
-    paginas.push(
-      <button
-        key="prev"
-        onClick={() => mudarPagina(paginaAtual - 1)}
-        disabled={paginaAtual === 1}
-        className={`pagination-button ${paginaAtual === 1 ? "disabled" : ""}`}
-      >
-        <FaChevronLeft size={12} />
-      </button>
-    );
-
-    // Primeira página
-    if (inicio > 1) {
-      paginas.push(
-        <button
-          key={1}
-          onClick={() => mudarPagina(1)}
-          className={`pagination-button ${paginaAtual === 1 ? "active" : ""}`}
-        >
-          1
-        </button>
-      );
-      if (inicio > 2) {
-        paginas.push(<span key="ellipsis-start" className="pagination-ellipsis">...</span>);
-      }
-    }
-
-    // Páginas intermediárias
-    for (let i = inicio; i <= fim; i++) {
-      paginas.push(
-        <button
-          key={i}
-          onClick={() => mudarPagina(i)}
-          className={`pagination-button ${paginaAtual === i ? "active" : ""}`}
-        >
-          {i}
-        </button>
-      );
-    }
-
-    // Última página
-    if (fim < totalPaginas) {
-      if (fim < totalPaginas - 1) {
-        paginas.push(<span key="ellipsis-end" className="pagination-ellipsis">...</span>);
-      }
-      paginas.push(
-        <button
-          key={totalPaginas}
-          onClick={() => mudarPagina(totalPaginas)}
-          className={`pagination-button ${paginaAtual === totalPaginas ? "active" : ""}`}
-        >
-          {totalPaginas}
-        </button>
-      );
-    }
-
-    // Próximo botão
-    paginas.push(
-      <button
-        key="next"
-        onClick={() => mudarPagina(paginaAtual + 1)}
-        disabled={paginaAtual === totalPaginas}
-        className={`pagination-button ${paginaAtual === totalPaginas ? "disabled" : ""}`}
-      >
-        <FaChevronRight size={12} />
-      </button>
-    );
 
     return (
       <div className="pagination-container">
         <div className="pagination-info">
           Mostrando {indiceInicial + 1}-{Math.min(indiceFinal, produtosFiltrados.length)} de {produtosFiltrados.length} produtos
         </div>
-        <div className="pagination-controls">{paginas}</div>
+        <div className="pagination-controls">
+          <button 
+            onClick={() => mudarPagina(paginaAtual - 1)} 
+            disabled={paginaAtual === 1}
+            className="pagination-button"
+          >
+            &lt;
+          </button>
+          
+          {Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i).map((pagina) => (
+            <button
+              key={pagina}
+              onClick={() => mudarPagina(pagina)}
+              className={`pagination-button ${paginaAtual === pagina ? 'active' : ''}`}
+            >
+              {pagina}
+            </button>
+          ))}
+          
+          <button 
+            onClick={() => mudarPagina(paginaAtual + 1)} 
+            disabled={paginaAtual === totalPaginas}
+            className="pagination-button"
+          >
+            &gt;
+          </button>
+        </div>
       </div>
     );
   };
@@ -237,7 +169,6 @@ const Produtos = () => {
     <div className="container-produtos">
       <div className="produtos-content-wrapper">
         <aside className="sidebar-filtros">
-          {/* Filtros aplicados */}
           <div className="filtros-aplicados-container">
             <strong>FILTROS APLICADOS:</strong>
             <button onClick={limparFiltros} className="btn-limpar-tudo">
@@ -250,7 +181,6 @@ const Produtos = () => {
                   <button
                     onClick={() => removerFiltro(cat, categoriasSelecionadas, setCategoriasSelecionadas)}
                     className="btn-remover-filtro"
-                    aria-label={`Remover filtro categoria ${cat}`}
                   >
                     ×
                   </button>
@@ -262,7 +192,6 @@ const Produtos = () => {
                   <button
                     onClick={() => removerFiltro(animal, tiposAnimalSelecionados, setTiposAnimalSelecionados)}
                     className="btn-remover-filtro"
-                    aria-label={`Remover filtro tipo de animal ${animal}`}
                   >
                     ×
                   </button>
@@ -274,7 +203,6 @@ const Produtos = () => {
                   <button
                     onClick={() => removerFiltro(idade, idadesSelecionadas, setIdadesSelecionadas)}
                     className="btn-remover-filtro"
-                    aria-label={`Remover filtro idade ${idade}`}
                   >
                     ×
                   </button>
@@ -283,28 +211,16 @@ const Produtos = () => {
             </div>
           </div>
 
-          {/* Categorias */}
           <div className="filtro">
             <h4>CATEGORIAS</h4>
             <ul>
-              {[
-                "Ração",
-                "Brinquedos",
-                "Coleiras",
-                "Acessórios",
-                "Higiene",
-                "Petiscos",
-                "Medicamentos",
-                "Camas",
-              ].map((cat, i) => (
+              {["Ração", "Brinquedos", "Coleiras", "Acessórios", "Higiene", "Petiscos", "Medicamentos", "Camas"].map((cat, i) => (
                 <li key={i}>
                   <input
                     type="checkbox"
                     id={`cat-${i}`}
                     checked={categoriasSelecionadas.includes(cat)}
-                    onChange={() =>
-                      toggleSelecao(cat, categoriasSelecionadas, setCategoriasSelecionadas)
-                    }
+                    onChange={() => toggleSelecao(cat, categoriasSelecionadas, setCategoriasSelecionadas)}
                   />
                   <label htmlFor={`cat-${i}`}>{cat}</label>
                 </li>
@@ -312,7 +228,6 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Tipo de Animal */}
           <div className="filtro">
             <h4>TIPO DE ANIMAL</h4>
             <ul>
@@ -322,9 +237,7 @@ const Produtos = () => {
                     type="checkbox"
                     id={`animal-${i}`}
                     checked={tiposAnimalSelecionados.includes(animal)}
-                    onChange={() =>
-                      toggleSelecao(animal, tiposAnimalSelecionados, setTiposAnimalSelecionados)
-                    }
+                    onChange={() => toggleSelecao(animal, tiposAnimalSelecionados, setTiposAnimalSelecionados)}
                   />
                   <label htmlFor={`animal-${i}`}>{animal}</label>
                 </li>
@@ -332,7 +245,6 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Idade */}
           <div className="filtro">
             <h4>IDADE</h4>
             <ul>
@@ -342,9 +254,7 @@ const Produtos = () => {
                     type="checkbox"
                     id={`idade-${i}`}
                     checked={idadesSelecionadas.includes(idade)}
-                    onChange={() =>
-                      toggleSelecao(idade, idadesSelecionadas, setIdadesSelecionadas)
-                    }
+                    onChange={() => toggleSelecao(idade, idadesSelecionadas, setIdadesSelecionadas)}
                   />
                   <label htmlFor={`idade-${i}`}>{idade}</label>
                 </li>
@@ -352,36 +262,82 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Faixa de Preço */}
+          {/* Improved Price Range Filter */}
           <div className="filtro">
             <h4>FAIXA DE PREÇO</h4>
             <div className="price-range">
-              <div className="price-values">
-                <span>R$ {precoMin || 0}</span> - <span>R$ {precoMax || 1000}</span>
+              <div className="price-inputs">
+                <div className="price-input-group">
+                  <label htmlFor="preco-min">Mínimo</label>
+                  <div className="input-currency">
+                    <span>R$</span>
+                    <input
+                      type="number"
+                      id="preco-min"
+                      min="0"
+                      max="1000"
+                      step="10"
+                      value={precoMin}
+                      onChange={(e) => {
+                        const val = Math.min(Number(e.target.value), precoMax || 1000);
+                        setPrecoMin(val || "");
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="price-separator">-</div>
+                <div className="price-input-group">
+                  <label htmlFor="preco-max">Máximo</label>
+                  <div className="input-currency">
+                    <span>R$</span>
+                    <input
+                      type="number"
+                      id="preco-max"
+                      min="0"
+                      max="1000"
+                      step="10"
+                      value={precoMax}
+                      onChange={(e) => {
+                        const val = Math.max(Number(e.target.value), precoMin || 0);
+                        setPrecoMax(val || "");
+                      }}
+                      placeholder="1000"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="price-sliders">
-                <input
-                  type="range"
-                  min="0"
-                  max="1000"
-                  step="10"
-                  value={precoMin || 0}
-                  onChange={(e) => {
-                    const val = Math.min(Number(e.target.value), precoMax || 1000);
-                    setPrecoMin(val);
-                  }}
-                />
-                <input
-                  type="range"
-                  min="0"
-                  max="1000"
-                  step="10"
-                  value={precoMax || 1000}
-                  onChange={(e) => {
-                    const val = Math.max(Number(e.target.value), precoMin || 0);
-                    setPrecoMax(val);
-                  }}
-                />
+              <div className="price-slider-container">
+                <div className="price-slider">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="10"
+                    value={precoMin || 0}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), precoMax || 1000);
+                      setPrecoMin(val);
+                    }}
+                    className="slider-min"
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="10"
+                    value={precoMax || 1000}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), precoMin || 0);
+                      setPrecoMax(val);
+                    }}
+                    className="slider-max"
+                  />
+                </div>
+                <div className="price-limits">
+                  <span>R$ 0</span>
+                  <span>R$ 1000</span>
+                </div>
               </div>
             </div>
           </div>
@@ -392,54 +348,36 @@ const Produtos = () => {
             {produtosPaginaAtual.length === 0 ? (
               <p className="nenhum-produto">Nenhum produto encontrado com os filtros selecionados.</p>
             ) : (
-              produtosPaginaAtual.map((produto, index) => (
-                <div
+              produtosPaginaAtual.map((produto) => (
+                <div 
+                  key={produto.id} 
                   className="card-produto"
-                  key={index}
                   onClick={() => handleProductClick(produto.id)}
                 >
                   <FaHeart
                     className="icon-favorito"
                     onClick={(e) => handleFavoritar(e, produto.id)}
                   />
-
                   <div className="img-wrapper">
-                    <img
-                      src={produto.imagensUrl?.[0] || "https://via.placeholder.com/150"}
-                      alt={produto.nome}
-                    />
+                    <img src={produto.imagensUrl?.[0] || "https://via.placeholder.com/150"} alt={produto.nome} />
                   </div>
-
                   <div className="info-produto">
                     <div className="avaliacao">
-                      {[1, 2, 3, 4, 5].map((i) =>
-                        i <= 4 ? (
-                          <FaStar key={i} color="#f5a623" size={14} />
-                        ) : (
-                          <FaRegStar key={i} color="#ccc" size={14} />
-                        )
+                      {[1, 2, 3, 4, 5].map((i) => 
+                        i <= 4 ? <FaStar key={i} color="#f5a623" size={14} /> : <FaRegStar key={i} color="#ccc" size={14} />
                       )}
                       <span className="num-avaliacoes">(50)</span>
                     </div>
-
                     <h3 className="nome-produto">{produto.nome}</h3>
-
                     <p className="precos">
                       {produto.tamanhos?.[0] ? (
                         <>
-                          <span className="preco-atual">
-                            R$ {produto.tamanhos[0].precoTotal.toFixed(2)}
-                          </span>
-                          <span className="preco-original">
-                            R$ {(produto.tamanhos[0].precoTotal * 1.25).toFixed(2)}
-                          </span>
+                          <span className="preco-atual">R$ {produto.tamanhos[0].precoTotal.toFixed(2)}</span>
+                          <span className="preco-original">R$ {(produto.tamanhos[0].precoTotal * 1.25).toFixed(2)}</span>
                         </>
-                      ) : (
-                        <span>Preço indisponível</span>
-                      )}
+                      ) : <span>Preço indisponível</span>}
                     </p>
-
-                    <button
+                    <button 
                       className="btn-cart"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -454,7 +392,7 @@ const Produtos = () => {
             )}
           </section>
 
-          {renderizarPaginacao()}
+          {renderPaginacao()}
         </div>
       </div>
     </div>

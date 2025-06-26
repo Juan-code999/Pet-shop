@@ -2,19 +2,51 @@ import React from 'react';
 import '../styles/Empresa.css';
 import heroDog from '../img/Dog_3.png';
 import pawIcon from '../img/paws.png';
-import pawPrint from '../img/paws.png';
-import puppyImg from '../img/Dog_3.png';
-import familyDog from '../img/Dog_3.png';
+import pawPrint from '../img/paws1.png';
+import puppyImg from '../img/empresa2.png';
+import familyDog from '../img/empresa3.png';
 
 export default function Empresa() {
-  // Gerador de patinhas dinâmicas
+  // Gerador de patinhas ajustado para não sobrepor conteúdo importante
   const generatePaws = (count) => {
+    // Definir zonas de exclusão onde não queremos patinhas
+    const exclusionZones = [
+      // Zona do texto principal (ajuste conforme necessário)
+      { x: [0, 60], y: [0, 60] },  // Canto superior esquerdo (texto)
+      // Zona da imagem do cachorro (se estiver à direita)
+      { x: [60, 100], y: [20, 80] },
+      // Zona central inferior (botões)
+      { x: [20, 80], y: [60, 100] }
+    ];
+    
+    // Função para verificar se uma posição está em uma zona de exclusão
+    const isPositionValid = (x, y) => {
+      return !exclusionZones.some(zone => 
+        x >= zone.x[0] && x <= zone.x[1] && 
+        y >= zone.y[0] && y <= zone.y[1]
+      );
+    };
+    
     return [...Array(count)].map((_, i) => {
-      const size = Math.random() * 20 + 15;
+      const size = Math.random() * 15 + 10;
       const rotation = Math.random() * 30 - 15;
-      const delay = Math.random() * 3;
-      const left = Math.random() * 90 + 5;
-      const top = Math.random() * 90 + 5;
+      const delay = Math.random() * 5;
+      const duration = Math.random() * 3 + 3;
+      const opacity = Math.random() * 0.3 + 0.2;
+      
+      // Tentar encontrar uma posição válida
+      let left, top;
+      let attempts = 0;
+      const maxAttempts = 50;
+      
+      do {
+        left = Math.random() * 90 + 5;
+        top = Math.random() * 90 + 5;
+        attempts++;
+      } while (!isPositionValid(left, top) && attempts < maxAttempts);
+      
+      // Se não encontrar posição válida, pular esta patinha
+      if (attempts >= maxAttempts) return null;
       
       return (
         <img 
@@ -27,14 +59,17 @@ export default function Empresa() {
             width: `${size}px`,
             height: `${size}px`,
             transform: `rotate(${rotation}deg)`,
-            animationDelay: `${delay}s`,
-            opacity: 0.7 - (i * 0.03),
+            animation: `paw-float ${duration}s infinite ease-in-out ${delay}s`,
+            opacity: opacity,
             left: `${left}%`,
-            top: `${top}%`
+            top: `${top}%`,
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+            zIndex: 1,
+            position: 'absolute'
           }}
         />
       );
-    });
+    }).filter(Boolean); // Filtrar patinhas nulas
   };
 
   return (
@@ -42,7 +77,7 @@ export default function Empresa() {
       {/* SEÇÃO HERO */}
       <section className="empresa-hero" aria-labelledby="hero-heading">
         <div className="paw-decorations">
-          {generatePaws(15)}
+          {generatePaws(15)} {/* Reduzi para 15 patinhas para menos confusão */}
         </div>
 
         <div className="empresa-hero-content">
@@ -66,6 +101,7 @@ export default function Empresa() {
               loading="lazy"
               width="500"
               height="500"
+              className="hero-dog-image"
             />
           </div>
         </div>
@@ -89,6 +125,7 @@ export default function Empresa() {
                 loading="lazy"
                 width="300"
                 height="300"
+                className="servico-image"
               />
             </div>
 
@@ -124,14 +161,16 @@ export default function Empresa() {
               <li className="info-list-item">Adoção de pets</li>
               <li className="info-list-item">Serviços exclusivos</li>
             </ul>
-            <img 
-              src={familyDog} 
-              alt="Família brincando com cachorro" 
-              className="info-image"
-              loading="lazy"
-              width="400"
-              height="300"
-            />
+            <div className="transparent-image-container">
+              <img 
+                src={familyDog} 
+                alt="Família brincando com cachorro" 
+                className="info-image-transparent"
+                loading="lazy"
+                width="400"
+                height="300"
+              />
+            </div>
           </article>
 
           <aside className="empresa-info-cta" aria-labelledby="cta-heading">
