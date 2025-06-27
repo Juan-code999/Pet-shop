@@ -53,12 +53,11 @@ namespace Pet_shop.Services
 
 
         // Atualizar usuário existente
-        public async Task<bool> AtualizarUsuarioAsync(string id, UsuarioDTO dto)
+        public async Task<bool> AtualizarUsuarioAsync(string id, UsuarioUpdateDTO dto)
         {
             try
             {
                 var existente = await _firebase.Child("usuarios").Child(id).OnceSingleAsync<Usuario>();
-
                 if (existente == null)
                     return false;
 
@@ -95,6 +94,7 @@ namespace Pet_shop.Services
                 return false;
             }
         }
+
 
         // Buscar usuário por ID
         public async Task<UsuarioDTO> BuscarUsuarioPorIdAsync(string id)

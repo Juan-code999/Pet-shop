@@ -38,7 +38,7 @@ namespace Pet_shop.Controllers
 
         // PUT: api/Usuario/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioDTO usuarioDTO)
+        public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioUpdateDTO usuarioDTO)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -49,6 +49,7 @@ namespace Pet_shop.Controllers
 
             return NoContent();
         }
+
 
 
         // GET: api/Usuario/{Id}

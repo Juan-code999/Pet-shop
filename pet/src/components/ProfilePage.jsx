@@ -19,10 +19,14 @@ import {
   FiNavigation, 
   FiLock,
   FiAlertCircle,
-  FiCheckCircle
+  FiCheckCircle,
+  FiCamera,
+  FiTrash2
 } from "react-icons/fi";
+import axios from "axios";
 
 const ProfilePage = () => {
+  // Estados
   const [usuarioId, setUsuarioId] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -32,59 +36,94 @@ const ProfilePage = () => {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Estado do formulário
   const [form, setForm] = useState({
     nome: "",
     telefone: "",
     email: "",
-    rua: "",
-    numero: "",
-    cidade: "",
-    estado: "",
-    cep: "",
-    pais: "Brasil",
-    bairro: "",
-    complemento: ""
+    foto: "",
+    endereco: {
+      rua: "",
+      numero: "",
+      complemento: "",
+      bairro: "",
+      cidade: "",
+      estado: "",
+      cep: "",
+    }
   });
 
   const auth = getAuth();
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
 
+  // Função para upload de imagem para o Cloudinary
+  const uploadImageToCloudinary = async (file) => {
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "LatMiau");
+
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error('Falha no upload da imagem');
+      }
+
+      return response.data.secure_url;
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Buscar dados do usuário
   const fetchUserData = useCallback(async (email) => {
     try {
       setLoading(true);
       setError(null);
       
-      const resId = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
-      if (!resId.ok) {
+      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
+      
+      if (!response.ok) {
         throw new Error("Erro ao buscar usuário por email");
       }
       
-      const dataId = await resId.json();
-      if (!dataId.id) {
+      const data = await response.json();
+      
+      if (!data.id) {
         throw new Error("ID do usuário não encontrado na resposta.");
       }
       
-      setUsuarioId(dataId.id);
-
-      const resDados = await fetch(`http://localhost:5005/api/Usuario/${dataId.id}`);
-      if (!resDados.ok) {
-        throw new Error("Erro ao buscar dados do usuário pelo id");
-      }
-      
-      const data = await resDados.json();
+      setUsuarioId(data.id);
       
       setForm({
         nome: data.nome || "",
         telefone: data.telefone || "",
         email: data.email || "",
-        rua: data.endereco?.rua || "",
-        numero: data.endereco?.numero || "",
-        cidade: data.endereco?.cidade || "",
-        estado: data.endereco?.estado || "",
-        cep: data.endereco?.cep || "",
-        pais: data.endereco?.pais || "Brasil",
-        bairro: data.endereco?.bairro || "",
-        complemento: data.endereco?.complemento || ""
+        foto: data.foto || "",
+        endereco: {
+          rua: data.endereco?.rua || "",
+          numero: data.endereco?.numero || "",
+          complemento: data.endereco?.complemento || "",
+          bairro: data.endereco?.bairro || "",
+          cidade: data.endereco?.cidade || "",
+          estado: data.endereco?.estado || "",
+          cep: data.endereco?.cep || "",
+        }
       });
       
     } catch (err) {
@@ -95,6 +134,7 @@ const ProfilePage = () => {
     }
   }, []);
 
+  // Efeito para carregar dados quando o usuário autenticado mudar
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -106,27 +146,69 @@ const ProfilePage = () => {
     return () => unsubscribe();
   }, [auth, fetchUserData]);
 
+  // Manipulador de mudanças no formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setForm(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
+  // Manipulador de upload de foto
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+
+        const imageUrl = await uploadImageToCloudinary(file);
+        setForm(prev => ({ ...prev, foto: imageUrl }));
+        
+      } catch (error) {
+        console.error("Erro ao fazer upload da imagem:", error);
+        alert("Erro ao fazer upload da imagem. Tente novamente.");
+      }
+    }
+  };
+
+  // Remover foto
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setForm(prev => ({ ...prev, foto: "" }));
+  };
+
+  // Validação do formulário
   const validateForm = () => {
-    if (!form.nome.trim()) {
-      return "O nome é obrigatório";
-    }
-    if (!form.email.trim()) {
-      return "O email é obrigatório";
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      return "Email inválido";
-    }
-    if (form.telefone && !/^[\d\s()-]+$/.test(form.telefone)) {
-      return "Telefone inválido";
-    }
+    if (!form.nome.trim()) return "O nome é obrigatório";
+    if (!form.email.trim()) return "O email é obrigatório";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Email inválido";
+    if (form.telefone && !/^[\d\s()-]+$/.test(form.telefone)) return "Telefone inválido";
+    
+    if (!form.endereco.rua.trim()) return "A rua é obrigatória";
+    if (!form.endereco.numero.trim()) return "O número é obrigatório";
+    if (!form.endereco.bairro.trim()) return "O bairro é obrigatório";
+    if (!form.endereco.cidade.trim()) return "A cidade é obrigatória";
+    if (!form.endereco.estado.trim()) return "O estado é obrigatório";
+    if (!form.endereco.cep.trim()) return "O CEP é obrigatório";
+    
     return null;
   };
 
+  // Enviar email de verificação
   const sendVerificationEmail = async (user) => {
     try {
       await sendEmailVerification(user);
@@ -139,38 +221,71 @@ const ProfilePage = () => {
     }
   };
 
+  // Atualizar dados do usuário na API - VERSÃO CORRIGIDA
   const updateUserData = async () => {
-    const body = {
-      id: usuarioId,
-      nome: form.nome,
-      email: form.email,
-      telefone: form.telefone,
-      senha: "",
-      endereco: {
-        rua: form.rua,
-        numero: form.numero,
-        complemento: form.complemento,
-        bairro: form.bairro,
-        cidade: form.cidade,
-        estado: form.estado,
-        cep: form.cep,
-        pais: form.pais
-      },
-      isAdmin: false
-    };
+    try {
+      // 1. Obter os dados atuais do usuário para pegar a senha hashada
+      const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`);
+      if (!userResponse.ok) {
+        throw new Error("Falha ao obter dados do usuário");
+      }
+      const currentUserData = await userResponse.json();
 
-    const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      // 2. Preparar os dados para atualização
+      const body = {
+        id: usuarioId,
+        nome: form.nome,
+        email: form.email,
+        telefone: form.telefone || "",
+        foto: form.foto || "",
+        senha: currentUserData.senha, // Usar a senha já hashada
+        endereco: {
+          rua: form.endereco.rua,
+          numero: form.endereco.numero,
+          complemento: form.endereco.complemento || "",
+          bairro: form.endereco.bairro,
+          cidade: form.endereco.cidade,
+          estado: form.endereco.estado,
+          cep: form.endereco.cep
+        },
+        isAdmin: currentUserData.isAdmin || false
+      };
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha na atualização");
+      const token = await currentUser.getIdToken();
+      
+      const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Erro na resposta da API:", errorData);
+        
+        let errorMessage = "Falha na atualização";
+        if (errorData.errors) {
+          errorMessage = Object.entries(errorData.errors)
+            .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+            .join('; ');
+        } else if (errorData.title) {
+          errorMessage = errorData.title;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      throw error;
     }
   };
 
+  // Manipulador de envio de senha no modal
   const handlePasswordSubmit = async () => {
     try {
       setAuthError(null);
@@ -185,19 +300,17 @@ const ProfilePage = () => {
         throw new Error("Por favor, verifique seu email atual antes de alterá-lo. Um email de verificação foi enviado.");
       }
 
-      const credential = EmailAuthProvider.credential(
-        user.email,
-        password
-      );
-
+      const credential = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(user, credential);
+      
       await updateEmail(user, form.email);
       await sendVerificationEmail(user);
+      
       await updateUserData();
       
       setShowPasswordModal(false);
       setEditMode(false);
-      alert("Email atualizado com sucesso! Um email de verificação foi enviado para seu novo endereço.");
+      alert("Dados atualizados com sucesso! Um email de verificação foi enviado para seu novo endereço.");
     } catch (error) {
       console.error("Erro na autenticação:", error);
       
@@ -209,12 +322,15 @@ const ProfilePage = () => {
         errorMessage = "Este email já está em uso por outra conta.";
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "O email fornecido é inválido.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Senha incorreta. Por favor, tente novamente.";
       }
       
       setAuthError(errorMessage);
     }
   };
 
+  // Manipulador de atualização de dados
   const handleAtualizar = async () => {
     const validationError = validateForm();
     if (validationError) {
@@ -235,9 +351,13 @@ const ProfilePage = () => {
         return;
       }
       
-      await updateUserData();
+      const updatedUser = await updateUserData();
+      console.log("Usuário atualizado:", updatedUser);
+      
       alert("Dados atualizados com sucesso!");
       setEditMode(false);
+      
+      fetchUserData(form.email);
     } catch (error) {
       console.error("Erro ao atualizar:", error);
       alert(`Erro ao atualizar os dados: ${error.message}`);
@@ -310,16 +430,39 @@ const ProfilePage = () => {
       <div className="profile-header">
         <div className="profile-avatar">
           <img
-            src={currentUser?.photoURL || "/default-avatar.jpg"}
+            src={photoPreview || form.foto || "/default-avatar.jpg"}
             alt="Perfil"
             onError={(e) => {
               e.target.src = "/default-avatar.jpg";
             }}
           />
           {editMode && (
-            <button className="edit-avatar-btn">
-              <FiEdit size={16} />
-            </button>
+            <div className="avatar-actions">
+              <label className="edit-avatar-btn">
+                <FiCamera size={16} />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handlePhotoChange}
+                  style={{ display: 'none' }}
+                  disabled={uploadingImage}
+                />
+              </label>
+              {(photoPreview || form.foto) && (
+                <button 
+                  className="remove-avatar-btn"
+                  onClick={handleRemovePhoto}
+                  disabled={uploadingImage}
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              )}
+            </div>
+          )}
+          {uploadingImage && (
+            <div className="uploading-overlay">
+              <div className="uploading-spinner"></div>
+            </div>
           )}
         </div>
         <h1>{form.nome}</h1>
@@ -328,10 +471,10 @@ const ProfilePage = () => {
         <div className="profile-actions">
           {editMode ? (
             <>
-              <button className="btn-save" onClick={handleAtualizar} disabled={updating}>
+              <button className="btn-save" onClick={handleAtualizar} disabled={updating || uploadingImage}>
                 <FiSave size={18} /> {updating ? "Salvando..." : "Salvar Alterações"}
               </button>
-              <button className="btn-cancel" onClick={() => setEditMode(false)} disabled={updating}>
+              <button className="btn-cancel" onClick={() => setEditMode(false)} disabled={updating || uploadingImage}>
                 Cancelar
               </button>
             </>
@@ -409,9 +552,10 @@ const ProfilePage = () => {
               <label><FiHome /> Rua</label>
               <input 
                 type="text" 
-                name="rua" 
-                value={form.rua} 
+                name="endereco.rua" 
+                value={form.endereco.rua} 
                 onChange={handleChange} 
+                required
                 disabled={!editMode}
               />
             </div>
@@ -419,9 +563,10 @@ const ProfilePage = () => {
               <label>Número</label>
               <input 
                 type="text" 
-                name="numero" 
-                value={form.numero} 
+                name="endereco.numero" 
+                value={form.endereco.numero} 
                 onChange={handleChange} 
+                required
                 disabled={!editMode}
               />
             </div>
@@ -429,8 +574,8 @@ const ProfilePage = () => {
               <label>Complemento</label>
               <input 
                 type="text" 
-                name="complemento" 
-                value={form.complemento} 
+                name="endereco.complemento" 
+                value={form.endereco.complemento} 
                 onChange={handleChange} 
                 disabled={!editMode}
               />
@@ -439,9 +584,10 @@ const ProfilePage = () => {
               <label>Bairro</label>
               <input 
                 type="text" 
-                name="bairro" 
-                value={form.bairro} 
+                name="endereco.bairro" 
+                value={form.endereco.bairro} 
                 onChange={handleChange} 
+                required
                 disabled={!editMode}
               />
             </div>
@@ -449,9 +595,10 @@ const ProfilePage = () => {
               <label>Cidade</label>
               <input 
                 type="text" 
-                name="cidade" 
-                value={form.cidade} 
+                name="endereco.cidade" 
+                value={form.endereco.cidade} 
                 onChange={handleChange} 
+                required
                 disabled={!editMode}
               />
             </div>
@@ -459,9 +606,10 @@ const ProfilePage = () => {
               <label>Estado</label>
               <input 
                 type="text" 
-                name="estado" 
-                value={form.estado} 
+                name="endereco.estado" 
+                value={form.endereco.estado} 
                 onChange={handleChange} 
+                required
                 disabled={!editMode}
               />
             </div>
@@ -469,25 +617,13 @@ const ProfilePage = () => {
               <label>CEP</label>
               <input 
                 type="text" 
-                name="cep" 
-                value={form.cep} 
+                name="endereco.cep" 
+                value={form.endereco.cep} 
                 onChange={handleChange} 
+                required
                 maxLength="9"
                 disabled={!editMode}
               />
-            </div>
-            <div className="form-group">
-              <label><FiNavigation /> País</label>
-              <select 
-                name="pais" 
-                value={form.pais} 
-                onChange={handleChange} 
-                disabled={!editMode}
-              >
-                <option value="Brasil">Brasil</option>
-                <option value="Estados Unidos">Estados Unidos</option>
-                <option value="Canadá">Canadá</option>
-              </select>
             </div>
           </div>
         </div>
