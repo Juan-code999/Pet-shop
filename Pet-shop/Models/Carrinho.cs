@@ -6,5 +6,6 @@
         public string UsuarioId { get; set; }
         public List<ItemCarrinho> Itens { get; set; } = new();
         public DateTime DataAtualizacao { get; set; } = DateTime.UtcNow;
+
     }
 }
