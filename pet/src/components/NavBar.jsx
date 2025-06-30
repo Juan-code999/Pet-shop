@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logo from '../img/logo.png';
 import {
   FaHome,
   FaBoxOpen,
@@ -127,7 +128,7 @@ const NavBar = () => {
       <div className="nav-middle">
         <div className="nav-logo-container">
           <Link to="/" className="nav-logo" style={{ textDecoration: 'none' }}>
-            <img src="src/img/logop.png" alt="Logo" className="nav-logo-img" />
+            <img src={logo} alt="Logo" className="nav-logo-img"/> 
             <p className="logo-text">Lat Miau</p>
           </Link>
         </div>

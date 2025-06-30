@@ -1,50 +1,160 @@
 import React from "react";
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { 
+  FaPhone, 
+  FaEnvelope, 
+  FaMapMarkerAlt, 
+  FaFacebookF, 
+  FaInstagram, 
+  FaLinkedinIn,
+  FaTwitter,
+  FaYoutube
+} from "react-icons/fa";
+import { FiClock } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import logo from '../img/logo.png';
 import "../styles/Footer.css";
 
 const Footer = () => {
   return (
-    <footer className="Footer__Container">
-      <div className="Footer__Content">
-        {/* Logo e descrição */}
-        <div className="Footer__Section Footer__Brand">
-          <img src="src/img/logo.png" alt="Logo" className="Footer__Logo" />
-          <p>Assistência Técnica especializada em manutenção e suporte para computadores e notebooks.</p>
+    <footer className="footer-premium">
+      <div className="footer-wave"></div>
+      
+      <div className="footer-container">
+        {/* Brand Column */}
+        <div className="footer-brand-col">
+          <div className="footer-brand">
+            <Link to="/" className="logo-wrapper">
+              <img src={logo} alt="Lat Miau" className="footer-logo" />
+              <span className="logo-text">Lat Miau</span>
+            </Link>
+            <p className="brand-slogan">
+              Transformando ideias em soluções digitais de alto impacto.
+            </p>
+            
+            <div className="footer-newsletter">
+              <h4>Assine nossa newsletter</h4>
+              <div className="newsletter-form">
+                <input type="email" placeholder="Seu melhor e-mail" />
+                <button type="submit">
+                  <FaEnvelope />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Links Rápidos */}
-        <div className="Footer__Section">
-          <h3>Links Rápidos</h3>
-          <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/projetos">Projetos</a></li>
-            <li><a href="/conta">Contatos</a></li>
-            <li><a href="/empresa">Empresa</a></li>
-          </ul>
+        {/* Links Columns */}
+        <div className="footer-links-grid">
+          {/* Services */}
+          <div className="footer-links-col">
+            <h3 className="links-title">Serviços</h3>
+            <ul className="footer-links">
+              <li><Link to="/desenvolvimento">Desenvolvimento Web</Link></li>
+              <li><Link to="/mobile">Aplicativos Mobile</Link></li>
+              <li><Link to="/marketing">Marketing Digital</Link></li>
+              <li><Link to="/consultoria">Consultoria TI</Link></li>
+              <li><Link to="/suporte">Suporte 24/7</Link></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div className="footer-links-col">
+            <h3 className="links-title">Empresa</h3>
+            <ul className="footer-links">
+              <li><Link to="/sobre">Sobre Nós</Link></li>
+              <li><Link to="/equipe">Nossa Equipe</Link></li>
+              <li><Link to="/portfolio">Portfólio</Link></li>
+              <li><Link to="/blog">Blog</Link></li>
+              <li><Link to="/trabalhe-conosco">Carreiras</Link></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div className="footer-links-col">
+            <h3 className="links-title">Suporte</h3>
+            <ul className="footer-links">
+              <li><Link to="/contato">Contato</Link></li>
+              <li><Link to="/faq">FAQ</Link></li>
+              <li><Link to="/politica">Política de Privacidade</Link></li>
+              <li><Link to="/termos">Termos de Serviço</Link></li>
+              <li><Link to="/sitemap">Mapa do Site</Link></li>
+            </ul>
+          </div>
         </div>
 
-        {/* Contato */}
-        <div className="Footer__Section">
-          <h3>Contato</h3>
-          <p><FaPhone /> (11) 99999-9999</p>
-          <p><FaEnvelope /> suporte@assistenciatech.com</p>
-          <p><FaMapMarkerAlt /> Rua Exemplo, 123 - São Paulo, SP</p>
-        </div>
-
-        {/* Redes Sociais */}
-        <div className="Footer__Section">
-          <h3>Redes Sociais</h3>
-          <div className="Footer__Socials">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><FaFacebook /></a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><FaInstagram /></a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><FaLinkedin /></a>
+        {/* Contact Column */}
+        <div className="footer-contact-col">
+          <h3 className="contact-title">Fale Conosco</h3>
+          
+          <div className="contact-info">
+            <div className="contact-item">
+              <div className="contact-icon">
+                <FaPhone />
+              </div>
+              <div>
+                <h4>Telefone</h4>
+                <p>(11) 98765-4321</p>
+              </div>
+            </div>
+            
+            <div className="contact-item">
+              <div className="contact-icon">
+                <FaEnvelope />
+              </div>
+              <div>
+                <h4>E-mail</h4>
+                <p>contato@latmiau.com.br</p>
+              </div>
+            </div>
+            
+            <div className="contact-item">
+              <div className="contact-icon">
+                <FaMapMarkerAlt />
+              </div>
+              <div>
+                <h4>Endereço</h4>
+                <p>Av. Paulista, 1000 - São Paulo/SP</p>
+              </div>
+            </div>
+            
+            <div className="contact-item">
+              <div className="contact-icon">
+                <FiClock />
+              </div>
+              <div>
+                <h4>Horário</h4>
+                <p>Seg-Sex: 9h às 18h</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Copyright */}
-      <div className="Footer__Bottom">
-        <p>© 2024 AssistênciaTech - Todos os direitos reservados.</p>
+      {/* Bottom Bar */}
+      <div className="footer-bottom">
+        <div className="footer-bottom-container">
+          <div className="copyright">
+            © {new Date().getFullYear()} Lat Miau. Todos os direitos reservados.
+          </div>
+          
+          <div className="social-links">
+            <a href="#" aria-label="Facebook"><FaFacebookF /></a>
+            <a href="#" aria-label="Instagram"><FaInstagram /></a>
+            <a href="#" aria-label="LinkedIn"><FaLinkedinIn /></a>
+            <a href="#" aria-label="Twitter"><FaTwitter /></a>
+            <a href="#" aria-label="YouTube"><FaYoutube /></a>
+          </div>
+          
+          <div className="payment-methods">
+            <span>Métodos de pagamento:</span>
+            <div className="payment-icons">
+              <i className="payment-icon visa"></i>
+              <i className="payment-icon mastercard"></i>
+              <i className="payment-icon boleto"></i>
+              <i className="payment-icon pix"></i>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );
