@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
-import "../styles/ProfilePage.css";
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   getAuth, 
   onAuthStateChanged, 
@@ -7,7 +6,7 @@ import {
   EmailAuthProvider, 
   updateEmail,
   sendEmailVerification
-} from "firebase/auth";
+} from 'firebase/auth';
 import { 
   FiEdit, 
   FiSave, 
@@ -16,14 +15,18 @@ import {
   FiMail, 
   FiMapPin, 
   FiHome, 
-  FiNavigation, 
   FiLock,
   FiAlertCircle,
   FiCheckCircle,
   FiCamera,
-  FiTrash2
-} from "react-icons/fi";
-import axios from "axios";
+  FiTrash2,
+  FiCreditCard,
+  FiHeart,
+  FiShield,
+  FiSettings
+} from 'react-icons/fi';
+import axios from 'axios';
+import '../styles/ProfilePage.css';
 
 const ProfilePage = () => {
   // Estados
@@ -38,6 +41,7 @@ const ProfilePage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
   
   // Estado do formulário
   const [form, setForm] = useState({
@@ -58,37 +62,6 @@ const ProfilePage = () => {
 
   const auth = getAuth();
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
-
-  // Função para upload de imagem para o Cloudinary
-  const uploadImageToCloudinary = async (file) => {
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "LatMiau");
-
-      const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error('Falha no upload da imagem');
-      }
-
-      return response.data.secure_url;
-    } catch (error) {
-      console.error('Erro ao fazer upload da imagem:', error);
-      throw error;
-    } finally {
-      setUploadingImage(false);
-    }
-  };
 
   // Buscar dados do usuário
   const fetchUserData = useCallback(async (email) => {
@@ -164,6 +137,33 @@ const ProfilePage = () => {
     }
   };
 
+  // Upload de imagem para o Cloudinary
+  const uploadImageToCloudinary = async (file) => {
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "LatMiau");
+
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dnuwa7gs2/image/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data.secure_url;
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Manipulador de upload de foto
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
@@ -214,31 +214,28 @@ const ProfilePage = () => {
       await sendEmailVerification(user);
       setEmailSent(true);
       setTimeout(() => setEmailSent(false), 5000);
-      alert("Email de verificação enviado. Por favor, verifique sua caixa de entrada.");
     } catch (error) {
       console.error("Erro ao enviar email de verificação:", error);
-      alert(`Erro ao enviar email de verificação: ${error.message}`);
+      throw error;
     }
   };
 
-  // Atualizar dados do usuário na API - VERSÃO CORRIGIDA
+  // Atualizar dados do usuário na API
   const updateUserData = async () => {
     try {
-      // 1. Obter os dados atuais do usuário para pegar a senha hashada
       const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`);
-      if (!userResponse.ok) {
-        throw new Error("Falha ao obter dados do usuário");
-      }
+      if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário");
+      
       const currentUserData = await userResponse.json();
-
-      // 2. Preparar os dados para atualização
+      const token = await currentUser.getIdToken();
+      
       const body = {
         id: usuarioId,
         nome: form.nome,
         email: form.email,
         telefone: form.telefone || "",
         foto: form.foto || "",
-        senha: currentUserData.senha, // Usar a senha já hashada
+        senha: currentUserData.senha,
         endereco: {
           rua: form.endereco.rua,
           numero: form.endereco.numero,
@@ -251,8 +248,6 @@ const ProfilePage = () => {
         isAdmin: currentUserData.isAdmin || false
       };
 
-      const token = await currentUser.getIdToken();
-      
       const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
         method: "PUT",
         headers: { 
@@ -264,18 +259,7 @@ const ProfilePage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Erro na resposta da API:", errorData);
-        
-        let errorMessage = "Falha na atualização";
-        if (errorData.errors) {
-          errorMessage = Object.entries(errorData.errors)
-            .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-            .join('; ');
-        } else if (errorData.title) {
-          errorMessage = errorData.title;
-        }
-        
-        throw new Error(errorMessage);
+        throw new Error(errorData.title || "Falha na atualização");
       }
 
       return await response.json();
@@ -305,28 +289,17 @@ const ProfilePage = () => {
       
       await updateEmail(user, form.email);
       await sendVerificationEmail(user);
-      
       await updateUserData();
       
       setShowPasswordModal(false);
       setEditMode(false);
-      alert("Dados atualizados com sucesso! Um email de verificação foi enviado para seu novo endereço.");
     } catch (error) {
       console.error("Erro na autenticação:", error);
-      
-      let errorMessage = error.message;
-      
-      if (error.code === 'auth/requires-recent-login') {
-        errorMessage = "Sua sessão expirou. Por favor, faça login novamente para alterar seu email.";
-      } else if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "Este email já está em uso por outra conta.";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "O email fornecido é inválido.";
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "Senha incorreta. Por favor, tente novamente.";
-      }
-      
-      setAuthError(errorMessage);
+      setAuthError(
+        error.code === 'auth/wrong-password' ? "Senha incorreta" :
+        error.code === 'auth/requires-recent-login' ? "Sessão expirou. Faça login novamente." :
+        error.message
+      );
     }
   };
 
@@ -351,15 +324,10 @@ const ProfilePage = () => {
         return;
       }
       
-      const updatedUser = await updateUserData();
-      console.log("Usuário atualizado:", updatedUser);
-      
-      alert("Dados atualizados com sucesso!");
+      await updateUserData();
       setEditMode(false);
-      
       fetchUserData(form.email);
     } catch (error) {
-      console.error("Erro ao atualizar:", error);
       alert(`Erro ao atualizar os dados: ${error.message}`);
     } finally {
       setUpdating(false);
@@ -369,7 +337,7 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <div className="profile-loading">
-        <div className="loading-spinner"></div>
+        <div className="spinner"></div>
         <p>Carregando seus dados...</p>
       </div>
     );
@@ -388,244 +356,482 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-container">
+      {/* Modal de Confirmação de Senha */}
       {showPasswordModal && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <FiLock size={24} />
-              <h3>Confirmar Senha</h3>
+              <div className="modal-icon-circle">
+                <FiLock size={20} />
+              </div>
+              <h3>Confirmação de Segurança</h3>
             </div>
-            <p>Para alterar seu email, por favor digite sua senha atual:</p>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Sua senha atual"
-              className="modal-input"
-            />
+            <p className="modal-description">Para proteger sua conta, precisamos que você confirme sua senha atual antes de alterar o email.</p>
+            <div className="form-group">
+              <label>Sua senha atual</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                className="modal-input"
+              />
+            </div>
             {authError && <div className="modal-error">{authError}</div>}
             <div className="modal-buttons">
               <button 
-                className="modal-cancel" 
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setUpdating(false);
-                }}
+                className="btn btn-outline" 
+                onClick={() => setShowPasswordModal(false)}
                 disabled={updating}
               >
                 Cancelar
               </button>
               <button 
-                className="modal-confirm" 
+                className="btn btn-primary" 
                 onClick={handlePasswordSubmit}
                 disabled={updating}
               >
-                {updating ? "Verificando..." : "Confirmar"}
+                {updating ? "Verificando..." : "Confirmar Alteração"}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Cabeçalho do Perfil */}
       <div className="profile-header">
-        <div className="profile-avatar">
-          <img
-            src={photoPreview || form.foto || "/default-avatar.jpg"}
-            alt="Perfil"
-            onError={(e) => {
-              e.target.src = "/default-avatar.jpg";
-            }}
-          />
-          {editMode && (
-            <div className="avatar-actions">
-              <label className="edit-avatar-btn">
-                <FiCamera size={16} />
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handlePhotoChange}
-                  style={{ display: 'none' }}
-                  disabled={uploadingImage}
-                />
-              </label>
-              {(photoPreview || form.foto) && (
-                <button 
-                  className="remove-avatar-btn"
-                  onClick={handleRemovePhoto}
-                  disabled={uploadingImage}
-                >
-                  <FiTrash2 size={16} />
-                </button>
+        <div className="header-background"></div>
+        <div className="profile-header-content">
+          <div className="avatar-container">
+            <div className="avatar-wrapper">
+              <img
+                src={photoPreview || form.foto || "/default-avatar.jpg"}
+                alt="Perfil"
+                className="avatar-image"
+                onError={(e) => {
+                  e.target.src = "/default-avatar.jpg";
+                }}
+              />
+              {editMode && (
+                <div className="avatar-actions">
+                  <label className="avatar-action-btn">
+                    <FiCamera size={16} />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handlePhotoChange}
+                      style={{ display: 'none' }}
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                  {(photoPreview || form.foto) && (
+                    <button 
+                      className="avatar-action-btn danger"
+                      onClick={handleRemovePhoto}
+                      disabled={uploadingImage}
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
+              {uploadingImage && (
+                <div className="uploading-overlay">
+                  <div className="spinner small"></div>
+                </div>
               )}
             </div>
-          )}
-          {uploadingImage && (
-            <div className="uploading-overlay">
-              <div className="uploading-spinner"></div>
-            </div>
-          )}
-        </div>
-        <h1>{form.nome}</h1>
-        <p className="profile-email">{form.email}</p>
-        
-        <div className="profile-actions">
-          {editMode ? (
-            <>
-              <button className="btn-save" onClick={handleAtualizar} disabled={updating || uploadingImage}>
-                <FiSave size={18} /> {updating ? "Salvando..." : "Salvar Alterações"}
+          </div>
+
+          <div className="profile-info">
+            <h1 className="profile-name">{form.nome}</h1>
+            <p className="profile-email">
+              {form.email}
+              {currentUser && !currentUser.emailVerified && (
+                <span className="verification-badge">
+                  <FiAlertCircle /> Não verificado
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="profile-actions">
+            {editMode ? (
+              <>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleAtualizar} 
+                  disabled={updating || uploadingImage}
+                >
+                  <FiSave /> {updating ? "Salvando..." : "Salvar Alterações"}
+                </button>
+                <button 
+                  className="btn btn-outline" 
+                  onClick={() => setEditMode(false)}
+                  disabled={updating || uploadingImage}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-primary" onClick={() => setEditMode(true)}>
+                <FiEdit /> Editar Perfil
               </button>
-              <button className="btn-cancel" onClick={() => setEditMode(false)} disabled={updating || uploadingImage}>
-                Cancelar
-              </button>
-            </>
-          ) : (
-            <button className="btn-edit" onClick={() => setEditMode(true)}>
-              <FiEdit size={18} /> Editar Perfil
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Conteúdo Principal */}
       <div className="profile-content">
-        <div className="profile-section">
-          <h2><FiUser /> Informações Pessoais</h2>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Nome Completo</label>
-              <input 
-                type="text" 
-                name="nome" 
-                value={form.nome} 
-                onChange={handleChange} 
-                required 
-                disabled={!editMode}
-              />
-            </div>
-            <div className="form-group">
-              <label><FiMail /> Email</label>
-              <input 
-                type="email" 
-                name="email" 
-                value={form.email} 
-                onChange={handleChange} 
-                required 
-                disabled={!editMode}
-              />
-              {currentUser && !currentUser.emailVerified && (
-                <div className="verification-warning">
-                  <FiAlertCircle />
-                  <span>Email não verificado. </span>
-                  <button 
-                    type="button" 
-                    className="verify-link"
-                    onClick={() => sendVerificationEmail(currentUser)}
-                  >
-                    Reenviar email de verificação
-                  </button>
-                </div>
-              )}
-              {emailSent && (
-                <div className="verification-success">
-                  <FiCheckCircle />
-                  <span>Email de verificação enviado!</span>
-                </div>
-              )}
-            </div>
-            <div className="form-group">
-              <label><FiPhone /> Telefone</label>
-              <input 
-                type="tel" 
-                name="telefone" 
-                value={form.telefone} 
-                onChange={handleChange} 
-                pattern="[\d\s()-]+"
-                disabled={!editMode}
-              />
-            </div>
+        {/* Menu Lateral */}
+        <div className="profile-sidebar">
+          <div className="sidebar-header">
+            <h3>Minha Conta</h3>
           </div>
+          <ul className="sidebar-menu">
+            <li 
+              className={`menu-item ${activeTab === 'personal' ? 'active' : ''}`}
+              onClick={() => setActiveTab('personal')}
+            >
+              <div className="menu-icon">
+                <FiUser />
+              </div>
+              <span>Informações Pessoais</span>
+            </li>
+            <li 
+              className={`menu-item ${activeTab === 'address' ? 'active' : ''}`}
+              onClick={() => setActiveTab('address')}
+            >
+              <div className="menu-icon">
+                <FiMapPin />
+              </div>
+              <span>Endereço</span>
+            </li>
+            <li 
+              className={`menu-item ${activeTab === 'payment' ? 'active' : ''}`}
+              onClick={() => setActiveTab('payment')}
+            >
+              <div className="menu-icon">
+                <FiCreditCard />
+              </div>
+              <span>Pagamentos</span>
+            </li>
+            <li 
+              className={`menu-item ${activeTab === 'favorites' ? 'active' : ''}`}
+              onClick={() => setActiveTab('favorites')}
+            >
+              <div className="menu-icon">
+                <FiHeart />
+              </div>
+              <span>Favoritos</span>
+            </li>
+            <li 
+              className={`menu-item ${activeTab === 'security' ? 'active' : ''}`}
+              onClick={() => setActiveTab('security')}
+            >
+              <div className="menu-icon">
+                <FiShield />
+              </div>
+              <span>Segurança</span>
+            </li>
+            <li 
+              className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <div className="menu-icon">
+                <FiSettings />
+              </div>
+              <span>Configurações</span>
+            </li>
+          </ul>
         </div>
 
-        <div className="profile-section">
-          <h2><FiMapPin /> Endereço</h2>
-          <div className="form-grid">
-            <div className="form-group">
-              <label><FiHome /> Rua</label>
-              <input 
-                type="text" 
-                name="endereco.rua" 
-                value={form.endereco.rua} 
-                onChange={handleChange} 
-                required
-                disabled={!editMode}
-              />
+        {/* Conteúdo Dinâmico */}
+        <div className="profile-main-content">
+          {/* Informações Pessoais */}
+          {activeTab === 'personal' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiUser className="section-icon" />
+                  <span>Informações Pessoais</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Nome Completo</label>
+                    <input 
+                      type="text" 
+                      name="nome" 
+                      value={form.nome} 
+                      onChange={handleChange} 
+                      required 
+                      disabled={!editMode}
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Email</label>
+                    <div className="input-with-icon">
+                      <FiMail className="input-icon" />
+                      <input 
+                        type="email" 
+                        name="email" 
+                        value={form.email} 
+                        onChange={handleChange} 
+                        required 
+                        disabled={!editMode}
+                        className={editMode ? "input-edit-mode" : ""}
+                      />
+                    </div>
+                    {currentUser && !currentUser.emailVerified && (
+                      <div className="verification-notice">
+                        <FiAlertCircle />
+                        <span>Seu email não está verificado. </span>
+                        <button 
+                          type="button" 
+                          className="text-link"
+                          onClick={() => sendVerificationEmail(currentUser)}
+                        >
+                          Reenviar verificação
+                        </button>
+                        {emailSent && (
+                          <span className="text-success">
+                            <FiCheckCircle /> Email enviado!
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Telefone</label>
+                    <div className="input-with-icon">
+                      <FiPhone className="input-icon" />
+                      <input 
+                        type="tel" 
+                        name="telefone" 
+                        value={form.telefone} 
+                        onChange={handleChange} 
+                        disabled={!editMode}
+                        placeholder="(00) 00000-0000"
+                        className={editMode ? "input-edit-mode" : ""}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Número</label>
-              <input 
-                type="text" 
-                name="endereco.numero" 
-                value={form.endereco.numero} 
-                onChange={handleChange} 
-                required
-                disabled={!editMode}
-              />
+          )}
+
+          {/* Endereço */}
+          {activeTab === 'address' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiMapPin className="section-icon" />
+                  <span>Endereço</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Rua</label>
+                    <div className="input-with-icon">
+                      <FiHome className="input-icon" />
+                      <input 
+                        type="text" 
+                        name="endereco.rua" 
+                        value={form.endereco.rua} 
+                        onChange={handleChange} 
+                        required
+                        disabled={!editMode}
+                        className={editMode ? "input-edit-mode" : ""}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Número</label>
+                    <input 
+                      type="text" 
+                      name="endereco.numero" 
+                      value={form.endereco.numero} 
+                      onChange={handleChange} 
+                      required
+                      disabled={!editMode}
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Complemento</label>
+                    <input 
+                      type="text" 
+                      name="endereco.complemento" 
+                      value={form.endereco.complemento} 
+                      onChange={handleChange} 
+                      disabled={!editMode}
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Bairro</label>
+                    <input 
+                      type="text" 
+                      name="endereco.bairro" 
+                      value={form.endereco.bairro} 
+                      onChange={handleChange} 
+                      required
+                      disabled={!editMode}
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Cidade</label>
+                    <input 
+                      type="text" 
+                      name="endereco.cidade" 
+                      value={form.endereco.cidade} 
+                      onChange={handleChange} 
+                      required
+                      disabled={!editMode}
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Estado</label>
+                    <input 
+                      type="text" 
+                      name="endereco.estado" 
+                      value={form.endereco.estado} 
+                      onChange={handleChange} 
+                      required
+                      disabled={!editMode}
+                      maxLength="2"
+                      placeholder="UF"
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>CEP</label>
+                    <input 
+                      type="text" 
+                      name="endereco.cep" 
+                      value={form.endereco.cep} 
+                      onChange={handleChange} 
+                      required
+                      disabled={!editMode}
+                      placeholder="00000-000"
+                      className={editMode ? "input-edit-mode" : ""}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Complemento</label>
-              <input 
-                type="text" 
-                name="endereco.complemento" 
-                value={form.endereco.complemento} 
-                onChange={handleChange} 
-                disabled={!editMode}
-              />
+          )}
+
+          {/* Métodos de Pagamento */}
+          {activeTab === 'payment' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiCreditCard className="section-icon" />
+                  <span>Métodos de Pagamento</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="empty-state">
+                  <p>Você ainda não cadastrou nenhum método de pagamento.</p>
+                  <button className="btn btn-primary">
+                    Adicionar Cartão
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Bairro</label>
-              <input 
-                type="text" 
-                name="endereco.bairro" 
-                value={form.endereco.bairro} 
-                onChange={handleChange} 
-                required
-                disabled={!editMode}
-              />
+          )}
+
+          {/* Favoritos */}
+          {activeTab === 'favorites' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiHeart className="section-icon" />
+                  <span>Meus Favoritos</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="empty-state">
+                  <p>Você ainda não tem itens favoritados.</p>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Cidade</label>
-              <input 
-                type="text" 
-                name="endereco.cidade" 
-                value={form.endereco.cidade} 
-                onChange={handleChange} 
-                required
-                disabled={!editMode}
-              />
+          )}
+
+          {/* Segurança */}
+          {activeTab === 'security' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiShield className="section-icon" />
+                  <span>Segurança</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="security-item">
+                  <h3>Alterar Senha</h3>
+                  <p>Atualize sua senha periodicamente para manter sua conta segura</p>
+                  <button className="btn btn-outline">
+                    Alterar Senha
+                  </button>
+                </div>
+
+                <div className="security-item">
+                  <h3>Autenticação de Dois Fatores</h3>
+                  <p>Adicione uma camada extra de segurança à sua conta</p>
+                  <button className="btn btn-outline">
+                    Ativar 2FA
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Estado</label>
-              <input 
-                type="text" 
-                name="endereco.estado" 
-                value={form.endereco.estado} 
-                onChange={handleChange} 
-                required
-                disabled={!editMode}
-              />
+          )}
+
+          {/* Configurações */}
+          {activeTab === 'settings' && (
+            <div className="profile-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <FiSettings className="section-icon" />
+                  <span>Configurações</span>
+                </h2>
+              </div>
+              <div className="section-content">
+                <div className="settings-item">
+                  <h3>Notificações</h3>
+                  <p>Gerencie como você recebe notificações</p>
+                  <button className="btn btn-outline">
+                    Configurar Notificações
+                  </button>
+                </div>
+
+                <div className="settings-item">
+                  <h3>Privacidade</h3>
+                  <p>Controle quem pode ver suas informações</p>
+                  <button className="btn btn-outline">
+                    Configurações de Privacidade
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label>CEP</label>
-              <input 
-                type="text" 
-                name="endereco.cep" 
-                value={form.endereco.cep} 
-                onChange={handleChange} 
-                required
-                maxLength="9"
-                disabled={!editMode}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
