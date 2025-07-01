@@ -7,9 +7,14 @@ import {
   FaInstagram, 
   FaLinkedinIn,
   FaTwitter,
-  FaYoutube
+  FaYoutube,
+  FaCcVisa,
+  FaCcMastercard,
+  FaBarcode,
+  FaQrcode
 } from "react-icons/fa";
 import { FiClock } from "react-icons/fi";
+import { SiPix } from "react-icons/si";
 import { Link } from "react-router-dom";
 import logo from '../img/logo.png';
 import "../styles/Footer.css";
@@ -146,12 +151,12 @@ const Footer = () => {
           </div>
           
           <div className="payment-methods">
-            <span>Métodos de pagamento:</span>
+            <span className="payment-label">Métodos de pagamento:</span>
             <div className="payment-icons">
-              <i className="payment-icon visa"></i>
-              <i className="payment-icon mastercard"></i>
-              <i className="payment-icon boleto"></i>
-              <i className="payment-icon pix"></i>
+              <span className="payment-icon" title="Visa"><FaCcVisa /></span>
+              <span className="payment-icon" title="Mastercard"><FaCcMastercard /></span>
+              <span className="payment-icon" title="Boleto"><FaBarcode /></span>
+              <span className="payment-icon" title="Pix"><SiPix /></span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-/* Footer Premium CSS */
+/* Footer Premium Pet Shop - CSS Completo */
 
 .footer-premium {
   position: relative;
@@ -7,6 +7,7 @@
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   padding-top: 80px;
   overflow: hidden;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .footer-wave {
@@ -30,6 +31,7 @@
   z-index: 1;
 }
 
+/* Coluna da Marca */
 .footer-brand-col {
   margin-right: 30px;
 }
@@ -39,12 +41,22 @@
   align-items: center;
   text-decoration: none;
   margin-bottom: 25px;
+  transition: transform 0.3s ease;
+}
+
+.logo-wrapper:hover {
+  transform: translateX(5px);
 }
 
 .footer-logo {
   height: 50px;
   width: auto;
   filter: brightness(0) invert(1);
+  transition: transform 0.3s ease;
+}
+
+.logo-wrapper:hover .footer-logo {
+  transform: rotate(-10deg);
 }
 
 .logo-text {
@@ -53,6 +65,7 @@
   font-weight: 700;
   margin-left: 12px;
   letter-spacing: 0.5px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .brand-slogan {
@@ -78,6 +91,11 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.newsletter-form:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .newsletter-form input {
@@ -85,7 +103,13 @@
   padding: 12px 15px;
   border: none;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  transition: all 0.3s ease;
+}
+
+.newsletter-form input:focus {
+  outline: none;
+  background: #fff;
 }
 
 .newsletter-form button {
@@ -101,9 +125,10 @@
 }
 
 .newsletter-form button:hover {
-  background: #0069d9;
+  background: #0056b3;
 }
 
+/* Colunas de Links */
 .footer-links-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -131,6 +156,11 @@
   width: 40px;
   height: 2px;
   background: #007BFF;
+  transition: width 0.3s ease;
+}
+
+.links-title:hover::after {
+  width: 60px;
 }
 
 .footer-links {
@@ -147,10 +177,22 @@
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-size: 15px;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
   padding-left: 0;
+}
+
+.footer-links a svg {
+  margin-right: 10px;
+  color: #007BFF;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.footer-links a:hover svg {
+  transform: scale(1.2);
 }
 
 .footer-links a::before {
@@ -161,18 +203,19 @@
   width: 0;
   height: 1px;
   background: #007BFF;
-  transition: width 0.3s;
+  transition: width 0.3s ease;
 }
 
 .footer-links a:hover {
-  color: #fff;
+  color: #007BFF;
   padding-left: 10px;
 }
 
 .footer-links a:hover::before {
-  width: 8px;
+  width: 15px;
 }
 
+/* Coluna de Contato */
 .footer-contact-col {
   margin-left: auto;
 }
@@ -194,6 +237,11 @@
   width: 40px;
   height: 2px;
   background: #007BFF;
+  transition: width 0.3s ease;
+}
+
+.contact-title:hover::after {
+  width: 60px;
 }
 
 .contact-info {
@@ -205,10 +253,15 @@
   display: flex;
   align-items: flex-start;
   gap: 15px;
+  transition: transform 0.3s ease;
+}
+
+.contact-item:hover {
+  transform: translateX(5px);
 }
 
 .contact-icon {
-  background: rgba(0, 123, 255, 0.1);
+  background: rgba(78, 205, 196, 0.1);
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -218,6 +271,12 @@
   color: #007BFF;
   flex-shrink: 0;
   font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.contact-item:hover .contact-icon {
+  background: rgba(78, 205, 196, 0.2);
+  transform: rotate(15deg);
 }
 
 .contact-item h4 {
@@ -234,10 +293,12 @@
   line-height: 1.5;
 }
 
+/* Rodapé Inferior */
 .footer-bottom {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   padding: 20px 0;
   margin-top: 60px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .footer-bottom-container {
@@ -270,61 +331,58 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.1);
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   font-size: 14px;
 }
 
 .social-links a:hover {
   color: #fff;
   background: #007BFF;
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.1);
 }
 
 .payment-methods {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.payment-methods span {
+.payment-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
 }
 
 .payment-icons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .payment-icon {
-  width: 30px;
-  height: 20px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0.7;
-  transition: opacity 0.3s;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 22px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .payment-icon:hover {
-  opacity: 1;
+  color: #fff;
+  transform: translateY(-2px) scale(1.15);
 }
 
-.payment-icon.visa {
-  background-image: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visa/visa-original.svg');
-}
+/* Cores específicas para métodos de pagamento */
+.payment-icon:nth-child(1) { color: #1a237e; } /* Visa */
+.payment-icon:nth-child(2) { color: #c2185b; } /* Mastercard */
+.payment-icon:nth-child(3) { color: #0277bd; } /* Boleto */
+.payment-icon:nth-child(4) { color: #00897b; } /* Pix */
 
-.payment-icon.mastercard {
-  background-image: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mastercard/mastercard-original.svg');
-}
-
-.payment-icon.boleto {
-  background-image: url('https://cdn.iconscout.com/icon/free/png-256/boleto-2-226554.png');
-}
-
-.payment-icon.pix {
-  background-image: url('https://logodownload.org/wp-content/uploads/2021/03/pix-banco-central-logo-1.png');
-}
+/* Efeitos de hover específicos */
+.payment-icon:nth-child(1):hover { color: #303f9f; }
+.payment-icon:nth-child(2):hover { color: #e91e63; }
+.payment-icon:nth-child(3):hover { color: #0288d1; }
+.payment-icon:nth-child(4):hover { color: #009688; }
 
 /* Responsividade */
 @media (max-width: 1024px) {
@@ -357,6 +415,16 @@
     text-align: center;
     gap: 15px;
   }
+
+  .payment-methods {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .payment-label {
+    margin-bottom: 5px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -378,5 +446,42 @@
   
   .newsletter-form button {
     padding: 10px;
+  }
+
+  .payment-icons {
+    gap: 8px;
+  }
+  
+  .payment-icon {
+    font-size: 20px;
+  }
+  
+  .footer-links a {
+    font-size: 14px;
+  }
+  
+  .contact-item {
+    gap: 10px;
+  }
+  
+  .contact-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+  
+  .contact-item h4, 
+  .contact-item p {
+    font-size: 13px;
+  }
+  
+  .links-title::after,
+  .contact-title::after {
+    width: 30px;
+  }
+  
+  .links-title:hover::after,
+  .contact-title:hover::after {
+    width: 40px;
   }
 }

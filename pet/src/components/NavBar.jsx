@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from '../img/logo.png';
+import logoDark from '../img/logo1.png'; // Logo para desktop
+import logoLight from '../img/logo1.png'; // Logo para mobile
 import {
   FaHome,
   FaBoxOpen,
@@ -20,7 +21,7 @@ import {
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
-const NavBar = () => {
+const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -28,20 +29,18 @@ const NavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const mobileMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const userButtonRef = useRef(null);
+  const userMenuTimer = useRef(null);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setMobileMenuOpen(false);
-        setShowUserMenu(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  // Debounce resize handler
+  const handleResize = useCallback(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    if (!mobile) {
+      setMobileMenuOpen(false);
+    }
   }, []);
 
   // Auth state listener
@@ -72,6 +71,43 @@ const NavBar = () => {
     return () => unsubscribe();
   }, []);
 
+  // Event listeners setup
+  useEffect(() => {
+    const debouncedResize = debounce(handleResize, 200);
+    window.addEventListener('resize', debouncedResize);
+    return () => window.removeEventListener('resize', debouncedResize);
+  }, [handleResize]);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuOpen && 
+          mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target) &&
+          !event.target.closest('.mobile-menu-button')) {
+        closeAllMenus();
+      }
+      
+      if (showUserMenu && 
+          userMenuRef.current && 
+          !userMenuRef.current.contains(event.target) &&
+          (!userButtonRef.current || !userButtonRef.current.contains(event.target))) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen, showUserMenu]);
+
+  const debounce = (func, wait) => {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  };
+
   const handleLogin = () => {
     navigate("/login");
     closeAllMenus();
@@ -91,14 +127,12 @@ const NavBar = () => {
   };
 
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-    if (showUserMenu) setShowUserMenu(false);
+    setMobileMenuOpen(prev => !prev);
+    setShowUserMenu(false);
   };
 
   const toggleUserMenu = () => {
-    if (isMobile) {
-      setShowUserMenu(!showUserMenu);
-    }
+    setShowUserMenu(prev => !prev);
   };
 
   const closeAllMenus = () => {
@@ -106,101 +140,169 @@ const NavBar = () => {
     setShowUserMenu(false);
   };
 
-  // Close menus when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (mobileMenuOpen && !document.querySelector('.nav-content').contains(e.target) &&
-        !document.querySelector('.mobile-menu-button').contains(e.target)) {
-        closeAllMenus();
-      }
-    };
-
-    if (mobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+  const handleUserMenuEnter = () => {
+    if (!isMobile) {
+      clearTimeout(userMenuTimer.current);
+      setShowUserMenu(true);
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [mobileMenuOpen]);
+  };
+
+  const handleUserMenuLeave = () => {
+    if (!isMobile) {
+      userMenuTimer.current = setTimeout(() => {
+        setShowUserMenu(false);
+      }, 300);
+    }
+  };
+
+  const handleDropdownEnter = () => {
+    clearTimeout(userMenuTimer.current);
+  };
+
+  const handleDropdownLeave = () => {
+    if (!isMobile) {
+      userMenuTimer.current = setTimeout(() => {
+        setShowUserMenu(false);
+      }, 300);
+    }
+  };
+
+  // Navigation links data for cleaner JSX
+  const navLinks = [
+    { path: "/", icon: <FaHome className="nav-icon" />, label: "HOME" },
+    { path: "/produtos", icon: <FaBoxOpen className="nav-icon" />, label: "PRODUTOS" },
+    { path: "/contato", icon: <FaEnvelope className="nav-icon" />, label: "CONTATO" },
+    { path: "/empresa", icon: <FaBuilding className="nav-icon" />, label: "EMPRESA" },
+    ...(user?.isAdmin ? [{ path: "/admin", icon: <FaUserCog className="nav-icon" />, label: "ADMIN" }] : [])
+  ];
 
   return (
     <header className="nav">
       <div className="nav-middle">
         <div className="nav-logo-container">
-          <Link to="/" className="nav-logo" style={{ textDecoration: 'none' }}>
-            <img src={logo} alt="Logo" className="nav-logo-img"/> 
-            <p className="logo-text">Lat Miau</p>
+          <Link to="/" className="nav-logo" onClick={closeAllMenus}>
+            <img 
+              src={isMobile ? logoLight : logoDark} 
+              alt="Logo" 
+              className="nav-logo-img"
+            /> 
+            <p className="brand-name">Lat Miau</p>
           </Link>
         </div>
 
-        <button className="mobile-menu-button" onClick={toggleMobileMenu}>
+        <button 
+          className="mobile-menu-button" 
+          onClick={toggleMobileMenu}
+          aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={mobileMenuOpen}
+        >
           {mobileMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
 
-        <div className={`nav-content ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+        <div 
+          className={`nav-content ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}
+          ref={mobileMenuRef}
+        >
           <nav className="nav-links">
-            <Link to="/" className={location.pathname === "/" ? "active" : ""} onClick={closeAllMenus}>
-              <FaHome className="nav-icon" /> HOME
-            </Link>
-            <Link to="/produtos" className={location.pathname === "/produtos" ? "active" : ""} onClick={closeAllMenus}>
-              <FaBoxOpen className="nav-icon" /> PRODUTOS
-            </Link>
-            <Link to="/contatos" className={location.pathname === "/contatos" ? "active" : ""} onClick={closeAllMenus}>
-              <FaEnvelope className="nav-icon" /> CONTATOS
-            </Link>
-            <Link to="/empresa" className={location.pathname === "/empresa" ? "active" : ""} onClick={closeAllMenus}>
-              <FaBuilding className="nav-icon" /> EMPRESA
-            </Link>
-            {user?.isAdmin && (
-              <Link to="/admin" className={location.pathname.startsWith("/admin") ? "active" : ""} onClick={closeAllMenus}>
-                <FaUserCog className="nav-icon" /> ADMIN
+            {navLinks.map((link) => (
+              <Link 
+                key={link.path}
+                to={link.path} 
+                className={location.pathname === link.path ? "active" : ""} 
+                onClick={closeAllMenus}
+                aria-current={location.pathname === link.path ? "page" : undefined}
+              >
+                {link.icon} {link.label}
               </Link>
-            )}
+            ))}
           </nav>
 
           <div className="nav-icons">
-            <Link to="/favoritos" className="nav-icon-link" onClick={closeAllMenus}>
+            <Link 
+              to="/favoritos" 
+              className="nav-icon-link" 
+              onClick={closeAllMenus}
+              aria-label="Favoritos"
+            >
               <FaHeart className="nav-icon" />
+              {favoritesCount > 0 && <span className="icon-badge">{favoritesCount}</span>}
             </Link>
-            <Link to="/carrinho" className="nav-icon-link" onClick={closeAllMenus}>
+            <Link 
+              to="/carrinho" 
+              className="nav-icon-link" 
+              onClick={closeAllMenus}
+              aria-label="Carrinho"
+            >
               <FaShoppingCart className="nav-icon" />
+              {cartCount > 0 && <span className="icon-badge">{cartCount}</span>}
             </Link>
 
             {user ? (
               <div
                 className="nav-user-container"
-                onMouseEnter={() => !isMobile && setShowUserMenu(true)}
-                onMouseLeave={() => !isMobile && setShowUserMenu(false)}
+                ref={userMenuRef}
+                onMouseEnter={handleUserMenuEnter}
+                onMouseLeave={handleUserMenuLeave}
               >
-                <div className="nav-user-info" onClick={isMobile ? toggleUserMenu : undefined}>
+                <div 
+                  className="nav-user-info" 
+                  onClick={toggleUserMenu}
+                  ref={userButtonRef}
+                  aria-haspopup="true"
+                  aria-expanded={showUserMenu}
+                >
                   {user?.photo ? (
-                    <img src={user.photo} alt="User" className="nav-user-photo" />
+                    <img 
+                      src={user.photo} 
+                      alt={`Foto de ${shortName}`} 
+                      className="nav-user-photo" 
+                    />
                   ) : (
-                    <FaUser className="user-placeholder" />
+                    <div className="user-avatar">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
                   )}
                   <span className="nav-user-name">
                     {shortName}
-                    {isMobile && (showUserMenu ? <FaChevronUp /> : <FaChevronDown />)}
+                    {isMobile ? (showUserMenu ? <FaChevronUp /> : <FaChevronDown />) : <FaChevronDown />}
                   </span>
                 </div>
 
-                {(showUserMenu || (!isMobile && showUserMenu)) && (
-                  <div
+                {showUserMenu && (
+                  <div 
                     className={`user-dropdown ${isMobile ? 'mobile-dropdown' : ''}`}
-                    onMouseEnter={() => !isMobile && setShowUserMenu(true)}
-                    onMouseLeave={() => !isMobile && setShowUserMenu(false)}
+                    onMouseEnter={handleDropdownEnter}
+                    onMouseLeave={handleDropdownLeave}
                   >
+                    <div className="dropdown-header">
+                      <div className="dropdown-user-info">
+                        {user?.photo ? (
+                          <img 
+                            src={user.photo} 
+                            alt={`Foto de ${shortName}`} 
+                            className="dropdown-user-photo" 
+                          />
+                        ) : (
+                          <div className="dropdown-user-avatar">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="dropdown-user-name">{user.name}</span>
+                      </div>
+                    </div>
+                    <div className="dropdown-divider"></div>
                     <Link
                       to="/perfil"
                       className="dropdown-item"
                       onClick={closeAllMenus}
                     >
                       <FaUserCircle className="dropdown-icon" />
-                      <span>Perfil</span>
+                      <span>Meu Perfil</span>
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="dropdown-item"
+                      aria-label="Sair"
                     >
                       <FaSignOutAlt className="dropdown-icon" />
                       <span>Sair</span>
@@ -209,8 +311,12 @@ const NavBar = () => {
                 )}
               </div>
             ) : (
-              <button className="login-button" onClick={handleLogin}>
-                Login
+              <button 
+                className="login-button" 
+                onClick={handleLogin}
+                aria-label="Login"
+              >
+                Entrar
               </button>
             )}
           </div>
