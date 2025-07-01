@@ -8,6 +8,7 @@ import {
   FiXCircle,
   FiInfo
 } from 'react-icons/fi';
+import banner from '../img/dogg.jpg';
 import '../styles/Registrar.css';
 
 // Função para gerar avatar SVG base64 com inicial e fundo colorido
@@ -201,7 +202,7 @@ const Registrar = () => {
       {message.text && <MessageBox text={message.text} type={message.type} />}
       <div className="registrar-box">
         <div className="registrar-left">
-          <img src="src/img/dogg.jpg" alt="Dog" />
+           <img src={banner} alt="Dog" />
         </div>
         <div className="registrar-right">
           <h2>Cadastro</h2>

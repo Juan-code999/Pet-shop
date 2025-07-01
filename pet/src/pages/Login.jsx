@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../Db/firebaseConfig';
+import logo from '../img/logo.png';
+import banner from '../img/dogg.jpg';
 import {
   FiAlertCircle,
   FiCheckCircle,
@@ -91,7 +93,7 @@ const Login = () => {
       <div className="login-box">
         <div className="login-left">
           <div className="logo">
-            <img src="src/img/logop.png" alt="Pet Care" />
+            <img src={logo} alt="Lat Miau" />
             <h2>Lat Miau</h2>
           </div>
           <h3>Faça login para continuar</h3>
@@ -126,7 +128,7 @@ const Login = () => {
           </div>
         </div>
         <div className="login-right">
-          <img src="src/img/dogg.jpg" alt="Cachorro" />
+          <img src={banner} alt="Lat Miau" />
         </div>
       </div>
     </div>
