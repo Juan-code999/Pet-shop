@@ -1,166 +1,203 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/Carrinho.css";
+import "../styles/Carrinho.css"; // Arquivo CSS separado
 
-function Carrinho() {
+export default function Carrinho() {
   const [carrinho, setCarrinho] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [erro, setErro] = useState(null);
+
+  // Pega o usuário logado do localStorage
   const usuarioId = localStorage.getItem("usuarioId");
 
-  useEffect(() => {
-    const fetchDados = async () => {
-      try {
-        const carrinhoRes = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}`);
-        if (carrinhoRes.ok) {
-          const dados = await carrinhoRes.json();
-          setCarrinho(dados);
-        } else {
-          setCarrinho({ Itens: [] });
-        }
-
-        const produtosRes = await fetch("http://localhost:5005/api/Produtos");
-        if (produtosRes.ok) {
-          const lista = await produtosRes.json();
-          setProdutos(lista);
-        } else {
-          setProdutos([]);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar carrinho:", error);
-        setCarrinho({ Itens: [] });
-        setProdutos([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (usuarioId) {
-      fetchDados();
-    } else {
+  async function carregarDados() {
+    if (!usuarioId) {
+      setErro("Usuário não está logado");
       setLoading(false);
-      setCarrinho({ Itens: [] });
+      return;
     }
-  }, [usuarioId]);
 
-  const getProduto = (id) =>
-    produtos.find((p) => p.Id === id || p.id === id) || {};
-
-  const adicionarItem = async (item) => {
+    setLoading(true);
+    setErro(null);
     try {
-      const res = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
-      });
-      if (!res.ok) throw new Error("Erro ao adicionar item.");
+      // Busca carrinho do usuário
+      const resCarrinho = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}`);
+      if (!resCarrinho.ok) throw new Error("Erro ao buscar carrinho");
+      const carrinhoJson = await resCarrinho.json();
+
+      // Busca todos os produtos
+      const resProdutos = await fetch("http://localhost:5005/api/Produtos");
+      if (!resProdutos.ok) throw new Error("Erro ao buscar produtos");
+      const produtosJson = await resProdutos.json();
+
+      setCarrinho(carrinhoJson);
+      setProdutos(produtosJson);
     } catch (err) {
-      console.error("Erro ao adicionar item ao carrinho:", err);
-      alert("Erro ao adicionar item ao carrinho.");
+      setErro(err.message);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const alterarQuantidade = async (produtoId, novaQtd) => {
-    if (novaQtd < 1) return;
-
-    const novoCarrinho = { ...carrinho };
-    const item = novoCarrinho.Itens.find((i) => i.ProdutoId === produtoId);
-    if (item) {
-      item.Quantidade = novaQtd;
-      setCarrinho(novoCarrinho);
-
-      await adicionarItem({
-        produtoId: item.ProdutoId,
-        tamanho: item.Tamanho,
-        quantidade: novaQtd,
-      });
-    }
-  };
-
-  const removerItem = (produtoId) => {
-    const novoCarrinho = {
-      ...carrinho,
-      Itens: carrinho.Itens.filter((i) => i.ProdutoId !== produtoId),
-    };
-    setCarrinho(novoCarrinho);
-    // OBS: isso remove apenas localmente — se quiser que remova no back-end, posso incluir esse endpoint e código também.
-  };
-
-  const finalizar = () => {
-    navigate("/FinalizarPedido");
-  };
-
-  const total =
-    carrinho?.Itens?.reduce((acc, item) => {
-      const produto = getProduto(item.ProdutoId);
-      return acc + (produto.preco || 0) * item.Quantidade;
-    }, 0) || 0;
-
-  if (loading) return <div className="loading">Carregando...</div>;
-
-  if (!carrinho || !carrinho.Itens || carrinho.Itens.length === 0) {
-    return (
-      <div className="carrinho-vazio">
-        <h2>Seu carrinho está vazio 😕</h2>
-        <button onClick={() => navigate("/")}>Voltar às compras</button>
-      </div>
-    );
   }
 
-  return (
-    <div className="carrinho-container">
-      <h1>Meu Carrinho</h1>
+  useEffect(() => {
+    carregarDados();
+  }, [usuarioId]);
 
-      <div className="itens">
-        {carrinho.Itens.map((item) => {
-          const produto = getProduto(item.ProdutoId);
-          return (
-            <div key={item.ProdutoId} className="item-carrinho">
-              <img
-                src={
-                  produto.urlImagens?.[0] ||
-                  produto.urlImagem ||
-                  "https://placehold.co/200x150?text=Produto"
-                }
-                alt={produto.nome || "Produto"}
-              />
-              <div className="info">
-                <h3>{produto.nome || "Produto desconhecido"}</h3>
-                <p>Tamanho: {item.Tamanho || "Único"}</p>
-                <p>Preço: R$ {produto.preco?.toFixed(2) || "0,00"}</p>
-                <label>
-                  Quantidade:
-                  <input
-                    type="number"
-                    value={item.Quantidade}
-                    min={1}
-                    onChange={(e) =>
-                      alterarQuantidade(item.ProdutoId, parseInt(e.target.value))
-                    }
-                  />
-                </label>
-                <p>
-                  Subtotal: R$ {(produto.preco * item.Quantidade || 0).toFixed(2)}
-                </p>
-                <button onClick={() => removerItem(item.ProdutoId)}>
+  async function removerItem(produtoId, tamanho) {
+    if (!carrinho) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/itens`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ produtoId, tamanho })
+      });
+      
+      if (!response.ok) throw new Error('Erro ao remover item');
+      
+      // Atualiza o carrinho localmente após remoção bem-sucedida
+      const novosItens = carrinho.itens.filter(
+        (item) => !(item.produtoId === produtoId && item.tamanho === tamanho)
+      );
+      setCarrinho({ ...carrinho, itens: novosItens });
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
+
+  async function atualizarQuantidade(produtoId, tamanho, novaQuantidade) {
+    if (!carrinho || novaQuantidade < 1) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/itens`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ produtoId, tamanho, quantidade: novaQuantidade })
+      });
+      
+      if (!response.ok) throw new Error('Erro ao atualizar quantidade');
+      
+      // Atualiza o carrinho localmente após atualização bem-sucedida
+      const novosItens = carrinho.itens.map(item => 
+        item.produtoId === produtoId && item.tamanho === tamanho 
+          ? { ...item, quantidade: novaQuantidade } 
+          : item
+      );
+      setCarrinho({ ...carrinho, itens: novosItens });
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
+
+  function calcularTotal() {
+    if (!carrinho || carrinho.itens.length === 0) return 0;
+    
+    return carrinho.itens.reduce((total, item) => {
+      const produto = produtos.find(p => p.id === item.produtoId);
+      if (!produto) return total;
+      
+      const tamanhoDetalhe = produto.tamanhos?.find(t => t.tamanho === item.tamanho);
+      const preco = tamanhoDetalhe?.precoTotal ?? 0;
+      
+      return total + (preco * item.quantidade);
+    }, 0);
+  }
+
+  if (loading) return <div className="loading">Carregando carrinho...</div>;
+  if (erro) return <div className="error">Erro: {erro}</div>;
+  if (!carrinho || carrinho.itens.length === 0) return <div className="empty-cart">Seu carrinho está vazio.</div>;
+
+  const total = calcularTotal();
+
+  return (
+    <div className="cart-container">
+      <h1 className="cart-title">Meu Carrinho</h1>
+      
+      <div className="cart-items">
+        {carrinho.itens.map((item) => {
+          const produto = produtos.find((p) => p.id === item.produtoId);
+
+          if (!produto) {
+            return (
+              <div key={`${item.produtoId}-${item.tamanho}`} className="cart-item">
+                <p className="item-name"><strong>Produto não disponível</strong></p>
+                <div className="item-details">
+                  <p>Tamanho: {item.tamanho}</p>
+                  <p>Quantidade: {item.quantidade}</p>
+                </div>
+                <button 
+                  className="remove-btn"
+                  onClick={() => removerItem(item.produtoId, item.tamanho)}
+                >
                   Remover
                 </button>
               </div>
+            );
+          }
+
+          const tamanhoDetalhe = produto.tamanhos?.find((t) => t.tamanho === item.tamanho);
+          const preco = tamanhoDetalhe?.precoTotal ?? 0;
+          const subtotal = preco * item.quantidade;
+
+          return (
+            <div key={`${item.produtoId}-${item.tamanho}`} className="cart-item">
+              <div className="item-image">
+                {produto.imagensUrl && produto.imagensUrl.length > 0 && (
+                  <img
+                    src={produto.imagensUrl[0]}
+                    alt={produto.nome}
+                  />
+                )}
+              </div>
+              
+              <div className="item-info">
+                <h3 className="item-name">{produto.nome}</h3>
+                <div className="item-details">
+                  <p><strong>Tamanho:</strong> {item.tamanho}</p>
+                  <p><strong>Preço unitário:</strong> R$ {preco.toFixed(2)}</p>
+                  
+                  <div className="quantity-control">
+                    <button 
+                      onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1)}
+                      disabled={item.quantidade <= 1}
+                    >
+                      -
+                    </button>
+                    <span>{item.quantidade}</span>
+                    <button 
+                      onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  
+                  <p className="subtotal"><strong>Subtotal:</strong> R$ {subtotal.toFixed(2)}</p>
+                </div>
+              </div>
+              
+              <button 
+                className="remove-btn"
+                onClick={() => removerItem(item.produtoId, item.tamanho)}
+              >
+                Remover
+              </button>
             </div>
           );
         })}
       </div>
-
-      <div className="resumo">
-        <h2>Resumo</h2>
-        <p>
-          Total: <strong>R$ {total.toFixed(2)}</strong>
-        </p>
-        <button onClick={finalizar}>Finalizar Pedido</button>
+      
+      <div className="cart-summary">
+        <h3>Resumo do Pedido</h3>
+        <div className="summary-row">
+          <span>Total:</span>
+          <span>R$ {total.toFixed(2)}</span>
+        </div>
+        <button className="checkout-btn">Finalizar Compra</button>
       </div>
     </div>
   );
 }
-
-export default Carrinho;

@@ -14,14 +14,6 @@ namespace Pet_shop.Services
             _firebase = new FirebaseClient(databaseUrl);
         }
 
-        public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
-        {
-            return await _firebase
-                .Child("carrinhos")
-                .Child(usuarioId)
-                .OnceSingleAsync<CarrinhoDTO>();
-        }
-
         public async Task AdicionarItemAsync(string usuarioId, ItemCarrinhoDTO novoItem)
         {
             var carrinho = await ObterCarrinhoAsync(usuarioId) ?? new CarrinhoDTO
@@ -44,6 +36,67 @@ namespace Pet_shop.Services
                 .Child("carrinhos")
                 .Child(usuarioId)
                 .PutAsync(carrinho);
+        }
+
+        public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
+        {
+            try
+            {
+                return await _firebase
+                    .Child("carrinhos")
+                    .Child(usuarioId)
+                    .OnceSingleAsync<CarrinhoDTO>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task RemoverItemAsync(string usuarioId, string produtoId, string tamanho)
+        {
+            var carrinho = await ObterCarrinhoAsync(usuarioId);
+            if (carrinho == null) return;
+
+            carrinho.Itens.RemoveAll(i => i.ProdutoId == produtoId && i.Tamanho == tamanho);
+            carrinho.DataAtualizacao = DateTime.UtcNow;
+
+            await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .PutAsync(carrinho);
+        }
+
+        public async Task AtualizarQuantidadeAsync(string usuarioId, string produtoId, string tamanho, int novaQuantidade)
+        {
+            if (novaQuantidade <= 0)
+            {
+                await RemoverItemAsync(usuarioId, produtoId, tamanho);
+                return;
+            }
+
+            var carrinho = await ObterCarrinhoAsync(usuarioId);
+            if (carrinho == null) return;
+
+            var item = carrinho.Itens.FirstOrDefault(i => i.ProdutoId == produtoId && i.Tamanho == tamanho);
+            if (item != null)
+            {
+                item.Quantidade = novaQuantidade;
+                carrinho.DataAtualizacao = DateTime.UtcNow;
+
+                await _firebase
+                    .Child("carrinhos")
+                    .Child(usuarioId)
+                    .PutAsync(carrinho);
+            }
+        }
+
+        public async Task LimparCarrinhoAsync(string usuarioId)
+        {
+            await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .DeleteAsync();
         }
     }
 }

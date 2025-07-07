@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
 import { FaMinus, FaPlus, FaHome, FaStar, FaRegStar, FaStarHalfAlt } from 'react-icons/fa';
 import { BiCart } from "react-icons/bi";
@@ -28,9 +27,7 @@ const ProdutoDetalhes = () => {
       const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
       const dadosProduto = response.data;
 
-      if (!dadosProduto) {
-        throw new Error("Produto não encontrado");
-      }
+      if (!dadosProduto) throw new Error("Produto não encontrado");
 
       if (dadosProduto.tamanhos) {
         dadosProduto.tamanhos = dadosProduto.tamanhos.map(tamanho => ({
@@ -71,8 +68,8 @@ const ProdutoDetalhes = () => {
 
   const renderAvaliacao = (nota) => {
     const estrelas = [];
-    const notaArredondada = Math.round(nota * 2) / 2; // Arredonda para o meio ponto mais próximo
-    
+    const notaArredondada = Math.round(nota * 2) / 2;
+
     for (let i = 1; i <= 5; i++) {
       if (i <= notaArredondada) {
         estrelas.push(<FaStar key={i} className="estrela-cheia" />);
@@ -82,7 +79,7 @@ const ProdutoDetalhes = () => {
         estrelas.push(<FaRegStar key={i} className="estrela-vazia" />);
       }
     }
-    
+
     return estrelas;
   };
 
@@ -106,17 +103,9 @@ const ProdutoDetalhes = () => {
     setAdicionandoAoCarrinho(true);
 
     const itemCarrinho = {
-      Itens: [
-        {
-          ProdutoId: produto.id,
-          NomeProduto: produto.nome,
-          Tamanho: tamanhoSelecionado.tamanho,
-          Quantidade: Number(quantidade),
-          PrecoUnitario: tamanhoSelecionado.precoTotal,
-          Desconto: produto.desconto || 0,
-          ImagemUrl: produto.imagensUrl?.[0] || ""
-        }
-      ]
+      produtoId: produto.id,
+      tamanho: tamanhoSelecionado.tamanho,
+      quantidade: Number(quantidade),
     };
 
     try {
@@ -147,9 +136,7 @@ const ProdutoDetalhes = () => {
       <div className="error-container">
         <div className="error-icon">!</div>
         <p className="error-message">{error}</p>
-        <button onClick={fetchProduto} className="error-retry">
-          Tentar novamente
-        </button>
+        <button onClick={fetchProduto} className="error-retry">Tentar novamente</button>
       </div>
     );
   }
@@ -159,9 +146,7 @@ const ProdutoDetalhes = () => {
       <div className="error-container">
         <div className="error-icon">!</div>
         <p className="error-message">Produto não encontrado</p>
-        <Link to="/produtos" className="error-retry">
-          Voltar para produtos
-        </Link>
+        <Link to="/produtos" className="error-retry">Voltar para produtos</Link>
       </div>
     );
   }
@@ -192,7 +177,6 @@ const ProdutoDetalhes = () => {
       </nav>
 
       <div className="produto-detalhes-container">
-        {/* Galeria de Imagens */}
         <div className="produto-galeria">
           <div className="miniaturas-vertical" role="list">
             {produto.imagensUrl?.map((url, i) => (
@@ -203,12 +187,7 @@ const ProdutoDetalhes = () => {
                 aria-label={`Visualizar imagem ${i + 1} do produto`}
                 role="listitem"
               >
-                <img 
-                  src={url} 
-                  alt={`Miniatura ${i + 1}`} 
-                  className="miniatura" 
-                  loading="lazy"
-                />
+                <img src={url} alt={`Miniatura ${i + 1}`} className="miniatura" loading="lazy" />
               </button>
             ))}
           </div>
@@ -223,7 +202,6 @@ const ProdutoDetalhes = () => {
           </div>
         </div>
 
-        {/* Informações do Produto */}
         <div className="produto-info-central">
           <h1>{produto.nome}</h1>
 
@@ -236,13 +214,13 @@ const ProdutoDetalhes = () => {
           </div>
 
           <div className="descricao-container">
-            <div 
+            <div
               className={`descricao ${descricaoExpandida ? 'expandida' : 'recolhida'}`}
-              dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }} 
+              dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }}
               aria-label="Descrição do produto"
             />
             {produto.descricao && produto.descricao.length > 200 && (
-              <button 
+              <button
                 className="btn-expandir-descricao"
                 onClick={() => setDescricaoExpandida(!descricaoExpandida)}
                 aria-expanded={descricaoExpandida}
@@ -252,7 +230,6 @@ const ProdutoDetalhes = () => {
             )}
           </div>
 
-          {/* Tamanhos */}
           {produto.tamanhos?.length > 0 && (
             <div className="tamanhos-container">
               <h3>Tamanhos disponíveis</h3>
@@ -260,23 +237,15 @@ const ProdutoDetalhes = () => {
                 {produto.tamanhos.map((tamanho, index) => (
                   <button
                     key={`${tamanho.tamanho}-${index}`}
-                    className={`tamanho-opcao ${
-                      tamanhoSelecionado?.tamanho === tamanho.tamanho
-                        ? "tamanho-selecionado"
-                        : ""
-                    }`}
+                    className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho ? "tamanho-selecionado" : ""}`}
                     onClick={() => setTamanhoSelecionado(tamanho)}
                     aria-pressed={tamanhoSelecionado?.tamanho === tamanho.tamanho}
                     aria-label={`Tamanho ${tamanho.tamanho} - R$${tamanho.precoTotal.toFixed(2)}`}
                   >
                     <span className="tamanho-nome">{tamanho.tamanho}</span>
-                    <span className="tamanho-preco">
-                      R$ {tamanho.precoTotal.toFixed(2)}
-                    </span>
+                    <span className="tamanho-preco">R$ {tamanho.precoTotal.toFixed(2)}</span>
                     {tamanho.precoPorKg > 0 && (
-                      <span className="tamanho-preco-kg">
-                        (R$ {tamanho.precoPorKg.toFixed(2)})
-                      </span>
+                      <span className="tamanho-preco-kg">(R$ {tamanho.precoPorKg.toFixed(2)})</span>
                     )}
                   </button>
                 ))}
@@ -285,7 +254,6 @@ const ProdutoDetalhes = () => {
           )}
         </div>
 
-        {/* Resumo do Pedido */}
         <aside className="resumo-pedido" aria-label="Resumo do pedido">
           <div className="precos">
             {produto.desconto > 0 && (
@@ -334,8 +302,8 @@ const ProdutoDetalhes = () => {
             </div>
           </div>
 
-          <button 
-            className="btn-add-carrinho" 
+          <button
+            className="btn-add-carrinho"
             onClick={adicionarAoCarrinho}
             disabled={adicionandoAoCarrinho || !tamanhoSelecionado}
             aria-label="Adicionar ao carrinho"
