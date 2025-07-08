@@ -18,7 +18,7 @@ namespace Pet_shop.Controllers
         [HttpPost("{usuarioId}/adicionar")]
         public async Task<IActionResult> AdicionarItem(string usuarioId, [FromBody] ItemCarrinhoDTO item)
         {
-            if (string.IsNullOrWhiteSpace(usuarioId) return BadRequest("Usuário inválido.");
+            if (string.IsNullOrWhiteSpace(usuarioId)) return BadRequest("Usuário inválido.");
             if (item == null) return BadRequest("Item inválido.");
             if (item.Quantidade <= 0) return BadRequest("A quantidade deve ser maior que zero.");
 
