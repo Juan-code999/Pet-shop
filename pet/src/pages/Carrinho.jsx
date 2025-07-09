@@ -106,7 +106,7 @@ export default function Carrinho() {
       return total + (preco * item.quantidade);
     }, 0);
   }
-
+  
   if (loading) return <div className="loading">Carregando carrinho...</div>;
   if (erro) return <div className="error">Erro: {erro}</div>;
   if (!carrinho || carrinho.itens.length === 0) return <div className="empty-cart">Seu carrinho está vazio.</div>;
@@ -199,5 +199,5 @@ export default function Carrinho() {
         <button className="checkout-btn">Finalizar Compra</button>
       </div>
     </div>
-  );
+   );
 }
