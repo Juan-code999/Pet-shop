@@ -11,7 +11,6 @@ builder.Services.AddSingleton<UsuarioService>();
 builder.Services.AddSingleton<ProdutoService>();
 builder.Services.AddSingleton<ContatoService>();
 builder.Services.AddSingleton<CarrinhoService>();
-builder.Services.AddSingleton<PagamentoService>();
 builder.Services.AddScoped<CurtidaService>();
 
 

@@ -15,7 +15,6 @@ import FormProduto from './components/FormProduto';
 import ProdutosDetalhes from './pages/ProdutoDetalhes';
 import Carrinho from './pages/Carrinho';
 import Curtidas from './pages/Curtidas';
-import Pagamento from './pages/Pagamento';
 
 function App() {
   return (
@@ -33,7 +32,6 @@ function App() {
         <Route path="/empresa" element={<Empresa />} />
         <Route path="/Formprodutos" element={<FormProduto />} />
         <Route path="/Carrinho" element={<Carrinho />} />
-        <Route path="/Pagamento" element={<Pagamento />} />
         <Route path="/favoritos" element={<Curtidas />} />
         <Route path="/admin" element={<AdminPage />} /> {/* Rota para a página Admin */}
         
