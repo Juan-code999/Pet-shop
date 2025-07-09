@@ -162,12 +162,11 @@ export default function Carrinho() {
   }
 
   function aplicarCupom() {
-    // Simulação de aplicação de cupom
     if (cupom.toUpperCase() === "DESCONTO10") {
-      setDesconto(0.1); // 10% de desconto
+      setDesconto(0.1);
       alert("Cupom aplicado com sucesso! 10% de desconto.");
     } else if (cupom.toUpperCase() === "DESCONTO20") {
-      setDesconto(0.2); // 20% de desconto
+      setDesconto(0.2);
       alert("Cupom aplicado com sucesso! 20% de desconto.");
     } else {
       setDesconto(0);
@@ -188,10 +187,6 @@ export default function Carrinho() {
     }
 
     try {
-      // Aqui você faria a chamada para a API de checkout/pagamento
-      // Por enquanto, apenas simulamos a finalização
-      
-      // Remove os itens do carrinho após a compra
       const promises = selectedItems.map(itemKey => {
         const [produtoId, tamanho] = itemKey.split('-');
         return removerItem(produtoId, tamanho);
@@ -283,12 +278,20 @@ export default function Carrinho() {
             {carrinho.itens.map((item) => {
               const produto = produtos.find((p) => p.id === item.produtoId);
               const isSelected = isItemSelected(item.produtoId, item.tamanho);
+              const tamanhoDetalhe = produto?.tamanhos?.find((t) => t.tamanho === item.tamanho);
+              const preco = tamanhoDetalhe?.precoTotal ?? 0;
+              const descontoProduto = produto?.desconto || 0;
+              const subtotal = preco * item.quantidade;
 
               if (!produto) {
                 return (
-                  <div key={`${item.produtoId}-${item.tamanho}`} className={`cart-item ${isSelected ? 'selected' : ''}`}>
+                  <div 
+                    key={`${item.produtoId}-${item.tamanho}`} 
+                    className={`cart-item ${isSelected ? 'selected' : ''}`}
+                    onClick={() => toggleItemSelection(item.produtoId, item.tamanho)}
+                  >
                     <div className="item-select">
-                      <label className="custom-checkbox">
+                      <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -305,11 +308,10 @@ export default function Carrinho() {
                         <p className="item-name">Produto não disponível</p>
                         <div className="item-attributes">
                           <span className="attribute">Tamanho: {item.tamanho}</span>
-                          <span className="attribute">Quantidade: {item.quantidade}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="item-actions">
+                    <div className="item-actions" onClick={(e) => e.stopPropagation()}>
                       <button 
                         className="remove-btn"
                         onClick={() => removerItem(item.produtoId, item.tamanho)}
@@ -322,14 +324,14 @@ export default function Carrinho() {
                 );
               }
 
-              const tamanhoDetalhe = produto.tamanhos?.find((t) => t.tamanho === item.tamanho);
-              const preco = tamanhoDetalhe?.precoTotal ?? 0;
-              const subtotal = preco * item.quantidade;
-
               return (
-                <div key={`${item.produtoId}-${item.tamanho}`} className={`cart-item ${isSelected ? 'selected' : ''}`}>
+                <div 
+                  key={`${item.produtoId}-${item.tamanho}`} 
+                  className={`cart-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => toggleItemSelection(item.produtoId, item.tamanho)}
+                >
                   <div className="item-select">
-                    <label className="custom-checkbox">
+                    <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -354,10 +356,14 @@ export default function Carrinho() {
                       <p className="item-name">{produto.nome}</p>
                       <div className="item-attributes">
                         <span className="attribute">Tamanho: {item.tamanho}</span>
-                        <span className="attribute">Cor: {produto.cor || 'Única'}</span>
+                        {descontoProduto > 0 && (
+                          <span className="attribute discount-badge">
+                            Desconto: {descontoProduto}%
+                          </span>
+                        )}
                       </div>
                       
-                      <div className="quantity-control">
+                      <div className="quantity-control" onClick={(e) => e.stopPropagation()}>
                         <button 
                           className="qty-btn minus"
                           onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1)}
@@ -379,11 +385,16 @@ export default function Carrinho() {
                   </div>
                   
                   <div className="item-price">
+                    {descontoProduto > 0 && (
+                      <p className="original-price">
+                        R$ {(preco / (1 - descontoProduto/100)).toFixed(2)}
+                      </p>
+                    )}
                     <p className="price-unit">R$ {preco.toFixed(2)}</p>
                     <p className="subtotal">R$ {subtotal.toFixed(2)}</p>
                   </div>
                   
-                  <div className="item-actions">
+                  <div className="item-actions" onClick={(e) => e.stopPropagation()}>
                     <button 
                       className="remove-btn"
                       onClick={() => removerItem(item.produtoId, item.tamanho)}

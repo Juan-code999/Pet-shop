@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa6";
 import { BiSolidDiscount } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/Carrinho.css";
+import "../styles/Pagamento.css";
 
 export default function Pagamento() {
   const [carrinho, setCarrinho] = useState(null);
@@ -33,7 +33,6 @@ export default function Pagamento() {
     cpf: "",
     parcelas: "1"
   });
-  const [processando, setProcessando] = useState(false);
   const usuarioId = localStorage.getItem("usuarioId");
   const navigate = useNavigate();
 
@@ -108,132 +107,39 @@ export default function Pagamento() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    // Formatação automática para campos específicos
-    let formattedValue = value;
-    
-    if (name === "numeroCartao") {
-      formattedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{4})(?=\d)/g, '$1 ');
-    }
-    
-    if (name === "validade") {
-      formattedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{2})(?=\d)/g, '$1/');
-    }
-    
-    if (name === "cpf") {
-      formattedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    
-    if (name === "cvv") {
-      formattedValue = value.replace(/\D/g, '').substring(0, 3);
-    }
-    
     setDadosPagamento(prev => ({
       ...prev,
-      [name]: formattedValue
+      [name]: value
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setProcessando(true);
-    setErro(null);
     
     if (!metodoPagamento) {
       setErro("Selecione um método de pagamento");
-      setProcessando(false);
       return;
     }
 
-    // Validações específicas para cartão
-    if (metodoPagamento === "cartao") {
-      const numeroCartaoLimpo = dadosPagamento.numeroCartao.replace(/\s/g, '');
-      const validadeLimpa = dadosPagamento.validade.replace(/\//g, '');
-      const cpfLimpo = dadosPagamento.cpf.replace(/\D/g, '');
-      
-      if (numeroCartaoLimpo.length !== 16) {
-        setErro("Número do cartão inválido");
-        setProcessando(false);
-        return;
-      }
-      
-      if (validadeLimpa.length !== 4) {
-        setErro("Data de validade inválida (MM/AA)");
-        setProcessando(false);
-        return;
-      }
-      
-      if (dadosPagamento.cvv.length !== 3) {
-        setErro("CVV inválido (3 dígitos)");
-        setProcessando(false);
-        return;
-      }
-      
-      if (cpfLimpo.length !== 11) {
-        setErro("CPF inválido");
-        setProcessando(false);
-        return;
-      }
+    if (metodoPagamento === "cartao" && 
+        (!dadosPagamento.numeroCartao || !dadosPagamento.nomeCartao || 
+         !dadosPagamento.validade || !dadosPagamento.cvv || !dadosPagamento.cpf)) {
+      setErro("Preencha todos os dados do cartão");
+      return;
     }
 
     try {
-      const total = calcularTotal();
-      const pagamentoDto = {
-        usuarioId,
-        carrinhoId: carrinho.id,
-        valorTotal: total,
-        metodoPagamento,
-        dados: metodoPagamento === "cartao" ? {
-          ...dadosPagamento,
-          numeroCartao: dadosPagamento.numeroCartao.replace(/\s/g, ''),
-          validade: dadosPagamento.validade.replace(/\//g, ''),
-          cpf: dadosPagamento.cpf.replace(/\D/g, '')
-        } : null
-      };
-
-      const response = await fetch("http://localhost:5005/api/Pagamento/processar", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(pagamentoDto)
+      // Simular processamento do pagamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Limpar carrinho após pagamento
+      await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/limpar`, {
+        method: 'DELETE'
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao processar pagamento");
-      }
-
-      const resultado = await response.json();
-
-      // Limpar carrinho após pagamento aprovado
-      if (resultado.status === "aprovado") {
-        await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/limpar`, {
-          method: 'DELETE'
-        });
-        
-        // Redirecionar para página de confirmação
-        navigate("/confirmacao", { 
-          state: { 
-            pagamentoId: resultado.pagamentoId,
-            metodoPagamento: resultado.metodo,
-            dadosPagamento: resultado.dados,
-            valorTotal: total
-          } 
-        });
-      } else {
-        setErro("Pagamento recusado. Por favor, tente outro método de pagamento.");
-      }
+      
+      navigate("/confirmacao");
     } catch (error) {
-      setErro(error.message);
-    } finally {
-      setProcessando(false);
+      setErro("Erro ao processar pagamento: " + error.message);
     }
   };
 
@@ -317,7 +223,7 @@ export default function Pagamento() {
                       value={dadosPagamento.numeroCartao}
                       onChange={handleInputChange}
                       placeholder="0000 0000 0000 0000"
-                      maxLength="19"
+                      maxLength="16"
                     />
                   </div>
                   
@@ -445,22 +351,9 @@ export default function Pagamento() {
                 <FaArrowLeft style={{ marginRight: '8px' }} />
                 Voltar ao Carrinho
               </Link>
-              <button 
-                type="submit" 
-                className="confirm-payment-btn"
-                disabled={processando}
-              >
-                {processando ? (
-                  <>
-                    <FaSpinner className="spinner" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <FaCheck style={{ marginRight: '8px' }} />
-                    Confirmar Pagamento
-                  </>
-                )}
+              <button type="submit" className="confirm-payment-btn">
+                <FaCheck style={{ marginRight: '8px' }} />
+                Confirmar Pagamento
               </button>
             </div>
           </form>
