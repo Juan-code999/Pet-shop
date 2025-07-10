@@ -7,5 +7,6 @@
         public decimal ValorTotal { get; set; }
         public string MetodoPagamento { get; set; }
         public DadosPagamentoDTO Dados { get; set; }
+        public List<ItemCarrinhoDTO> Itens { get; set; }
     }
 }

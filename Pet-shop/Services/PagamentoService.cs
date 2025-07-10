@@ -2,6 +2,9 @@
 using Firebase.Database.Query;
 using Pet_shop.DTOs;
 using Pet_shop.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Pet_shop.Services
 {
@@ -9,6 +12,7 @@ namespace Pet_shop.Services
     {
         private readonly FirebaseClient _firebase;
         private readonly CarrinhoService _carrinhoService;
+        private readonly string[] _metodosPagamentoValidos = { "cartao", "pix", "boleto" };
 
         public PagamentoService(IConfiguration configuration, CarrinhoService carrinhoService)
         {
@@ -19,16 +23,40 @@ namespace Pet_shop.Services
 
         public async Task<Pagamento> ProcessarPagamentoAsync(PagamentoDTO pagamentoDto)
         {
-            // Validar carrinho
+            ValidarDadosPagamento(pagamentoDto);
+
             var carrinho = await _carrinhoService.ObterCarrinhoAsync(pagamentoDto.UsuarioId);
             if (carrinho == null || !carrinho.Itens.Any())
                 throw new Exception("Carrinho inválido ou vazio");
 
-            // Calcular valor total (já vem do front-end, mas podemos validar)
-            // var valorTotal = CalcularTotalCarrinho(carrinho);
+            var pagamento = MapearParaModelo(pagamentoDto);
 
-            // Criar pagamento
-            var pagamento = new Pagamento
+            await SimularProcessamentoPagamento(pagamento);
+
+            await SalvarPagamentoNoFirebase(pagamento);
+
+            return pagamento;
+        }
+
+        private void ValidarDadosPagamento(PagamentoDTO pagamentoDto)
+        {
+            if (pagamentoDto == null)
+                throw new ArgumentNullException(nameof(pagamentoDto));
+
+            if (string.IsNullOrEmpty(pagamentoDto.UsuarioId) ||
+                string.IsNullOrEmpty(pagamentoDto.CarrinhoId))
+                throw new ArgumentException("UsuárioID ou CarrinhoID inválidos");
+
+            if (!_metodosPagamentoValidos.Contains(pagamentoDto.MetodoPagamento))
+                throw new ArgumentException($"Método de pagamento inválido. Válidos: {string.Join(", ", _metodosPagamentoValidos)}");
+
+            if (pagamentoDto.ValorTotal <= 0)
+                throw new ArgumentException("Valor total deve ser maior que zero");
+        }
+
+        private Pagamento MapearParaModelo(PagamentoDTO pagamentoDto)
+        {
+            return new Pagamento
             {
                 Id = Guid.NewGuid().ToString(),
                 UsuarioId = pagamentoDto.UsuarioId,
@@ -42,29 +70,19 @@ namespace Pet_shop.Services
                     Validade = pagamentoDto.MetodoPagamento == "cartao" ? pagamentoDto.Dados.Validade : null,
                     CVV = pagamentoDto.MetodoPagamento == "cartao" ? pagamentoDto.Dados.CVV : null,
                     CPF = pagamentoDto.MetodoPagamento == "cartao" ? pagamentoDto.Dados.CPF : null,
-                    Parcelas = pagamentoDto.MetodoPagamento == "cartao" ? pagamentoDto.Dados.Parcelas : 0
+                    Parcelas = pagamentoDto.MetodoPagamento == "cartao" ? pagamentoDto.Dados.Parcelas : 0,
+                    ChavePix = pagamentoDto.MetodoPagamento == "pix" ? pagamentoDto.Dados.ChavePix : null,
+                    CodigoBoleto = pagamentoDto.MetodoPagamento == "boleto" ? pagamentoDto.Dados.CodigoBoleto : null,
+                    DataVencimento = pagamentoDto.MetodoPagamento == "boleto" ? pagamentoDto.Dados.DataVencimento : null
                 },
                 Status = "pendente"
             };
-
-            // Simular processamento do pagamento
-            await SimularProcessamentoPagamento(pagamento);
-
-            // Salvar no Firebase
-            await _firebase
-                .Child("pagamentos")
-                .Child(pagamento.Id)
-                .PutAsync(pagamento);
-
-            return pagamento;
         }
 
         private async Task SimularProcessamentoPagamento(Pagamento pagamento)
         {
-            // Simular tempo de processamento
             await Task.Delay(1500);
 
-            // Simular resultado aleatório (80% de chance de sucesso)
             var random = new Random();
             var sucesso = random.Next(0, 100) < 80;
 
@@ -82,6 +100,21 @@ namespace Pet_shop.Services
             }
         }
 
+        private async Task SalvarPagamentoNoFirebase(Pagamento pagamento)
+        {
+            try
+            {
+                await _firebase
+                    .Child("pagamentos")
+                    .Child(pagamento.Id)
+                    .PutAsync(pagamento);
+            }
+            catch (FirebaseException ex)
+            {
+                throw new Exception("Erro ao salvar pagamento no Firebase", ex);
+            }
+        }
+
         public async Task<Pagamento> ObterPagamentoAsync(string pagamentoId)
         {
             if (string.IsNullOrWhiteSpace(pagamentoId))
@@ -89,24 +122,14 @@ namespace Pet_shop.Services
 
             try
             {
-                var result = await _firebase
+                return await _firebase
                     .Child("pagamentos")
                     .Child(pagamentoId)
                     .OnceSingleAsync<Pagamento>();
-
-                return result;
             }
-            catch (FirebaseException firebaseEx)
+            catch (FirebaseException ex)
             {
-                // Logar o erro específico do Firebase
-                Console.WriteLine($"Erro ao acessar Firebase: {firebaseEx.Message}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                // Logar outros erros
-                Console.WriteLine($"Erro geral: {ex.Message}");
-                return null;
+                throw new Exception($"Erro ao acessar Firebase: {ex.Message}", ex);
             }
         }
 
@@ -125,19 +148,9 @@ namespace Pet_shop.Services
             pagamento.Status = status;
             pagamento.DataAtualizacao = DateTime.UtcNow;
 
-            try
-            {
-                await _firebase
-                    .Child("pagamentos")
-                    .Child(pagamentoId)
-                    .PutAsync(pagamento);
+            await SalvarPagamentoNoFirebase(pagamento);
 
-                return pagamento;
-            }
-            catch (FirebaseException firebaseEx)
-            {
-                throw new Exception($"Falha ao atualizar pagamento no Firebase: {firebaseEx.Message}", firebaseEx);
-            }
+            return pagamento;
         }
     }
 }

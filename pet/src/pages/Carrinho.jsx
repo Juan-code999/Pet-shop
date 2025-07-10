@@ -15,7 +15,8 @@ import {
   FaPix
 } from "react-icons/fa6";
 import { BiSolidDiscount } from "react-icons/bi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import "../styles/Carrinho.css";
 
 export default function Carrinho() {
@@ -26,7 +27,13 @@ export default function Carrinho() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [cupom, setCupom] = useState("");
   const [desconto, setDesconto] = useState(0);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  
   const usuarioId = localStorage.getItem("usuarioId");
+  const navigate = useNavigate();
 
   async function carregarDados() {
     if (!usuarioId) {
@@ -87,7 +94,13 @@ export default function Carrinho() {
     return selectedItems.includes(`${produtoId}-${tamanho}`);
   };
 
-  async function removerItem(produtoId, tamanho) {
+  async function removerItem(produtoId, tamanho, confirmado = false) {
+    if (!confirmado) {
+      setItemToDelete({ produtoId, tamanho });
+      setShowDeleteModal(true);
+      return;
+    }
+
     if (!carrinho) return;
     
     try {
@@ -102,6 +115,7 @@ export default function Carrinho() {
       if (!response.ok) throw new Error('Erro ao remover item');
       await carregarDados();
       setSelectedItems(prev => prev.filter(id => id !== `${produtoId}-${tamanho}`));
+      setShowDeleteModal(false);
     } catch (error) {
       setErro(error.message);
     }
@@ -113,14 +127,27 @@ export default function Carrinho() {
       return;
     }
 
+    setItemToDelete(null);
+    setShowDeleteModal(true);
+  }
+
+  async function confirmarRemocaoMultipla() {
     try {
       const promises = selectedItems.map(itemKey => {
         const [produtoId, tamanho] = itemKey.split('-');
-        return removerItem(produtoId, tamanho);
+        return fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/remover`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ produtoId, tamanho })
+        });
       });
 
       await Promise.all(promises);
+      await carregarDados();
       setSelectedItems([]);
+      setShowDeleteModal(false);
     } catch (error) {
       setErro(error.message);
     }
@@ -161,17 +188,29 @@ export default function Carrinho() {
     }, 0);
   }
 
-  function aplicarCupom() {
+  async function aplicarCupom() {
+    if (!cupom.trim()) {
+      setErro("Digite um código de cupom");
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    
+    // Simula o processamento do cupom
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     if (cupom.toUpperCase() === "DESCONTO10") {
       setDesconto(0.1);
-      alert("Cupom aplicado com sucesso! 10% de desconto.");
+      setErro(null);
     } else if (cupom.toUpperCase() === "DESCONTO20") {
       setDesconto(0.2);
-      alert("Cupom aplicado com sucesso! 20% de desconto.");
+      setErro(null);
     } else {
       setDesconto(0);
       setErro("Cupom inválido");
     }
+    
+    setIsApplyingCoupon(false);
   }
 
   function calcularTotal() {
@@ -186,48 +225,92 @@ export default function Carrinho() {
       return;
     }
 
-    try {
-      const promises = selectedItems.map(itemKey => {
-        const [produtoId, tamanho] = itemKey.split('-');
-        return removerItem(produtoId, tamanho);
-      });
+    // Salva os itens selecionados para a página de pagamento
+    const selectedProducts = carrinho.itens.filter(item => 
+      selectedItems.includes(`${item.produtoId}-${item.tamanho}`)
+    );
+    
+    localStorage.setItem('checkoutItems', JSON.stringify({
+      items: selectedProducts,
+      total: calcularTotal(),
+      desconto: subtotal * desconto
+    }));
 
-      await Promise.all(promises);
-      setSelectedItems([]);
-      setDesconto(0);
-      setCupom("");
-      
-      alert('Compra finalizada com sucesso! Obrigado por sua compra.');
-    } catch (error) {
-      setErro(error.message);
-    }
+    navigate('/pagamento');
   }
 
   if (loading) return (
-    <div className="loading-container">
-      <FaSpinner className="loading-spinner" />
+    <motion.div 
+      className="loading-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+      >
+        <FaSpinner className="loading-spinner" />
+      </motion.div>
       <p>Carregando seu carrinho...</p>
-    </div>
+    </motion.div>
   );
   
   if (erro) return (
-    <div className="error-container">
-      <div className="error-icon"><FaExclamationTriangle /></div>
+    <motion.div 
+      className="error-container"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100 }}
+    >
+      <motion.div 
+        className="error-icon"
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ repeat: 2, duration: 0.3 }}
+      >
+        <FaExclamationTriangle />
+      </motion.div>
       <p>{erro}</p>
-      <button onClick={carregarDados} className="retry-btn">Tentar novamente</button>
-    </div>
+      <motion.button 
+        onClick={carregarDados} 
+        className="retry-btn"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        Tentar novamente
+      </motion.button>
+    </motion.div>
   );
   
   if (!carrinho || carrinho.itens.length === 0) return (
-    <div className="empty-cart-container">
-      <div className="empty-cart-icon"><FaShoppingCart /></div>
+    <motion.div 
+      className="empty-cart-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div 
+        className="empty-cart-icon"
+        animate={{ 
+          y: [0, -10, 0],
+          scale: [1, 1.05, 1]
+        }}
+        transition={{ repeat: Infinity, duration: 2 }}
+      >
+        <FaShoppingCart />
+      </motion.div>
       <h2>Seu carrinho está vazio</h2>
       <p>Parece que você ainda não adicionou nenhum item</p>
-      <Link to="/produtos" className="continue-shopping-btn">
-        <FaArrowLeft style={{ marginRight: '8px' }} />
-        Continuar comprando
-      </Link>
-    </div>
+      <motion.div
+        whileHover={{ x: -5 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
+        <Link to="/produtos" className="continue-shopping-btn">
+          <FaArrowLeft style={{ marginRight: '8px' }} />
+          Continuar comprando
+        </Link>
+      </motion.div>
+    </motion.div>
   );
 
   const subtotal = calcularSubtotal();
@@ -236,23 +319,54 @@ export default function Carrinho() {
   const selectedCount = selectedItems.length;
 
   return (
-    <div className="cart-container">
+    <motion.div 
+      className="cart-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <div className="cart-header">
-        <h1 className="cart-title">Meu Carrinho</h1>
-        <div className="cart-steps">
-          <span className="step active">Carrinho</span>
+        <motion.h1 
+          className="cart-title"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          Meu Carrinho
+        </motion.h1>
+        <motion.div 
+          className="cart-steps"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <motion.span 
+            className="step active"
+            whileHover={{ scale: 1.05 }}
+          >
+            Carrinho
+          </motion.span>
           <span className="divider">›</span>
           <span className="step">Pagamento</span>
           <span className="divider">›</span>
           <span className="step">Confirmação</span>
-        </div>
+        </motion.div>
       </div>
       
       <div className="cart-content">
         <div className="cart-items-container">
-          <div className="cart-items-header">
-            <div className="header-select-all">
-              <label className="custom-checkbox">
+          <motion.div 
+            className="cart-items-header"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div 
+              className="header-select-all"
+              onClick={toggleSelectAll}
+              style={{ cursor: 'pointer' }}
+            >
+              <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="checkbox"
                   checked={selectedItems.length === carrinho.itens.length && carrinho.itens.length > 0}
@@ -264,31 +378,93 @@ export default function Carrinho() {
             </div>
             
             {selectedCount > 0 && (
-              <button 
+              <motion.button 
                 className="remove-selected-btn"
                 onClick={removerItensSelecionados}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 200 }}
               >
                 <FaTrash style={{ marginRight: '5px' }} />
                 Remover selecionados
-              </button>
+              </motion.button>
             )}
-          </div>
+          </motion.div>
           
-          <div className="cart-items">
-            {carrinho.itens.map((item) => {
-              const produto = produtos.find((p) => p.id === item.produtoId);
-              const isSelected = isItemSelected(item.produtoId, item.tamanho);
-              const tamanhoDetalhe = produto?.tamanhos?.find((t) => t.tamanho === item.tamanho);
-              const preco = tamanhoDetalhe?.precoTotal ?? 0;
-              const descontoProduto = produto?.desconto || 0;
-              const subtotal = preco * item.quantidade;
+          <motion.div 
+            className="cart-items"
+            layout
+          >
+            <AnimatePresence>
+              {carrinho.itens.map((item) => {
+                const produto = produtos.find((p) => p.id === item.produtoId);
+                const isSelected = isItemSelected(item.produtoId, item.tamanho);
+                const tamanhoDetalhe = produto?.tamanhos?.find((t) => t.tamanho === item.tamanho);
+                const preco = tamanhoDetalhe?.precoTotal ?? 0;
+                const descontoProduto = produto?.desconto || 0;
+                const subtotal = preco * item.quantidade;
 
-              if (!produto) {
+                if (!produto) {
+                  return (
+                    <motion.div 
+                      key={`${item.produtoId}-${item.tamanho}`} 
+                      className={`cart-item ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleItemSelection(item.produtoId, item.tamanho)}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                      layout
+                    >
+                      <div className="item-select">
+                        <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleItemSelection(item.produtoId, item.tamanho)}
+                          />
+                          <span className="checkmark"></span>
+                        </label>
+                      </div>
+                      <div className="item-content">
+                        <div className="item-image unavailable">
+                          <span>Produto indisponível</span>
+                        </div>
+                        <div className="item-details">
+                          <p className="item-name">Produto não disponível</p>
+                          <div className="item-attributes">
+                            <span className="attribute">Tamanho: {item.tamanho}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="item-actions" onClick={(e) => e.stopPropagation()}>
+                        <motion.button 
+                          className="remove-btn"
+                          onClick={() => removerItem(item.produtoId, item.tamanho)}
+                          title="Remover item"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FaTrash />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  );
+                }
+
                 return (
-                  <div 
+                  <motion.div 
                     key={`${item.produtoId}-${item.tamanho}`} 
                     className={`cart-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => toggleItemSelection(item.produtoId, item.tamanho)}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    whileHover={{ scale: 1.005 }}
+                    layout
                   >
                     <div className="item-select">
                       <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
@@ -300,140 +476,151 @@ export default function Carrinho() {
                         <span className="checkmark"></span>
                       </label>
                     </div>
+                    
                     <div className="item-content">
-                      <div className="item-image unavailable">
-                        <span>Produto indisponível</span>
-                      </div>
+                      <motion.div 
+                        className="item-image"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        {produto.imagensUrl && produto.imagensUrl.length > 0 && (
+                          <img
+                            src={produto.imagensUrl[0]}
+                            alt={produto.nome}
+                            loading="lazy"
+                          />
+                        )}
+                      </motion.div>
+                      
                       <div className="item-details">
-                        <p className="item-name">Produto não disponível</p>
+                        <p className="item-name">{produto.nome}</p>
                         <div className="item-attributes">
                           <span className="attribute">Tamanho: {item.tamanho}</span>
+                          {descontoProduto > 0 && (
+                            <motion.span 
+                              className="attribute discount-badge"
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              Desconto: {descontoProduto}%
+                            </motion.span>
+                          )}
+                        </div>
+                        
+                        <div className="quantity-control" onClick={(e) => e.stopPropagation()}>
+                          <motion.button 
+                            className="qty-btn minus"
+                            onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1)}
+                            disabled={item.quantidade <= 1}
+                            title="Diminuir quantidade"
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            −
+                          </motion.button>
+                          <motion.span 
+                            className="qty-value"
+                            key={`qty-${item.quantidade}`}
+                            initial={{ scale: 1.2 }}
+                            animate={{ scale: 1 }}
+                          >
+                            {item.quantidade}
+                          </motion.span>
+                          <motion.button 
+                            className="qty-btn plus"
+                            onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade + 1)}
+                            title="Aumentar quantidade"
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            +
+                          </motion.button>
                         </div>
                       </div>
                     </div>
+                    
+                    <div className="item-price">
+                      {descontoProduto > 0 && (
+                        <p className="original-price">
+                          De: R$ {(preco / (1 - descontoProduto/100)).toFixed(2)}
+                        </p>
+                      )}
+                      <p className="price-unit">
+                        {descontoProduto > 0 ? 'Por: ' : ''}R$ {preco.toFixed(2)}
+                      </p>
+                    </div>
+                    
                     <div className="item-actions" onClick={(e) => e.stopPropagation()}>
-                      <button 
+                      <motion.button 
                         className="remove-btn"
                         onClick={() => removerItem(item.produtoId, item.tamanho)}
                         title="Remover item"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         <FaTrash />
-                      </button>
+                      </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
                 );
-              }
-
-              return (
-                <div 
-                  key={`${item.produtoId}-${item.tamanho}`} 
-                  className={`cart-item ${isSelected ? 'selected' : ''}`}
-                  onClick={() => toggleItemSelection(item.produtoId, item.tamanho)}
-                >
-                  <div className="item-select">
-                    <label className="custom-checkbox" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleItemSelection(item.produtoId, item.tamanho)}
-                      />
-                      <span className="checkmark"></span>
-                    </label>
-                  </div>
-                  
-                  <div className="item-content">
-                    <div className="item-image">
-                      {produto.imagensUrl && produto.imagensUrl.length > 0 && (
-                        <img
-                          src={produto.imagensUrl[0]}
-                          alt={produto.nome}
-                          loading="lazy"
-                        />
-                      )}
-                    </div>
-                    
-                    <div className="item-details">
-                      <p className="item-name">{produto.nome}</p>
-                      <div className="item-attributes">
-                        <span className="attribute">Tamanho: {item.tamanho}</span>
-                        {descontoProduto > 0 && (
-                          <span className="attribute discount-badge">
-                            Desconto: {descontoProduto}%
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="quantity-control" onClick={(e) => e.stopPropagation()}>
-                        <button 
-                          className="qty-btn minus"
-                          onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1)}
-                          disabled={item.quantidade <= 1}
-                          title="Diminuir quantidade"
-                        >
-                          −
-                        </button>
-                        <span className="qty-value">{item.quantidade}</span>
-                        <button 
-                          className="qty-btn plus"
-                          onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade + 1)}
-                          title="Aumentar quantidade"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="item-price">
-                    {descontoProduto > 0 && (
-                      <p className="original-price">
-                        R$ {(preco / (1 - descontoProduto/100)).toFixed(2)}
-                      </p>
-                    )}
-                    <p className="price-unit">R$ {preco.toFixed(2)}</p>
-                    <p className="subtotal">R$ {subtotal.toFixed(2)}</p>
-                  </div>
-                  
-                  <div className="item-actions" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      className="remove-btn"
-                      onClick={() => removerItem(item.produtoId, item.tamanho)}
-                      title="Remover item"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+              })}
+            </AnimatePresence>
+          </motion.div>
         </div>
         
-        <div className="cart-summary">
+        <motion.div 
+          className="cart-summary"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <h3 className="summary-title">Resumo do Pedido</h3>
           <div className="summary-content">
-            <div className="summary-row">
+            <motion.div 
+              className="summary-row"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
               <span>Itens selecionados</span>
               <span>{selectedCount}</span>
-            </div>
-            <div className="summary-row">
+            </motion.div>
+            <motion.div 
+              className="summary-row"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.55 }}
+            >
               <span>Subtotal</span>
               <span>R$ {subtotal.toFixed(2)}</span>
-            </div>
+            </motion.div>
             
             {desconto > 0 && (
-              <div className="summary-row discount">
+              <motion.div 
+                className="summary-row discount"
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <span>Desconto</span>
                 <span className="discount-value">- R$ {valorDesconto.toFixed(2)}</span>
-              </div>
+              </motion.div>
             )}
             
-            <div className="summary-row">
+            <motion.div 
+              className="summary-row"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
               <span>Frete</span>
               <span className="free-shipping">Grátis</span>
-            </div>
+            </motion.div>
             
-            <div className="coupon-section">
+            <motion.div 
+              className="coupon-section"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.65 }}
+            >
               <div className="coupon-input">
                 <BiSolidDiscount className="coupon-icon" />
                 <input
@@ -442,44 +629,153 @@ export default function Carrinho() {
                   value={cupom}
                   onChange={(e) => setCupom(e.target.value)}
                 />
-                <button 
+                <motion.button 
                   className="apply-coupon-btn"
                   onClick={aplicarCupom}
+                  disabled={isApplyingCoupon}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Aplicar
-                </button>
+                  {isApplyingCoupon ? (
+                    <motion.span
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    >
+                      Aplicando...
+                    </motion.span>
+                  ) : (
+                    "Aplicar"
+                  )}
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
             
-            <div className="summary-divider"></div>
-            <div className="summary-row total">
+            <motion.div 
+              className="summary-divider"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.7 }}
+            />
+            <motion.div 
+              className="summary-row total"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.75 }}
+            >
               <span>Total</span>
-              <span className="total-price">R$ {total.toFixed(2)}</span>
-            </div>
+              <motion.span 
+                className="total-price"
+                key={`total-${total}`}
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+              >
+                R$ {total.toFixed(2)}
+              </motion.span>
+            </motion.div>
           </div>
           
-          <button 
+          <motion.button 
             className={`checkout-btn ${selectedCount === 0 ? 'disabled' : ''}`}
             onClick={finalizarCompra}
-            disabled={selectedCount === 0}
+            disabled={selectedCount === 0 || isCheckingOut}
+            whileHover={selectedCount === 0 || isCheckingOut ? {} : { scale: 1.03 }}
+            whileTap={selectedCount === 0 || isCheckingOut ? {} : { scale: 0.97 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
           >
-            <FaCheck style={{ marginRight: '8px' }} />
-            Finalizar Compra
-            <span className="selected-count">({selectedCount})</span>
-          </button>
+            {isCheckingOut ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  style={{ marginRight: '8px' }}
+                >
+                  <FaSpinner />
+                </motion.div>
+                Processando...
+              </>
+            ) : (
+              <>
+                <FaCheck style={{ marginRight: '8px' }} />
+                Finalizar Compra
+                <span className="selected-count">({selectedCount})</span>
+              </>
+            )}
+          </motion.button>
           
-          <div className="payment-methods">
-            <p>Métodos de pagamento:</p>
+          <motion.div 
+            className="payment-methods"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            <p style={{ marginBottom: '8px' }}>Métodos de pagamento:</p>
             <div className="payment-icons">
-              <FaCcVisa className="payment-icon" title="Visa" />
-              <FaCcMastercard className="payment-icon" title="Mastercard" />
-              <FaCcAmex className="payment-icon" title="American Express" />
-              <FaPix className="payment-icon" title="PIX" />
-              <FaBarcode className="payment-icon" title="Boleto" />
+              <motion.div whileHover={{ y: -3 }}>
+                <FaCcVisa className="payment-icon" title="Visa" />
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }}>
+                <FaCcMastercard className="payment-icon" title="Mastercard" />
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }}>
+                <FaCcAmex className="payment-icon" title="American Express" />
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }}>
+                <FaPix className="payment-icon" title="PIX" />
+              </motion.div>
+              <motion.div whileHover={{ y: -3 }}>
+                <FaBarcode className="payment-icon" title="Boleto" />
+              </motion.div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+
+      {/* Modal de confirmação */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div 
+            className="delete-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div 
+              className="delete-modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Confirmar exclusão</h3>
+              <p>
+                {itemToDelete 
+                  ? "Tem certeza que deseja remover este item do carrinho?"
+                  : "Tem certeza que deseja remover os itens selecionados?"}
+              </p>
+              <div className="modal-buttons">
+                <button 
+                  className="cancel-btn"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="confirm-btn"
+                  onClick={itemToDelete 
+                    ? () => removerItem(itemToDelete.produtoId, itemToDelete.tamanho, true)
+                    : confirmarRemocaoMultipla
+                  }
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

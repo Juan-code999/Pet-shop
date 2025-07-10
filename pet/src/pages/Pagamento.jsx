@@ -34,10 +34,10 @@ export default function Pagamento() {
     parcelas: "1"
   });
   const [processando, setProcessando] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
   const usuarioId = localStorage.getItem("usuarioId");
   const navigate = useNavigate();
 
-  // Carrega os dados do carrinho e produtos
   async function carregarDados() {
     if (!usuarioId) {
       setErro("Usuário não está logado");
@@ -63,6 +63,7 @@ export default function Pagamento() {
 
       setCarrinho(carrinhoJson);
       setProdutos(produtosJson);
+      setSelectedItems(carrinhoJson.itens.map(item => item.id));
     } catch (err) {
       setErro(err.message);
     } finally {
@@ -74,11 +75,20 @@ export default function Pagamento() {
     carregarDados();
   }, [usuarioId]);
 
-  // Calcula o subtotal do carrinho
+  const toggleItemSelection = (itemId) => {
+    setSelectedItems(prev => 
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
   function calcularSubtotal() {
     if (!carrinho || carrinho.itens.length === 0) return 0;
     
     return carrinho.itens.reduce((total, item) => {
+      if (!selectedItems.includes(item.id)) return total;
+      
       const produto = produtos.find(p => p.id === item.produtoId);
       if (!produto) return total;
       
@@ -89,7 +99,6 @@ export default function Pagamento() {
     }, 0);
   }
 
-  // Aplica cupom de desconto
   function aplicarCupom() {
     if (cupom.toUpperCase() === "DESCONTO10") {
       setDesconto(0.1);
@@ -103,18 +112,15 @@ export default function Pagamento() {
     }
   }
 
-  // Calcula o valor total com desconto
   function calcularTotal() {
     const subtotal = calcularSubtotal();
     const valorDesconto = subtotal * desconto;
     return subtotal - valorDesconto;
   }
 
-  // Manipula mudanças nos inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Formatação automática para campos específicos
     let formattedValue = value;
     
     if (name === "numeroCartao") {
@@ -145,7 +151,6 @@ export default function Pagamento() {
     }));
   };
 
-  // Envia o formulário de pagamento
   const handleSubmit = async (e) => {
     e.preventDefault();
     setProcessando(true);
@@ -157,93 +162,84 @@ export default function Pagamento() {
       return;
     }
 
-    // Validações específicas para cartão
-    if (metodoPagamento === "cartao") {
-      const numeroCartaoLimpo = dadosPagamento.numeroCartao.replace(/\s/g, '');
-      const validadeLimpa = dadosPagamento.validade.replace(/\//g, '');
-      const cpfLimpo = dadosPagamento.cpf.replace(/\D/g, '');
-      
-      if (numeroCartaoLimpo.length !== 16) {
-        setErro("Número do cartão inválido (deve ter 16 dígitos)");
-        setProcessando(false);
-        return;
-      }
-      
-      if (validadeLimpa.length !== 4) {
-        setErro("Data de validade inválida (formato MM/AA)");
-        setProcessando(false);
-        return;
-      }
-      
-      if (dadosPagamento.cvv.length !== 3) {
-        setErro("CVV inválido (deve ter 3 dígitos)");
-        setProcessando(false);
-        return;
-      }
-      
-      if (cpfLimpo.length !== 11) {
-        setErro("CPF inválido (deve ter 11 dígitos)");
-        setProcessando(false);
-        return;
-      }
+    if (selectedItems.length === 0) {
+      setErro("Selecione pelo menos um item para comprar");
+      setProcessando(false);
+      return;
     }
 
     try {
       const total = calcularTotal();
-      const pagamentoDto = {
+      const selectedItemsData = carrinho.itens.filter(item => selectedItems.includes(item.id));
+
+      const payload = {
         usuarioId,
         carrinhoId: carrinho.id,
         valorTotal: total,
         metodoPagamento,
-        dados: metodoPagamento === "cartao" ? {
-          ...dadosPagamento,
-          numeroCartao: dadosPagamento.numeroCartao.replace(/\s/g, ''),
-          validade: dadosPagamento.validade.replace(/\//g, ''),
-          cpf: dadosPagamento.cpf.replace(/\D/g, '')
-        } : null
+        itens: selectedItemsData.map(item => ({
+          produtoId: item.produtoId,
+          tamanho: item.tamanho,
+          quantidade: item.quantidade
+        })),
+        dados: {}
       };
+
+      if (metodoPagamento === "cartao") {
+        payload.dados = {
+          numeroCartao: dadosPagamento.numeroCartao.replace(/\s/g, ''),
+          nomeCartao: dadosPagamento.nomeCartao,
+          validade: dadosPagamento.validade.replace(/\//g, ''),
+          cvv: dadosPagamento.cvv,
+          cpf: dadosPagamento.cpf.replace(/\D/g, ''),
+          parcelas: parseInt(dadosPagamento.parcelas)
+        };
+      }
 
       const response = await fetch("http://localhost:5005/api/Pagamento/processar", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(pagamentoDto)
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao processar pagamento");
+        throw new Error(errorData.message || `Erro ao processar pagamento: ${response.status}`);
       }
 
       const resultado = await response.json();
 
-      // Limpar carrinho após pagamento aprovado
       if (resultado.status === "aprovado") {
-        await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/limpar`, {
-          method: 'DELETE'
+        await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/itens`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ itensIds: selectedItems })
         });
         
-        // Redirecionar para página de confirmação
         navigate("/confirmacao", { 
           state: { 
             pagamentoId: resultado.pagamentoId,
             metodoPagamento: resultado.metodo,
             dadosPagamento: resultado.dados,
-            valorTotal: total
+            valorTotal: total,
+            itensComprados: selectedItemsData
           } 
         });
       } else {
         setErro("Pagamento recusado. Por favor, tente outro método de pagamento.");
       }
     } catch (error) {
+      console.error("Erro no pagamento:", error);
       setErro(error.message);
     } finally {
       setProcessando(false);
     }
   };
 
-  // Estado de carregamento
   if (loading) return (
     <div className="loading-container">
       <FaSpinner className="loading-spinner" />
@@ -251,7 +247,6 @@ export default function Pagamento() {
     </div>
   );
   
-  // Estado de erro
   if (erro) return (
     <div className="error-container">
       <div className="error-icon"><FaExclamationTriangle /></div>
@@ -260,7 +255,6 @@ export default function Pagamento() {
     </div>
   );
   
-  // Carrinho vazio
   if (!carrinho || carrinho.itens.length === 0) return (
     <div className="empty-cart-container">
       <div className="empty-cart-icon"><FaShoppingCart /></div>
@@ -273,7 +267,6 @@ export default function Pagamento() {
     </div>
   );
 
-  // Cálculos finais
   const subtotal = calcularSubtotal();
   const valorDesconto = subtotal * desconto;
   const total = calcularTotal();
@@ -292,12 +285,55 @@ export default function Pagamento() {
       </div>
       
       <div className="cart-content">
-        {/* Seção de métodos de pagamento */}
+        <div className="cart-items-container">
+          <h2 className="cart-items-title">Selecione os itens para comprar</h2>
+          <div className="items-list">
+            {carrinho.itens.map(item => {
+              const produto = produtos.find(p => p.id === item.produtoId);
+              if (!produto) return null;
+              
+              const tamanhoDetalhe = produto.tamanhos?.find(t => t.tamanho === item.tamanho);
+              const preco = tamanhoDetalhe?.precoTotal ?? 0;
+              const totalItem = preco * item.quantidade;
+              
+              return (
+                <div 
+                  key={item.id}
+                  className={`cart-item ${selectedItems.includes(item.id) ? 'selected' : ''}`}
+                  onClick={() => toggleItemSelection(item.id)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => toggleItemSelection(item.id)}
+                    onClick={e => e.stopPropagation()}
+                  />
+                  <img 
+                    src={produto.imagemUrl || 'https://via.placeholder.com/80'} 
+                    alt={produto.nome} 
+                    className="item-image"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/80';
+                    }}
+                  />
+                  <div className="item-details">
+                    <h4 className="item-name">{produto.nome}</h4>
+                    <p>Tamanho: {item.tamanho}</p>
+                    <p>Quantidade: {item.quantidade}</p>
+                  </div>
+                  <div className="item-price">
+                    R$ {totalItem.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
         <div className="payment-form-container">
           <h2 className="payment-title">Método de Pagamento</h2>
           
           <div className="payment-methods-selector">
-            {/* Método: Cartão de Crédito */}
             <div 
               className={`payment-method ${metodoPagamento === "cartao" ? "active" : ""}`}
               onClick={() => setMetodoPagamento("cartao")}
@@ -400,7 +436,6 @@ export default function Pagamento() {
               )}
             </div>
             
-            {/* Método: PIX */}
             <div 
               className={`payment-method ${metodoPagamento === "pix" ? "active" : ""}`}
               onClick={() => setMetodoPagamento("pix")}
@@ -426,7 +461,6 @@ export default function Pagamento() {
               )}
             </div>
             
-            {/* Método: Boleto Bancário */}
             <div 
               className={`payment-method ${metodoPagamento === "boleto" ? "active" : ""}`}
               onClick={() => setMetodoPagamento("boleto")}
@@ -453,10 +487,9 @@ export default function Pagamento() {
             </div>
           </div>
           
-          {/* Formulário de envio */}
           <form onSubmit={handleSubmit} className="payment-form">
             {erro && (
-              <div className="error-message" style={{ color: '#e74c3c', marginBottom: '15px' }}>
+              <div className="error-message">
                 <FaExclamationTriangle style={{ marginRight: '5px' }} />
                 {erro}
               </div>
@@ -488,12 +521,11 @@ export default function Pagamento() {
           </form>
         </div>
         
-        {/* Resumo do pedido */}
         <div className="cart-summary">
           <h3 className="summary-title">Resumo do Pedido</h3>
           <div className="summary-content">
             <div className="summary-row">
-              <span>Itens ({carrinho.itens.length})</span>
+              <span>Itens ({selectedItems.length})</span>
               <span>R$ {subtotal.toFixed(2)}</span>
             </div>
             

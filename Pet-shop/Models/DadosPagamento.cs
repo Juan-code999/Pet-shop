@@ -15,6 +15,6 @@
 
         // Para boleto
         public string CodigoBoleto { get; set; }
-        public DateTime DataVencimento { get; set; }
+        public DateTime? DataVencimento { get; set; }
     }
 }

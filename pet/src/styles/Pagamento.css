@@ -640,6 +640,134 @@ body {
   transform: translateY(-2px);
   box-shadow: var(--box-shadow-hover);
 }
+/* styles/Pagamento.css - CSS Unificado e Aprimorado */
+
+/* Adicione estas regras ao seu CSS existente */
+
+/* Seção de itens selecionáveis */
+.selected-items-section {
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  gap: 15px;
+}
+
+.cart-item.selected {
+  border-color: var(--success-color);
+  background-color: rgba(39, 174, 96, 0.05);
+}
+
+.cart-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--medium-gray);
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+  position: relative;
+  cursor: pointer;
+}
+
+.cart-item input[type="checkbox"]:checked {
+  border-color: var(--success-color);
+  background-color: var(--success-color);
+}
+
+.cart-item input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--text-on-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.item-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-details h4 {
+  margin: 0 0 5px 0;
+  color: var(--primary-color);
+}
+
+.item-details p {
+  margin: 3px 0;
+  color: var(--dark-gray);
+  font-size: 0.9em;
+}
+
+.item-price {
+  font-weight: bold;
+  color: var(--success-color);
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Mensagem de erro específica */
+.error-message {
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+/* Responsividade adicional */
+@media (max-width: 768px) {
+  .cart-item {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .cart-item input[type="checkbox"] {
+    order: 1;
+  }
+  
+  .item-image {
+    order: 2;
+    width: 60px;
+    height: 60px;
+  }
+  
+  .item-details {
+    order: 3;
+    flex: 1 0 100%;
+  }
+  
+  .item-price {
+    order: 4;
+    text-align: left;
+    margin-top: 10px;
+    flex: 1;
+  }
+}
 
 /* Animações */
 @keyframes spin {
