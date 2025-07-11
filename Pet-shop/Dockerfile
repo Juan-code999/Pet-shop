@@ -8,7 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiar o arquivo .csproj correto
-COPY Pet-shop.csproj ./  # Corrigido para refletir o local correto
+COPY Pet-shop.csproj ./
 
 # Restaurar dependências
 RUN dotnet restore "Pet-shop.csproj"
@@ -31,4 +31,4 @@ WORKDIR /app
 COPY --from=publish /app/publish . 
 
 # Definir o ponto de entrada para a aplicação
-ENTRYPOINT ["dotnet", "Pet-shop.dll"]  # Certifique-se de que o nome do arquivo .dll é correto
+ENTRYPOINT ["dotnet", "Pet-shop.dll"]  
