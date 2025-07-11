@@ -7,11 +7,11 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copiar o arquivo .csproj correto (ajustado para Pet_shop.csproj)
-COPY Pet-shop.csproj ./  # Use o nome correto
+# Copiar o arquivo .csproj correto
+COPY Pet-shop/Pet-shop.csproj ./  # Use o caminho correto do .csproj
 
 # Restaurar dependências
-RUN dotnet restore "Pet-shop.csproj"  # Use o nome correto
+RUN dotnet restore "Pet-shop.csproj"  # Use o caminho correto do .csproj
 
 # Copiar o restante do código
 COPY . . 
