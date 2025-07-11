@@ -1,0 +1,39 @@
+ Arquivos de configuração da IDE
+**/.vs
+**/.vscode
+**/.idea
+**/.settings
+**/*.user
+
+# Dependências e diretórios gerados
+**/bin
+**/obj
+**/node_modules
+**/docker-compose*
+**/compose*
+
+ Arquivos de configuração de ambiente e secretos
+**/.env
+**/*.yaml
+**/secrets.dev.yaml
+**/values.dev.yaml
+**/*.dbmdl
+**/*.jfm
+
+ Logs e arquivos de depuração
+**/npm-debug.log
+**/*.log
+
+# Licença e documentos
+LICENSE
+README.md
+
+# Arquivos gerados por ferramentas e sistemas de controle de versão
+**/.git
+**/.gitignore
+**/.dockerignore
+**/*.gitmodules
+**/*.project
+
+ Arquivos específicos do Docker que não são necessários
+**/Dockerfile*
