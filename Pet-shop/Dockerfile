@@ -8,10 +8,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiar o arquivo .csproj correto
-COPY Pet-shop/Pet-shop.csproj ./  # Use o caminho correto do .csproj
+COPY Pet-shop.csproj ./  # Corrigido para refletir o local correto
 
 # Restaurar dependências
-RUN dotnet restore "Pet-shop.csproj"  # Use o caminho correto do .csproj
+RUN dotnet restore "Pet-shop.csproj"  # Use o nome correto
 
 # Copiar o restante do código
 COPY . . 
