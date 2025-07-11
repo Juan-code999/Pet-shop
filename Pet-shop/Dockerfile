@@ -11,7 +11,7 @@ WORKDIR /src
 COPY Pet-shop.csproj ./  # Corrigido para refletir o local correto
 
 # Restaurar dependências
-RUN dotnet restore "Pet-shop.csproj"  # Use o nome correto
+RUN dotnet restore "Pet-shop.csproj"
 
 # Copiar o restante do código
 COPY . . 

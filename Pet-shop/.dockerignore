@@ -1,4 +1,4 @@
- Arquivos de configuração da IDE
+# Arquivos de configuração da IDE
 **/.vs
 **/.vscode
 **/.idea
@@ -12,7 +12,7 @@
 **/docker-compose*
 **/compose*
 
- Arquivos de configuração de ambiente e secretos
+# Arquivos de configuração de ambiente e secretos
 **/.env
 **/*.yaml
 **/secrets.dev.yaml
@@ -20,7 +20,7 @@
 **/*.dbmdl
 **/*.jfm
 
- Logs e arquivos de depuração
+# Logs e arquivos de depuração
 **/npm-debug.log
 **/*.log
 
@@ -35,5 +35,5 @@ README.md
 **/*.gitmodules
 **/*.project
 
- Arquivos específicos do Docker que não são necessários
+# Arquivos específicos do Docker que não são necessários
 **/Dockerfile*
