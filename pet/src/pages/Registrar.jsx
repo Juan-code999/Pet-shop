@@ -2,155 +2,221 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
 import { auth } from '../Db/firebaseConfig';
-import {
-  FiAlertCircle,
-  FiCheckCircle,
-  FiXCircle,
-  FiInfo
-} from 'react-icons/fi';
+import { FiAlertCircle, FiCheckCircle, FiXCircle, FiInfo, FiEye, FiEyeOff } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import banner from '../img/dogg.jpg';
 import '../styles/Registrar.css';
 
-// Função para gerar avatar SVG base64 com inicial e fundo colorido
-function generateAvatar(name) {
-  const initial = name.charAt(0).toUpperCase();
-
-  // Gera cor aleatória
-  const randomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+const MessageBox = ({ text, type }) => {
+  const icons = {
+    success: <FiCheckCircle />,
+    error: <FiXCircle />,
+    warning: <FiAlertCircle />,
+    info: <FiInfo />
   };
 
-  const bgColor = randomColor();
-
-  const svg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150">
-    <rect width="150" height="150" fill="${bgColor}" />
-    <text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" fill="#fff">${initial}</text>
-  </svg>`;
-
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
-}
-
-const MessageBox = ({ text, type }) => {
-  let icon;
-  let color;
-
-  switch (type) {
-    case 'success':
-      icon = <FiCheckCircle />;
-      color = '#28a745'; // verde
-      break;
-    case 'error':
-      icon = <FiXCircle />;
-      color = '#dc3545'; // vermelho
-      break;
-    case 'warning':
-      icon = <FiAlertCircle />;
-      color = '#ffc107'; // amarelo
-      break;
-    default:
-      icon = <FiInfo />;
-      color = '#17a2b8'; // azul-info
-  }
+  const colors = {
+    success: '#28a745',
+    error: '#dc3545',
+    warning: '#ffc107',
+    info: '#17a2b8'
+  };
 
   return (
-    <div className="message-box" style={{ borderLeft: `5px solid ${color}`, color }}>
-      <span style={{ marginRight: 8 }}>{icon}</span>
+    <motion.div
+      className="message-box"
+      style={{ borderLeft: `5px solid ${colors[type]}` }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <span className="message-icon">{icons[type]}</span>
       {text}
-    </div>
+    </motion.div>
   );
 };
 
 const Registrar = () => {
-  const [formDataUsuario, setFormDataUsuario] = useState({
-    Nome: '',
-    Email: '',
-    Senha: '',
-    ConfirmarSenha: '',
-    Telefone: '',
-    Endereco: {
-      Rua: '',
-      Numero: '',
-      Bairro: '',
-      Cidade: '',
-      Estado: '',
-      Cep: '',
-      Complemento: '',
-    },
-    isAdmin: false,
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+    confirmarSenha: '',
+    telefone: '',
+    endereco: {
+      rua: '',
+      numero: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: '',
+      complemento: ''
+    }
   });
 
+  const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    switch(name) {
+      case 'nome':
+        if (/[^a-zA-ZÀ-ÿ\s']/.test(value)) return;
+        break;
+        
+      case 'telefone':
+        const digits = value.replace(/\D/g, '');
+        let formatted = digits;
+        if (digits.length > 2) {
+          formatted = `(${digits.substring(0,2)}) ${digits.substring(2,7)}`;
+          if (digits.length > 7) {
+            formatted += `-${digits.substring(7,11)}`;
+          }
+        }
+        setFormData(prev => ({ ...prev, [name]: formatted }));
+        return;
+        
+      case 'endereco.cep':
+        const cepDigits = value.replace(/\D/g, '');
+        let cepFormatted = cepDigits;
+        if (cepDigits.length > 5) {
+          cepFormatted = `${cepDigits.substring(0,5)}-${cepDigits.substring(5,8)}`;
+        }
+        const field = name.split('.')[1];
+        setFormData(prev => ({
+          ...prev,
+          endereco: { ...prev.endereco, [field]: cepFormatted }
+        }));
+        return;
+        
+      case 'endereco.numero':
+        if (/[^0-9]/.test(value)) return;
+        break;
+    }
 
-    if (name.startsWith('Endereco.')) {
-      const enderecoField = name.split('.')[1];
-      setFormDataUsuario((prev) => ({
+    if (name.startsWith('endereco.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
         ...prev,
-        Endereco: {
-          ...prev.Endereco,
-          [enderecoField]: value,
-        },
+        endereco: { ...prev.endereco, [field]: value }
       }));
     } else {
-      setFormDataUsuario((prev) => ({ ...prev, [name]: value }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const showMessage = (text, type = 'info', duration = 4000) => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: '', type: '' }), duration);
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+    } else if (formData.nome.trim().length < 3) {
+      newErrors.nome = 'Nome muito curto';
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (!formData.senha) {
+      newErrors.senha = 'Senha é obrigatória';
+    } else if (formData.senha.length < 6) {
+      newErrors.senha = 'Senha deve ter pelo menos 6 caracteres';
+    }
+    
+    if (formData.senha !== formData.confirmarSenha) {
+      newErrors.confirmarSenha = 'Senhas não coincidem';
+    }
+    
+    if (formData.telefone && formData.telefone.replace(/\D/g, '').length < 10) {
+      newErrors.telefone = 'Telefone inválido';
+    }
+    
+    if (!formData.endereco.rua.trim()) newErrors.rua = 'Rua é obrigatória';
+    if (!formData.endereco.numero.trim()) newErrors.numero = 'Número é obrigatório';
+    if (!formData.endereco.bairro.trim()) newErrors.bairro = 'Bairro é obrigatório';
+    if (!formData.endereco.cidade.trim()) newErrors.cidade = 'Cidade é obrigatória';
+    if (!formData.endereco.estado.trim()) newErrors.estado = 'Estado é obrigatório';
+    
+    if (!formData.endereco.cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+    } else if (formData.endereco.cep.replace(/\D/g, '').length !== 8) {
+      newErrors.cep = 'CEP inválido';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmitCompleto = async (e) => {
+  const generateAvatar = (name) => {
+    if (!name) return '';
+    const initial = name.charAt(0).toUpperCase();
+    const hue = Math.floor(Math.random() * 360);
+    const bgColor = `hsl(${hue}, 70%, 60%)`;
+
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+      <rect width="150" height="150" fill="${bgColor}" rx="75"/>
+      <text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" fill="#fff">${initial}</text>
+    </svg>`;
+
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const { Nome, Email, Senha, ConfirmarSenha } = formDataUsuario;
+    setIsSubmitting(true);
 
-    if (!Email || !Senha || !Nome) {
-      showMessage('Preencha o nome, email e a senha!', 'warning');
-      return;
-    }
-
-    if (Senha !== ConfirmarSenha) {
-      showMessage('As senhas não coincidem!', 'error');
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      setMessage({ text: 'Por favor, corrija os erros no formulário', type: 'error' });
       return;
     }
 
     let userCredential = null;
 
     try {
-      userCredential = await createUserWithEmailAndPassword(auth, Email, Senha);
-
-      // Usando avatar gerado
+      userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+      
       await updateProfile(userCredential.user, {
-        displayName: Nome,
-        photoURL: generateAvatar(Nome),
+        displayName: formData.nome,
+        photoURL: generateAvatar(formData.nome)
       });
 
       const userId = userCredential.user.uid;
 
-      const response = await fetch('http://localhost:5005/api/Usuario', {
+      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           Id: userId,
-          Nome: formDataUsuario.Nome,
-          Email: formDataUsuario.Email,
-          Senha: formDataUsuario.Senha,
-          Telefone: formDataUsuario.Telefone,
-          Endereco: formDataUsuario.Endereco,
-          IsAdmin: formDataUsuario.IsAdmin,
-           Foto: '',  // campo Foto vazio
+          Nome: formData.nome,
+          Email: formData.email,
+          Senha: formData.senha,
+          Telefone: formData.telefone,
+          Endereco: {
+            Rua: formData.endereco.rua,
+            Numero: formData.endereco.numero,
+            Bairro: formData.endereco.bairro,
+            Cidade: formData.endereco.cidade,
+            Estado: formData.endereco.estado,
+            Cep: formData.endereco.cep,
+            Complemento: formData.endereco.complemento,
+          },
+          IsAdmin: false,
+          Foto: '',
         }),
       });
 
@@ -162,149 +228,246 @@ const Registrar = () => {
           const erros = Object.entries(errorData.errors)
             .map(([campo, mensagens]) => `${campo}: ${mensagens.join(', ')}`)
             .join(' | ');
-          showMessage(`Erro na API: ${erros}`, 'error', 7000);
+          setMessage({ text: `Erro na API: ${erros}`, type: 'error' });
         } else {
-          showMessage('Erro desconhecido ao enviar dados', 'error', 7000);
+          setMessage({ text: 'Erro desconhecido ao enviar dados', type: 'error' });
         }
 
         if (userCredential && userCredential.user) {
-          try {
-            await deleteUser(userCredential.user);
-          } catch (err) {
-            console.error('Erro ao desfazer usuário Firebase:', err.message);
-          }
+          await deleteUser(userCredential.user);
         }
         return;
       }
 
-      showMessage('Usuário registrado com sucesso!', 'success');
+      setMessage({ text: 'Cadastro realizado com sucesso!', type: 'success' });
       setTimeout(() => navigate('/login'), 1500);
-
     } catch (error) {
+      console.error('Erro no registro:', error);
+      let errorMessage = 'Erro ao realizar cadastro';
+      
       if (error.code === 'auth/email-already-in-use') {
-        showMessage('Este e-mail já está em uso.', 'error');
-      } else {
-        showMessage('Erro ao registrar: ' + error.message, 'error');
+        errorMessage = 'Este email já está em uso';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres';
       }
-
+      
+      setMessage({ text: errorMessage, type: 'error' });
+      
       if (userCredential && userCredential.user) {
-        try {
-          await deleteUser(userCredential.user);
-        } catch (err) {
-          console.error('Erro ao desfazer no Firebase:', err.message);
-        }
+        await deleteUser(userCredential.user);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="registrar-container" style={{ position: 'relative' }}>
-      {message.text && <MessageBox text={message.text} type={message.type} />}
+    <div className="registrar-container">
+      <AnimatePresence>
+        {message.text && <MessageBox text={message.text} type={message.type} />}
+      </AnimatePresence>
+
       <div className="registrar-box">
         <div className="registrar-left">
-           <img src={banner} alt="Dog" />
+          <img src={banner} alt="Cachorro fofo" />
         </div>
+
         <div className="registrar-right">
-          <h2>Cadastro</h2>
-          <form className="registrar-form" onSubmit={handleSubmitCompleto}>
-            <input
-              type="text"
-              name="Nome"
-              placeholder="Nome completo"
-              value={formDataUsuario.Nome}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="email"
-              name="Email"
-              placeholder="Email"
-              value={formDataUsuario.Email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Telefone"
-              placeholder="Telefone"
-              value={formDataUsuario.Telefone}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="Endereco.Rua"
-              placeholder="Rua"
-              value={formDataUsuario.Endereco.Rua}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Numero"
-              placeholder="Número"
-              value={formDataUsuario.Endereco.Numero}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Bairro"
-              placeholder="Bairro"
-              value={formDataUsuario.Endereco.Bairro}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Cidade"
-              placeholder="Cidade"
-              value={formDataUsuario.Endereco.Cidade}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Estado"
-              placeholder="Estado"
-              value={formDataUsuario.Endereco.Estado}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Cep"
-              placeholder="CEP"
-              value={formDataUsuario.Endereco.Cep}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="Endereco.Complemento"
-              placeholder="Complemento"
-              value={formDataUsuario.Endereco.Complemento}
-              onChange={handleChange}
-            />
-            <input
-              type="password"
-              name="Senha"
-              placeholder="Senha"
-              value={formDataUsuario.Senha}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="ConfirmarSenha"
-              placeholder="Confirmar Senha"
-              value={formDataUsuario.ConfirmarSenha}
-              onChange={handleChange}
-              required
-            />
-            <button type="submit">Cadastrar</button>
+          <h2>Crie sua conta</h2>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="input-group">
+              <label>Nome Completo*</label>
+              <input
+                type="text"
+                name="nome"
+                value={formData.nome}
+                onChange={handleChange}
+                className={errors.nome ? 'input-error' : ''}
+                placeholder="Digite seu nome completo"
+              />
+              {errors.nome && <span className="error-message">{errors.nome}</span>}
+            </div>
+
+            <div className="input-group">
+              <label>Email*</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={errors.email ? 'input-error' : ''}
+                placeholder="seu@email.com"
+              />
+              {errors.email && <span className="error-message">{errors.email}</span>}
+            </div>
+
+            <div className="input-group">
+              <label>Telefone</label>
+              <input
+                type="tel"
+                name="telefone"
+                value={formData.telefone}
+                onChange={handleChange}
+                className={errors.telefone ? 'input-error' : ''}
+                placeholder="(00) 00000-0000"
+              />
+              {errors.telefone && <span className="error-message">{errors.telefone}</span>}
+            </div>
+
+            <div className="address-section">
+              <h3>Endereço</h3>
+              <div className="address-grid">
+                <div className="input-group">
+                  <label>Rua*</label>
+                  <input
+                    type="text"
+                    name="endereco.rua"
+                    value={formData.endereco.rua}
+                    onChange={handleChange}
+                    className={errors.rua ? 'input-error' : ''}
+                    placeholder="Nome da rua"
+                  />
+                  {errors.rua && <span className="error-message">{errors.rua}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>Número*</label>
+                  <input
+                    type="text"
+                    name="endereco.numero"
+                    value={formData.endereco.numero}
+                    onChange={handleChange}
+                    className={errors.numero ? 'input-error' : ''}
+                    placeholder="Número"
+                  />
+                  {errors.numero && <span className="error-message">{errors.numero}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>Bairro*</label>
+                  <input
+                    type="text"
+                    name="endereco.bairro"
+                    value={formData.endereco.bairro}
+                    onChange={handleChange}
+                    className={errors.bairro ? 'input-error' : ''}
+                    placeholder="Nome do bairro"
+                  />
+                  {errors.bairro && <span className="error-message">{errors.bairro}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>Cidade*</label>
+                  <input
+                    type="text"
+                    name="endereco.cidade"
+                    value={formData.endereco.cidade}
+                    onChange={handleChange}
+                    className={errors.cidade ? 'input-error' : ''}
+                    placeholder="Nome da cidade"
+                  />
+                  {errors.cidade && <span className="error-message">{errors.cidade}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>Estado*</label>
+                  <input
+                    type="text"
+                    name="endereco.estado"
+                    value={formData.endereco.estado}
+                    onChange={handleChange}
+                    className={errors.estado ? 'input-error' : ''}
+                    placeholder="UF"
+                    maxLength="2"
+                  />
+                  {errors.estado && <span className="error-message">{errors.estado}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>CEP*</label>
+                  <input
+                    type="text"
+                    name="endereco.cep"
+                    value={formData.endereco.cep}
+                    onChange={handleChange}
+                    className={errors.cep ? 'input-error' : ''}
+                    placeholder="00000-000"
+                  />
+                  {errors.cep && <span className="error-message">{errors.cep}</span>}
+                </div>
+
+                <div className="input-group">
+                  <label>Complemento</label>
+                  <input
+                    type="text"
+                    name="endereco.complemento"
+                    value={formData.endereco.complemento}
+                    onChange={handleChange}
+                    placeholder="Apto, bloco, etc."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label>Senha*</label>
+              <div className="password-input">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="senha"
+                  value={formData.senha}
+                  onChange={handleChange}
+                  className={errors.senha ? 'input-error' : ''}
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <button 
+                  type="button" 
+                  className="toggle-password"
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
+              {errors.senha && <span className="error-message">{errors.senha}</span>}
+            </div>
+
+            <div className="input-group">
+              <label>Confirmar Senha*</label>
+              <div className="password-input">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmarSenha"
+                  value={formData.confirmarSenha}
+                  onChange={handleChange}
+                  className={errors.confirmarSenha ? 'input-error' : ''}
+                  placeholder="Confirme sua senha"
+                />
+                <button 
+                  type="button" 
+                  className="toggle-password"
+                  onClick={toggleConfirmPasswordVisibility}
+                  aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
+              {errors.confirmarSenha && <span className="error-message">{errors.confirmarSenha}</span>}
+            </div>
+
+            <button type="submit" disabled={isSubmitting} className="submit-button">
+              {isSubmitting ? (
+                <>
+                  <span className="spinner"></span>
+                  Cadastrando...
+                </>
+              ) : 'Cadastrar'}
+            </button>
           </form>
-          <p>
-            Já tem uma conta? <Link to="/login">Entrar</Link>
+
+          <p className="login-link">
+            Já tem uma conta? <Link to="/login">Faça login</Link>
           </p>
         </div>
       </div>
