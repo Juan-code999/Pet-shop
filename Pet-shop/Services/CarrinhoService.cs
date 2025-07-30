@@ -1,19 +1,29 @@
 ﻿using Firebase.Database;
 using Firebase.Database.Query;
 using Pet_shop.DTOs;
+using Pet_shop.Models;
 
 namespace Pet_shop.Services
 {
+    /// <summary>
+    /// Serviço para gerenciar operações do carrinho
+    /// </summary>
     public class CarrinhoService
     {
         private readonly FirebaseClient _firebase;
 
+        /// <summary>
+        /// Construtor do CarrinhoService
+        /// </summary>
         public CarrinhoService(IConfiguration configuration)
         {
-            var databaseUrl = configuration["Firebase:DatabaseUrl"];
+            var databaseUrl = configuration["Firebase:DatabaseUrl"] ?? throw new ArgumentNullException("Firebase:DatabaseUrl");
             _firebase = new FirebaseClient(databaseUrl);
         }
 
+        /// <summary>
+        /// Adiciona um item ao carrinho
+        /// </summary>
         public async Task AdicionarItemAsync(string usuarioId, ItemCarrinhoDTO novoItem)
         {
             var carrinho = await ObterCarrinhoAsync(usuarioId) ?? new CarrinhoDTO
@@ -38,7 +48,10 @@ namespace Pet_shop.Services
                 .PutAsync(carrinho);
         }
 
-        public async Task<CarrinhoDTO> ObterCarrinhoAsync(string usuarioId)
+        /// <summary>
+        /// Obtém o carrinho de um usuário
+        /// </summary>
+        public async Task<CarrinhoDTO?> ObterCarrinhoAsync(string usuarioId)
         {
             try
             {
@@ -53,6 +66,9 @@ namespace Pet_shop.Services
             }
         }
 
+        /// <summary>
+        /// Remove um item do carrinho
+        /// </summary>
         public async Task RemoverItemAsync(string usuarioId, string produtoId, string tamanho)
         {
             var carrinho = await ObterCarrinhoAsync(usuarioId);
@@ -67,6 +83,9 @@ namespace Pet_shop.Services
                 .PutAsync(carrinho);
         }
 
+        /// <summary>
+        /// Atualiza a quantidade de um item no carrinho
+        /// </summary>
         public async Task AtualizarQuantidadeAsync(string usuarioId, string produtoId, string tamanho, int novaQuantidade)
         {
             if (novaQuantidade <= 0)
@@ -91,6 +110,54 @@ namespace Pet_shop.Services
             }
         }
 
+        /// <summary>
+        /// Atualiza o tamanho de um item no carrinho
+        /// </summary>
+        public async Task AtualizarTamanhoAsync(
+            string usuarioId,
+            string produtoId,
+            string tamanhoAtual,
+            string novoTamanho,
+            decimal novoPreco)
+        {
+            if (tamanhoAtual == novoTamanho)
+                return;
+
+            var carrinho = await ObterCarrinhoAsync(usuarioId);
+            if (carrinho == null)
+                throw new Exception("Carrinho não encontrado");
+
+            var itemAtual = carrinho.Itens.FirstOrDefault(i =>
+                i.ProdutoId == produtoId && i.Tamanho == tamanhoAtual);
+
+            if (itemAtual == null)
+                throw new Exception("Item não encontrado no carrinho");
+
+            var itemExistente = carrinho.Itens.FirstOrDefault(i =>
+                i.ProdutoId == produtoId && i.Tamanho == novoTamanho);
+
+            if (itemExistente != null)
+            {
+                itemExistente.Quantidade += itemAtual.Quantidade;
+                carrinho.Itens.Remove(itemAtual);
+            }
+            else
+            {
+                itemAtual.Tamanho = novoTamanho;
+                itemAtual.PrecoUnitario = novoPreco;
+            }
+
+            carrinho.DataAtualizacao = DateTime.UtcNow;
+
+            await _firebase
+                .Child("carrinhos")
+                .Child(usuarioId)
+                .PutAsync(carrinho);
+        }
+
+        /// <summary>
+        /// Limpa todo o carrinho de um usuário
+        /// </summary>
         public async Task LimparCarrinhoAsync(string usuarioId)
         {
             await _firebase

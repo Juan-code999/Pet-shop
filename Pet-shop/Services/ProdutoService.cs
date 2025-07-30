@@ -102,6 +102,21 @@ public class ProdutoService
     }
 
 
+    public async Task<Produto?> ObterProdutoPorIdAsync(string produtoId)
+    {
+        try
+        {
+            return await _firebase
+                .Child("produtos")
+                .Child(produtoId)
+                .OnceSingleAsync<Produto>();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 
 }
 

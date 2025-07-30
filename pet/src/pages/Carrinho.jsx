@@ -5,7 +5,8 @@ import {
   FaCheck, 
   FaExclamationTriangle,
   FaSpinner,
-  FaArrowLeft
+  FaArrowLeft,
+  FaExchangeAlt
 } from "react-icons/fa";
 import { 
   FaCcVisa, 
@@ -31,6 +32,10 @@ export default function Carrinho() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState(null);
+  const [newSize, setNewSize] = useState('');
+  const [priceDifference, setPriceDifference] = useState(null);
   
   const usuarioId = localStorage.getItem("usuarioId");
   const navigate = useNavigate();
@@ -196,7 +201,6 @@ export default function Carrinho() {
 
     setIsApplyingCoupon(true);
     
-    // Simula o processamento do cupom
     await new Promise(resolve => setTimeout(resolve, 800));
     
     if (cupom.toUpperCase() === "DESCONTO10") {
@@ -225,7 +229,6 @@ export default function Carrinho() {
       return;
     }
 
-    // Salva os itens selecionados para a página de pagamento
     const selectedProducts = carrinho.itens.filter(item => 
       selectedItems.includes(`${item.produtoId}-${item.tamanho}`)
     );
@@ -237,6 +240,63 @@ export default function Carrinho() {
     }));
 
     navigate('/pagamento');
+  }
+
+  const handleOpenEditModal = (item) => {
+    setItemToEdit(item);
+    setNewSize(item.tamanho);
+    setPriceDifference(null);
+    setShowEditModal(true);
+  };
+
+  const handleSizeChange = (tamanho) => {
+    setNewSize(tamanho);
+    if (itemToEdit && tamanho !== itemToEdit.tamanho) {
+      const produto = produtos.find(p => p.id === itemToEdit.produtoId);
+      const tamanhoDetalhe = produto?.tamanhos?.find(t => t.tamanho === tamanho);
+      const novoPreco = tamanhoDetalhe?.precoTotal || 0;
+      const diferenca = novoPreco - (itemToEdit.precoUnitario || 0);
+      setPriceDifference(diferenca);
+    } else {
+      setPriceDifference(null);
+    }
+  };
+
+  async function atualizarTamanho() {
+    if (!itemToEdit || !newSize || newSize === itemToEdit.tamanho) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          produtoId: itemToEdit.produtoId, 
+          tamanhoAtual: itemToEdit.tamanho, 
+          novoTamanho: newSize
+        })
+      });
+      
+      if (!response.ok) throw new Error('Erro ao atualizar tamanho');
+      
+      const data = await response.json();
+      console.log(data.mensagem);
+      
+      await carregarDados();
+      setShowEditModal(false);
+      
+      const oldKey = `${itemToEdit.produtoId}-${itemToEdit.tamanho}`;
+      const newKey = `${itemToEdit.produtoId}-${newSize}`;
+      if (selectedItems.includes(oldKey)) {
+        setSelectedItems(prev => [
+          ...prev.filter(id => id !== oldKey),
+          newKey
+        ]);
+      }
+    } catch (error) {
+      setErro(error.message);
+    }
   }
 
   if (loading) return (
@@ -550,6 +610,15 @@ export default function Carrinho() {
                     
                     <div className="item-actions" onClick={(e) => e.stopPropagation()}>
                       <motion.button 
+                        className="edit-btn"
+                        onClick={() => handleOpenEditModal(item)}
+                        title="Alterar tamanho"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <FaExchangeAlt />
+                      </motion.button>
+                      <motion.button 
                         className="remove-btn"
                         onClick={() => removerItem(item.produtoId, item.tamanho)}
                         title="Remover item"
@@ -732,7 +801,7 @@ export default function Carrinho() {
         </motion.div>
       </div>
 
-      {/* Modal de confirmação */}
+      {/* Modal de confirmação de exclusão */}
       <AnimatePresence>
         {showDeleteModal && (
           <motion.div 
@@ -770,6 +839,71 @@ export default function Carrinho() {
                   }
                 >
                   Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de edição de tamanho */}
+      <AnimatePresence>
+        {showEditModal && itemToEdit && (
+          <motion.div 
+            className="edit-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowEditModal(false)}
+          >
+            <motion.div 
+              className="edit-modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Alterar Tamanho</h3>
+              <p>Selecione o novo tamanho para {produtos.find(p => p.id === itemToEdit.produtoId)?.nome}</p>
+              
+              <div className="size-options">
+                {produtos.find(p => p.id === itemToEdit.produtoId)?.tamanhos?.map(t => (
+                  <motion.button
+                    key={t.tamanho}
+                    className={`size-option ${newSize === t.tamanho ? 'selected' : ''}`}
+                    onClick={() => handleSizeChange(t.tamanho)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="size-label">{t.tamanho}</div>
+                    <div className="size-price">R$ {t.precoTotal.toFixed(2)}</div>
+                  </motion.button>
+                ))}
+              </div>
+
+              {priceDifference !== null && (
+                <div className={`price-difference ${priceDifference >= 0 ? 'positive' : 'negative'}`}>
+                  {priceDifference >= 0 ? (
+                    <span>+R$ {priceDifference.toFixed(2)}</span>
+                  ) : (
+                    <span>-R$ {Math.abs(priceDifference).toFixed(2)}</span>
+                  )}
+                </div>
+              )}
+              
+              <div className="modal-buttons">
+                <button 
+                  className="cancel-btn"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="confirm-btn"
+                  onClick={atualizarTamanho}
+                  disabled={!newSize || newSize === itemToEdit.tamanho}
+                >
+                  Confirmar Alteração
                 </button>
               </div>
             </motion.div>

@@ -24,7 +24,7 @@ const ProdutoDetalhes = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`http://localhost:5005/api/Produtos/${id}`);
+      const response = await axios.get(`https://pet-shop-eiab.onrender.com/api/Produtos/${id}`);
       const dadosProduto = response.data;
 
       if (!dadosProduto) throw new Error("Produto não encontrado");
@@ -109,7 +109,7 @@ const ProdutoDetalhes = () => {
     };
 
     try {
-      await axios.post(`http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      await axios.post(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
       toast.success("Produto adicionado ao carrinho com sucesso!", {
         autoClose: 2000,
         closeOnClick: true,

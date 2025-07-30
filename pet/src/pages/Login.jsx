@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Db/firebaseConfig';
+import { useAuth } from '../context/AuthContext'; // importar o hook do contexto
 import logo from '../img/logo.png';
 import banner from '../img/dogg.jpg';
 import {
@@ -12,31 +11,15 @@ import {
 } from 'react-icons/fi';
 import '../styles/Login.css';
 
-// Componente MessageBox para mensagens com ícones e cores
 const MessageBox = ({ text, type }) => {
   if (!text) return null;
-
-  let icon;
-  let color;
-
+  let icon, color;
   switch (type) {
-    case 'success':
-      icon = <FiCheckCircle />;
-      color = '#28a745'; // verde
-      break;
-    case 'error':
-      icon = <FiXCircle />;
-      color = '#dc3545'; // vermelho
-      break;
-    case 'warning':
-      icon = <FiAlertCircle />;
-      color = '#ffc107'; // amarelo
-      break;
-    default:
-      icon = <FiInfo />;
-      color = '#17a2b8'; // azul-info
+    case 'success': icon = <FiCheckCircle />; color = '#28a745'; break;
+    case 'error': icon = <FiXCircle />; color = '#dc3545'; break;
+    case 'warning': icon = <FiAlertCircle />; color = '#ffc107'; break;
+    default: icon = <FiInfo />; color = '#17a2b8';
   }
-
   return (
     <div className="message-box" style={{ borderLeft: `5px solid ${color}`, color, marginBottom: 16 }}>
       <span style={{ marginRight: 8, verticalAlign: 'middle' }}>{icon}</span>
@@ -50,6 +33,7 @@ const Login = () => {
   const [senha, setSenha] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const navigate = useNavigate();
+  const { login } = useAuth(); // pegar o método de login do contexto
 
   const showMessage = (text, type = 'info', duration = 4000) => {
     setMessage({ text, type });
@@ -65,17 +49,15 @@ const Login = () => {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
+      await login(email, senha);
 
-      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(user.email)}`);
+      // Depois do login, pode buscar dados extras do usuário
+      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
       if (!response.ok) {
         showMessage('Usuário não encontrado no banco de dados.', 'error');
         return;
       }
-
       const usuario = await response.json();
-
       localStorage.setItem('usuarioId', usuario.id || usuario.Id);
       localStorage.setItem('usuarioNome', usuario.nome || usuario.Nome || '');
       localStorage.setItem('isAdmin', usuario.isAdmin || usuario.IsAdmin ? 'true' : 'false');

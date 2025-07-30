@@ -3,6 +3,8 @@ import axios from "axios";
 import { FaStar, FaRegStar, FaHeart, FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import "../styles/Produtos.css";
 
 const Produtos = () => {
@@ -43,7 +45,7 @@ const Produtos = () => {
     const fetchProdutos = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5005/api/Produtos");
+        const response = await axios.get("https://pet-shop-eiab.onrender.com/api/Produtos");
         setProdutos(response.data);
         setProdutosFiltrados(response.data);
         setLoading(false);
@@ -130,36 +132,67 @@ const Produtos = () => {
   const adicionarAoCarrinho = async (e, produto) => {
     e.stopPropagation();
     const usuarioId = localStorage.getItem("usuarioId");
+    
     if (!usuarioId) {
-      alert("Você precisa estar logado para adicionar itens ao carrinho.");
+      toast.info("Você precisa estar logado para adicionar itens ao carrinho", {
+        autoClose: 3000,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
       navigate('/login', { state: { from: '/produtos' } });
       return;
     }
 
+    if (!produto.tamanhos?.length) {
+      toast.warning("Este produto não possui tamanhos disponíveis");
+      return;
+    }
+
+    // Feedback visual de carregamento
+    const btn = e.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<FaShoppingCart /> Adicionando...';
+    btn.disabled = true;
+
     const itemCarrinho = {
-      UsuarioId: usuarioId,
-      Itens: [
-        {
-          ProdutoId: produto.id,
-          Tamanho: produto.tamanhos?.[0]?.tamanho || "Único",
-          Quantidade: 1
-        }
-      ]
+      produtoId: produto.id,
+      tamanho: produto.tamanhos[0].tamanho, // Pega o primeiro tamanho disponível
+      quantidade: 1,
     };
 
     try {
-      await axios.post(`http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
-      // Feedback visual
-      const btn = e.target;
+      await axios.post(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      
+      // Feedback visual de sucesso
       btn.innerHTML = '<FaShoppingCart /> Adicionado!';
       btn.style.backgroundColor = '#28a745';
+      
+      toast.success("Produto adicionado ao carrinho com sucesso!", {
+        autoClose: 2000,
+        closeOnClick: true,
+      });
+
+      // Reset do botão após 2 segundos
       setTimeout(() => {
-        btn.innerHTML = '<FaShoppingCart /> Adicionar ao carrinho';
-        btn.style.backgroundColor = '#007BFF';
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = '';
+        btn.disabled = false;
       }, 2000);
     } catch (error) {
       console.error("Erro ao adicionar ao carrinho:", error);
-      alert("Erro ao adicionar ao carrinho. Tente novamente.");
+      
+      // Feedback visual de erro
+      btn.innerHTML = '<FaShoppingCart /> Erro!';
+      btn.style.backgroundColor = '#dc3545';
+      
+      toast.error(error.response?.data?.message || "Erro ao adicionar ao carrinho");
+
+      // Reset do botão após 2 segundos
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = '';
+        btn.disabled = false;
+      }, 2000);
     }
   };
 

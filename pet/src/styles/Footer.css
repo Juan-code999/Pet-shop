@@ -1,6 +1,6 @@
 /* Footer Premium Pet Shop - CSS Completo */
 
-.footer-premium {
+.pet-footer-premium {
   position: relative;
   background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
   color: #ffffff;
@@ -10,7 +10,7 @@
   box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
 }
 
-.footer-wave {
+.pet-footer-wave {
   position: absolute;
   top: -1px;
   left: 0;
@@ -20,7 +20,7 @@
   background-size: cover;
 }
 
-.footer-container {
+.pet-footer-container {
   display: grid;
   grid-template-columns: 1.2fr 1.5fr 1fr;
   gap: 40px;
@@ -32,11 +32,11 @@
 }
 
 /* Coluna da Marca */
-.footer-brand-col {
+.pet-footer-brand-col {
   margin-right: 30px;
 }
 
-.logo-wrapper {
+.pet-logo-wrapper {
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -44,22 +44,22 @@
   transition: transform 0.3s ease;
 }
 
-.logo-wrapper:hover {
+.pet-logo-wrapper:hover {
   transform: translateX(5px);
 }
 
-.footer-logo {
+.pet-footer-logo {
   height: 50px;
   width: auto;
   filter: brightness(0) invert(1);
   transition: transform 0.3s ease;
 }
 
-.logo-wrapper:hover .footer-logo {
+.pet-logo-wrapper:hover .pet-footer-logo {
   transform: rotate(-10deg);
 }
 
-.logo-text {
+.pet-logo-text {
   color: #ffffff;
   font-size: 24px;
   font-weight: 700;
@@ -68,25 +68,25 @@
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.brand-slogan {
+.pet-brand-slogan {
   color: rgba(255, 255, 255, 0.8);
   font-size: 15px;
   line-height: 1.7;
   margin-bottom: 30px;
 }
 
-.footer-newsletter {
+.pet-footer-newsletter {
   margin-top: 30px;
 }
 
-.footer-newsletter h4 {
+.pet-footer-newsletter h4 {
   font-size: 16px;
   margin-bottom: 15px;
   color: #fff;
   font-weight: 500;
 }
 
-.newsletter-form {
+.pet-newsletter-form {
   display: flex;
   border-radius: 8px;
   overflow: hidden;
@@ -94,11 +94,11 @@
   transition: all 0.3s ease;
 }
 
-.newsletter-form:hover {
+.pet-newsletter-form:hover {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.newsletter-form input {
+.pet-newsletter-form input {
   flex: 1;
   padding: 12px 15px;
   border: none;
@@ -107,12 +107,12 @@
   transition: all 0.3s ease;
 }
 
-.newsletter-form input:focus {
+.pet-newsletter-form input:focus {
   outline: none;
   background: #fff;
 }
 
-.newsletter-form button {
+.pet-newsletter-form button {
   background: #007BFF;
   color: white;
   border: none;
@@ -124,22 +124,22 @@
   justify-content: center;
 }
 
-.newsletter-form button:hover {
+.pet-newsletter-form button:hover {
   background: #0056b3;
 }
 
 /* Colunas de Links */
-.footer-links-grid {
+.pet-footer-links-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
 }
 
-.footer-links-col {
+.pet-footer-links-col {
   margin-bottom: 30px;
 }
 
-.links-title {
+.pet-links-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 25px;
@@ -148,7 +148,7 @@
   padding-bottom: 10px;
 }
 
-.links-title::after {
+.pet-links-title::after {
   content: '';
   position: absolute;
   left: 0;
@@ -159,21 +159,21 @@
   transition: width 0.3s ease;
 }
 
-.links-title:hover::after {
+.pet-links-title:hover::after {
   width: 60px;
 }
 
-.footer-links {
+.pet-footer-links {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.footer-links li {
+.pet-footer-links li {
   margin-bottom: 12px;
 }
 
-.footer-links a {
+.pet-footer-links a {
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-size: 15px;
@@ -184,18 +184,18 @@
   padding-left: 0;
 }
 
-.footer-links a svg {
+.pet-footer-links a svg {
   margin-right: 10px;
   color: #007BFF;
   font-size: 14px;
   transition: transform 0.3s ease;
 }
 
-.footer-links a:hover svg {
+.pet-footer-links a:hover svg {
   transform: scale(1.2);
 }
 
-.footer-links a::before {
+.pet-footer-links a::before {
   content: '';
   position: absolute;
   left: 0;
@@ -206,21 +206,21 @@
   transition: width 0.3s ease;
 }
 
-.footer-links a:hover {
+.pet-footer-links a:hover {
   color: #007BFF;
   padding-left: 10px;
 }
 
-.footer-links a:hover::before {
+.pet-footer-links a:hover::before {
   width: 15px;
 }
 
 /* Coluna de Contato */
-.footer-contact-col {
+.pet-footer-contact-col {
   margin-left: auto;
 }
 
-.contact-title {
+.pet-contact-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 25px;
@@ -229,7 +229,7 @@
   padding-bottom: 10px;
 }
 
-.contact-title::after {
+.pet-contact-title::after {
   content: '';
   position: absolute;
   left: 0;
@@ -240,27 +240,27 @@
   transition: width 0.3s ease;
 }
 
-.contact-title:hover::after {
+.pet-contact-title:hover::after {
   width: 60px;
 }
 
-.contact-info {
+.pet-contact-info {
   display: grid;
   gap: 20px;
 }
 
-.contact-item {
+.pet-contact-item {
   display: flex;
   align-items: flex-start;
   gap: 15px;
   transition: transform 0.3s ease;
 }
 
-.contact-item:hover {
+.pet-contact-item:hover {
   transform: translateX(5px);
 }
 
-.contact-icon {
+.pet-contact-icon {
   background: rgba(78, 205, 196, 0.1);
   width: 36px;
   height: 36px;
@@ -274,19 +274,19 @@
   transition: all 0.3s ease;
 }
 
-.contact-item:hover .contact-icon {
+.pet-contact-item:hover .pet-contact-icon {
   background: rgba(78, 205, 196, 0.2);
   transform: rotate(15deg);
 }
 
-.contact-item h4 {
+.pet-contact-item h4 {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 5px;
   color: #fff;
 }
 
-.contact-item p {
+.pet-contact-item p {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
   margin: 0;
@@ -294,14 +294,14 @@
 }
 
 /* Rodapé Inferior */
-.footer-bottom {
+.pet-footer-bottom {
   background: rgba(0, 0, 0, 0.25);
   padding: 20px 0;
   margin-top: 60px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.footer-bottom-container {
+.pet-footer-bottom-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -312,17 +312,17 @@
   gap: 20px;
 }
 
-.copyright {
+.pet-copyright {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
 }
 
-.social-links {
+.pet-social-links {
   display: flex;
   gap: 15px;
 }
 
-.social-links a {
+.pet-social-links a {
   color: rgba(255, 255, 255, 0.7);
   width: 32px;
   height: 32px;
@@ -335,30 +335,30 @@
   font-size: 14px;
 }
 
-.social-links a:hover {
+.pet-social-links a:hover {
   color: #fff;
   background: #007BFF;
   transform: translateY(-3px) scale(1.1);
 }
 
-.payment-methods {
+.pet-payment-methods {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.payment-label {
+.pet-payment-label {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
 }
 
-.payment-icons {
+.pet-payment-icons {
   display: flex;
   gap: 10px;
 }
 
-.payment-icon {
+.pet-payment-icon {
   color: rgba(255, 255, 255, 0.8);
   font-size: 22px;
   transition: all 0.3s ease;
@@ -367,121 +367,121 @@
   justify-content: center;
 }
 
-.payment-icon:hover {
+.pet-payment-icon:hover {
   color: #fff;
   transform: translateY(-2px) scale(1.15);
 }
 
 /* Cores específicas para métodos de pagamento */
-.payment-icon:nth-child(1) { color: #1a237e; } /* Visa */
-.payment-icon:nth-child(2) { color: #c2185b; } /* Mastercard */
-.payment-icon:nth-child(3) { color: #0277bd; } /* Boleto */
-.payment-icon:nth-child(4) { color: #00897b; } /* Pix */
+.pet-payment-icon:nth-child(1) { color: #1a237e; } /* Visa */
+.pet-payment-icon:nth-child(2) { color: #c2185b; } /* Mastercard */
+.pet-payment-icon:nth-child(3) { color: #0277bd; } /* Boleto */
+.pet-payment-icon:nth-child(4) { color: #00897b; } /* Pix */
 
 /* Efeitos de hover específicos */
-.payment-icon:nth-child(1):hover { color: #303f9f; }
-.payment-icon:nth-child(2):hover { color: #e91e63; }
-.payment-icon:nth-child(3):hover { color: #0288d1; }
-.payment-icon:nth-child(4):hover { color: #009688; }
+.pet-payment-icon:nth-child(1):hover { color: #303f9f; }
+.pet-payment-icon:nth-child(2):hover { color: #e91e63; }
+.pet-payment-icon:nth-child(3):hover { color: #0288d1; }
+.pet-payment-icon:nth-child(4):hover { color: #009688; }
 
 /* Responsividade */
 @media (max-width: 1024px) {
-  .footer-container {
+  .pet-footer-container {
     grid-template-columns: 1fr 1fr;
   }
   
-  .footer-contact-col {
+  .pet-footer-contact-col {
     grid-column: span 2;
     margin-top: 30px;
   }
 }
 
 @media (max-width: 768px) {
-  .footer-container {
+  .pet-footer-container {
     grid-template-columns: 1fr;
     padding: 0 30px;
   }
   
-  .footer-links-grid {
+  .pet-footer-links-grid {
     grid-template-columns: 1fr;
   }
   
-  .footer-contact-col {
+  .pet-footer-contact-col {
     grid-column: span 1;
   }
   
-  .footer-bottom-container {
+  .pet-footer-bottom-container {
     flex-direction: column;
     text-align: center;
     gap: 15px;
   }
 
-  .payment-methods {
+  .pet-payment-methods {
     flex-direction: column;
     align-items: center;
     gap: 8px;
   }
   
-  .payment-label {
+  .pet-payment-label {
     margin-bottom: 5px;
   }
 }
 
 @media (max-width: 480px) {
-  .footer-container {
+  .pet-footer-container {
     padding: 0 20px;
   }
   
-  .footer-wave {
+  .pet-footer-wave {
     height: 60px;
   }
   
-  .logo-text {
+  .pet-logo-text {
     font-size: 20px;
   }
   
-  .newsletter-form {
+  .pet-newsletter-form {
     flex-direction: column;
   }
   
-  .newsletter-form button {
+  .pet-newsletter-form button {
     padding: 10px;
   }
 
-  .payment-icons {
+  .pet-payment-icons {
     gap: 8px;
   }
   
-  .payment-icon {
+  .pet-payment-icon {
     font-size: 20px;
   }
   
-  .footer-links a {
+  .pet-footer-links a {
     font-size: 14px;
   }
   
-  .contact-item {
+  .pet-contact-item {
     gap: 10px;
   }
   
-  .contact-icon {
+  .pet-contact-icon {
     width: 30px;
     height: 30px;
     font-size: 12px;
   }
   
-  .contact-item h4, 
-  .contact-item p {
+  .pet-contact-item h4, 
+  .pet-contact-item p {
     font-size: 13px;
   }
   
-  .links-title::after,
-  .contact-title::after {
+  .pet-links-title::after,
+  .pet-contact-title::after {
     width: 30px;
   }
   
-  .links-title:hover::after,
-  .contact-title:hover::after {
+  .pet-links-title:hover::after,
+  .pet-contact-title:hover::after {
     width: 40px;
   }
 }

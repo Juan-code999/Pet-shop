@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { auth } from '../Db/firebaseConfig';
 import { FiAlertCircle, FiCheckCircle, FiXCircle, FiInfo, FiEye, FiEyeOff } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -63,41 +63,6 @@ const Registrar = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    switch(name) {
-      case 'nome':
-        if (/[^a-zA-ZÀ-ÿ\s']/.test(value)) return;
-        break;
-        
-      case 'telefone':
-        const digits = value.replace(/\D/g, '');
-        let formatted = digits;
-        if (digits.length > 2) {
-          formatted = `(${digits.substring(0,2)}) ${digits.substring(2,7)}`;
-          if (digits.length > 7) {
-            formatted += `-${digits.substring(7,11)}`;
-          }
-        }
-        setFormData(prev => ({ ...prev, [name]: formatted }));
-        return;
-        
-      case 'endereco.cep':
-        const cepDigits = value.replace(/\D/g, '');
-        let cepFormatted = cepDigits;
-        if (cepDigits.length > 5) {
-          cepFormatted = `${cepDigits.substring(0,5)}-${cepDigits.substring(5,8)}`;
-        }
-        const field = name.split('.')[1];
-        setFormData(prev => ({
-          ...prev,
-          endereco: { ...prev.endereco, [field]: cepFormatted }
-        }));
-        return;
-        
-      case 'endereco.numero':
-        if (/[^0-9]/.test(value)) return;
-        break;
-    }
 
     if (name.startsWith('endereco.')) {
       const field = name.split('.')[1];
@@ -115,45 +80,29 @@ const Registrar = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.nome.trim()) {
       newErrors.nome = 'Nome é obrigatório';
     } else if (formData.nome.trim().length < 3) {
       newErrors.nome = 'Nome muito curto';
     }
-    
+
     if (!formData.email) {
       newErrors.email = 'Email é obrigatório';
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
-    
+
     if (!formData.senha) {
       newErrors.senha = 'Senha é obrigatória';
     } else if (formData.senha.length < 6) {
       newErrors.senha = 'Senha deve ter pelo menos 6 caracteres';
     }
-    
+
     if (formData.senha !== formData.confirmarSenha) {
       newErrors.confirmarSenha = 'Senhas não coincidem';
     }
-    
-    if (formData.telefone && formData.telefone.replace(/\D/g, '').length < 10) {
-      newErrors.telefone = 'Telefone inválido';
-    }
-    
-    if (!formData.endereco.rua.trim()) newErrors.rua = 'Rua é obrigatória';
-    if (!formData.endereco.numero.trim()) newErrors.numero = 'Número é obrigatório';
-    if (!formData.endereco.bairro.trim()) newErrors.bairro = 'Bairro é obrigatório';
-    if (!formData.endereco.cidade.trim()) newErrors.cidade = 'Cidade é obrigatória';
-    if (!formData.endereco.estado.trim()) newErrors.estado = 'Estado é obrigatório';
-    
-    if (!formData.endereco.cep.trim()) {
-      newErrors.cep = 'CEP é obrigatório';
-    } else if (formData.endereco.cep.replace(/\D/g, '').length !== 8) {
-      newErrors.cep = 'CEP inválido';
-    }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -183,16 +132,15 @@ const Registrar = () => {
       return;
     }
 
-    let userCredential = null;
-
     try {
-      userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
-      
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+
       await updateProfile(userCredential.user, {
         displayName: formData.nome,
         photoURL: generateAvatar(formData.nome)
       });
 
+      // Envia os dados do usuário para sua API
       const userId = userCredential.user.uid;
 
       const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario', {
@@ -223,40 +171,35 @@ const Registrar = () => {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro na API:', errorData);
+        setMessage({ text: 'Erro ao salvar dados na API.', type: 'error' });
 
-        if (errorData.errors) {
-          const erros = Object.entries(errorData.errors)
-            .map(([campo, mensagens]) => `${campo}: ${mensagens.join(', ')}`)
-            .join(' | ');
-          setMessage({ text: `Erro na API: ${erros}`, type: 'error' });
-        } else {
-          setMessage({ text: 'Erro desconhecido ao enviar dados', type: 'error' });
-        }
-
+        // Remove usuário do Firebase se a API falhar
         if (userCredential && userCredential.user) {
-          await deleteUser(userCredential.user);
+          await userCredential.user.delete();
         }
+
+        setIsSubmitting(false);
         return;
       }
 
       setMessage({ text: 'Cadastro realizado com sucesso!', type: 'success' });
+
+      // **Desloga usuário para evitar login automático**
+      await signOut(auth);
+
       setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
       console.error('Erro no registro:', error);
       let errorMessage = 'Erro ao realizar cadastro';
-      
+
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'Este email já está em uso';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'A senha deve ter pelo menos 6 caracteres';
       }
-      
+
       setMessage({ text: errorMessage, type: 'error' });
-      
-      if (userCredential && userCredential.user) {
-        await deleteUser(userCredential.user);
-      }
-    } finally {
+
       setIsSubmitting(false);
     }
   };
@@ -274,7 +217,7 @@ const Registrar = () => {
 
         <div className="registrar-right">
           <h2>Crie sua conta</h2>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="input-group">
               <label>Nome Completo*</label>
@@ -421,8 +364,8 @@ const Registrar = () => {
                   className={errors.senha ? 'input-error' : ''}
                   placeholder="Mínimo 6 caracteres"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="toggle-password"
                   onClick={togglePasswordVisibility}
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
@@ -444,8 +387,8 @@ const Registrar = () => {
                   className={errors.confirmarSenha ? 'input-error' : ''}
                   placeholder="Confirme sua senha"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="toggle-password"
                   onClick={toggleConfirmPasswordVisibility}
                   aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}

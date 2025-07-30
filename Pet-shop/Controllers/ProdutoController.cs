@@ -2,16 +2,20 @@
 using Pet_shop.DTOs;
 using Pet_shop.Services;
 
-[ApiController]
 [Route("api/[controller]")]
+[ApiController]
 public class ProdutosController : ControllerBase
 {
-    private readonly CurtidaService _curtidaService;
     private readonly ProdutoService _produtoService;
+    private readonly CurtidaService _curtidaService;
 
-    public ProdutosController(ProdutoService produtoService)
+    /// <summary>
+    /// Construtor do ProdutosController
+    /// </summary>
+    public ProdutosController(ProdutoService produtoService, CurtidaService curtidaService)
     {
         _produtoService = produtoService;
+        _curtidaService = curtidaService;
     }
 
     [HttpPost]
