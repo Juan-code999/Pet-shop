@@ -44,7 +44,12 @@ public class ProdutosController : ControllerBase
             return NotFound();
         return Ok(produto);
     }
-
+    [HttpGet("destaques")]
+    public async Task<IActionResult> GetProdutosEmDestaque()
+    {
+        var produtos = await _produtoService.ObterProdutosEmDestaqueAsync();
+        return Ok(produtos);
+    }
     [HttpGet("usuario/{usuarioId}")]
     public async Task<IActionResult> GetCurtidos(string usuarioId)
     {

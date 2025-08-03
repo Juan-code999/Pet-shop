@@ -100,6 +100,22 @@ public class ProdutoService
             return produto;
         }).ToList();
     }
+    public async Task<List<Produto>> ObterProdutosEmDestaqueAsync()
+    {
+        var produtos = await _firebase
+            .Child("produtos")
+            .OnceAsync<Produto>();
+
+        return produtos
+            .Where(p => p.Object.Destaque)
+            .Select(p =>
+            {
+                var produto = p.Object;
+                produto.Id = p.Key;
+                return produto;
+            })
+            .ToList();
+    }
 
 
     public async Task<Produto?> ObterProdutoPorIdAsync(string produtoId)
