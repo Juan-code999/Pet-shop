@@ -18,6 +18,7 @@ import ProdutosDetalhes from './pages/ProdutoDetalhes';
 import Carrinho from './pages/Carrinho';
 import Curtidas from './pages/Curtidas';
 import Pagamento from './pages/Pagamento';
+import ProductEdit from './pages/Admin/ProductEdit';
 
 import { AuthProvider } from './context/AuthContext';
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="/Pagamento" element={<Pagamento />} />
           <Route path="/favoritos" element={<Curtidas />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/products/edit/:id" element={<ProductEdit />} />
           <Route path="*" element={<h1>Página não encontrada</h1>} />
         </Routes>
         <Footer />
