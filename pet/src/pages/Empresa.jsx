@@ -7,49 +7,41 @@ import puppyImg from '../img/empresa2.png';
 import familyDog from '../img/empresa3.png';
 
 export default function Empresa() {
-  // Gerador de patinhas ajustado para não sobrepor conteúdo importante
   const generatePaws = (count) => {
-    // Definir zonas de exclusão onde não queremos patinhas
     const exclusionZones = [
-      // Zona do texto principal (ajuste conforme necessário)
-      { x: [0, 60], y: [0, 60] },  // Canto superior esquerdo (texto)
-      // Zona da imagem do cachorro (se estiver à direita)
+      { x: [0, 60], y: [0, 60] },
       { x: [60, 100], y: [20, 80] },
-      // Zona central inferior (botões)
       { x: [20, 80], y: [60, 100] }
     ];
-    
-    // Função para verificar se uma posição está em uma zona de exclusão
+
     const isPositionValid = (x, y) => {
-      return !exclusionZones.some(zone => 
-        x >= zone.x[0] && x <= zone.x[1] && 
+      return !exclusionZones.some(zone =>
+        x >= zone.x[0] && x <= zone.x[1] &&
         y >= zone.y[0] && y <= zone.y[1]
       );
     };
-    
+
     return [...Array(count)].map((_, i) => {
       const size = Math.random() * 15 + 10;
       const rotation = Math.random() * 30 - 15;
       const delay = Math.random() * 5;
       const duration = Math.random() * 3 + 3;
       const opacity = Math.random() * 0.3 + 0.2;
-      
-      // Tentar encontrar uma posição válida
+
       let left, top;
       let attempts = 0;
       const maxAttempts = 50;
-      
+
       do {
         left = Math.random() * 90 + 5;
         top = Math.random() * 90 + 5;
         attempts++;
       } while (!isPositionValid(left, top) && attempts < maxAttempts);
-      
-      // Se não encontrar posição válida, pular esta patinha
+
       if (attempts >= maxAttempts) return null;
-      
+
       return (
-        <img 
+        <img
           key={`paw-${i}`}
           src={i % 2 === 0 ? pawIcon : pawPrint}
           className="paw"
@@ -69,7 +61,7 @@ export default function Empresa() {
           }}
         />
       );
-    }).filter(Boolean); // Filtrar patinhas nulas
+    }).filter(Boolean);
   };
 
   return (
@@ -77,7 +69,7 @@ export default function Empresa() {
       {/* SEÇÃO HERO */}
       <section className="empresa-hero" aria-labelledby="hero-heading">
         <div className="paw-decorations">
-          {generatePaws(15)} {/* Reduzi para 15 patinhas para menos confusão */}
+          {generatePaws(15)}
         </div>
 
         <div className="empresa-hero-content">
@@ -95,9 +87,9 @@ export default function Empresa() {
             </div>
           </div>
           <div className="empresa-hero-image">
-            <img 
-              src={heroDog} 
-              alt="Cachorro sorrindo" 
+            <img
+              src={heroDog}
+              alt="Cachorro sorrindo"
               loading="lazy"
               width="500"
               height="500"
@@ -119,9 +111,9 @@ export default function Empresa() {
 
           <div className="empresa-servicos-grid">
             <div className="empresa-servico-img">
-              <img 
-                src={puppyImg} 
-                alt="Filhote de cachorro feliz" 
+              <img
+                src={puppyImg}
+                alt="Filhote de cachorro feliz"
                 loading="lazy"
                 width="300"
                 height="300"
@@ -162,9 +154,9 @@ export default function Empresa() {
               <li className="info-list-item">Serviços exclusivos</li>
             </ul>
             <div className="transparent-image-container">
-              <img 
-                src={familyDog} 
-                alt="Família brincando com cachorro" 
+              <img
+                src={familyDog}
+                alt="Família brincando com cachorro"
                 className="info-image-transparent"
                 loading="lazy"
                 width="400"
@@ -182,6 +174,29 @@ export default function Empresa() {
           </aside>
         </div>
       </section>
+
+      {/* SEÇÃO MAPA DO SITE */}
+      <section className="empresa-info" aria-labelledby="mapa-heading">
+        <div className="info-container">
+          <article className="empresa-info-texto">
+            <h2 id="mapa-heading">Mapa do Site</h2>
+            <ul className="info-list">
+              <li className="info-list-item"><a href="/home">Página Inicial</a></li>
+              <li className="info-list-item"><a href="/empresa">Empresa</a></li>
+              <li className="info-list-item"><a href="/contato">Contato</a></li>
+            </ul>
+          </article>
+
+          <aside className="empresa-info-cta" aria-labelledby="navegue-heading">
+            <h3 id="navegue-heading">Navegue com Facilidade</h3>
+            <p className="cta-description">
+              Use o mapa do site para encontrar rapidamente o que procura.
+            </p>
+            <button className="cta-button">Ir para o Início</button>
+          </aside>
+        </div>
+      </section>
+
     </div>
   );
 }

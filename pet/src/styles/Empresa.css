@@ -528,3 +528,52 @@
     padding: 6rem 2rem;
   }
 }
+/* ====== Estilo do Mapa do Site ====== */
+
+
+
+
+
+
+/* Cabeçalho menor */
+.empresa-info #mapa-heading {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+}
+
+/* Lista geral menor e mais compacta */
+.empresa-info ul.info-list {
+  padding: 1rem 1.5rem;
+  max-width: 400px;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(20, 77, 121, 0.12);
+  background: #fff;
+}
+
+/* Itens da lista mais próximos */
+.empresa-info ul.info-list li.info-list-item {
+  font-size: 1rem;
+  margin-bottom: 6px;
+  padding-left: 22px;
+}
+
+/* Ícone menor e alinhado */
+.empresa-info ul.info-list li.info-list-item::before {
+  font-size: 1.1rem;
+  top: 2px;
+  left: 0;
+}
+
+/* Botão menor e com menos margem */
+.empresa-info .cta-button {
+  padding: 8px 24px;
+  font-size: 0.9rem;
+  margin-top: 0.8rem;
+  box-shadow: 0 8px 20px rgba(30, 144, 255, 0.3);
+}
+
+.empresa-info .cta-button:hover {
+  box-shadow: 0 14px 30px rgba(24, 123, 205, 0.5);
+  transform: translateY(-3px);
+}

@@ -20,6 +20,11 @@ import logo from '../img/logo.png';
 import "../styles/Footer.css";
 
 const Footer = () => {
+  // Função para scroll suave ao topo
+  const handleClickScrollTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="pet-footer-premium">
       <div className="pet-footer-wave"></div>
@@ -28,7 +33,7 @@ const Footer = () => {
         {/* Brand Column */}
         <div className="pet-footer-brand-col">
           <div className="pet-footer-brand">
-            <Link to="/" className="pet-logo-wrapper">
+            <Link to="/" className="pet-logo-wrapper" onClick={handleClickScrollTop}>
               <img src={logo} alt="Lat Miau" className="pet-footer-logo" />
               <span className="pet-logo-text">Lat Miau</span>
             </Link>
@@ -54,11 +59,8 @@ const Footer = () => {
           <div className="pet-footer-links-col">
             <h3 className="pet-links-title">Produtos</h3>
             <ul className="pet-footer-links">
-              <li><Link to="/racao">Ração Premium</Link></li>
-              <li><Link to="/brinquedos">Brinquedos</Link></li>
-              <li><Link to="/higiene">Higiene & Cuidados</Link></li>
-              <li><Link to="/acessorios">Acessórios</Link></li>
-              <li><Link to="/casinhas">Casinhas & Caminhas</Link></li>
+              <li><Link to="/produtos" onClick={handleClickScrollTop}>Brinquedos</Link></li>
+              <li><Link to="/produtos" onClick={handleClickScrollTop}>Acessórios</Link></li>
             </ul>
           </div>
 
@@ -66,11 +68,8 @@ const Footer = () => {
           <div className="pet-footer-links-col">
             <h3 className="pet-links-title">Empresa</h3>
             <ul className="pet-footer-links">
-              <li><Link to="/sobre">Sobre Nós</Link></li>
-              <li><Link to="/equipe">Nossa Equipe</Link></li>
-              <li><Link to="/lojas">Nossas Lojas</Link></li>
-              <li><Link to="/blog">Blog</Link></li>
-              <li><Link to="/trabalhe-conosco">Carreiras</Link></li>
+              <li><Link to="/empresa" onClick={handleClickScrollTop}>Sobre Nós</Link></li>
+              <li><Link to="/empresa" onClick={handleClickScrollTop}>Nossa Equipe</Link></li>
             </ul>
           </div>
 
@@ -78,11 +77,8 @@ const Footer = () => {
           <div className="pet-footer-links-col">
             <h3 className="pet-links-title">Suporte</h3>
             <ul className="pet-footer-links">
-              <li><Link to="/contato">Contato</Link></li>
-              <li><Link to="/faq">FAQ</Link></li>
-              <li><Link to="/politica">Política de Privacidade</Link></li>
-              <li><Link to="/termos">Termos de Serviço</Link></li>
-              <li><Link to="/sitemap">Mapa do Site</Link></li>
+              <li><Link to="/contato" onClick={handleClickScrollTop}>Contato</Link></li>
+              <li><Link to="/empresa" onClick={handleClickScrollTop}>Mapa do Site</Link></li>
             </ul>
           </div>
         </div>
