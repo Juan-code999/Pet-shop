@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../../styles/AdminPage.css';
 import ProductList from './ProductList';
 import Usuarios from './Usuarios';
@@ -8,124 +7,66 @@ export default function AdminPage() {
   const [menuAtivo, setMenuAtivo] = useState('Dashboard');
   const [userLogado, setUserLogado] = useState(null);
   const [totalUsuarios, setTotalUsuarios] = useState(0);
-  const [totalProdutos, setTotalProdutos] = useState(0);
-  const [pedidosHoje, setPedidosHoje] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const API_URL = 'http://localhost:5005/api/Usuario';
 
-  const API_URL = 'http://localhost:5005/api';
-  const USUARIO_URL = `${API_URL}/Usuario`;
-  const PRODUTO_URL = `${API_URL}/Produto`;
-  const PEDIDO_URL = `${API_URL}/Pedido`;
-
-  // Buscar dados iniciais
+  // Buscar usuário logado e contagem total de usuários
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        // Simulando que temos o ID do usuário logado (na prática, você pegaria do seu sistema de autenticação)
+        const userIdLogado = 1; // Substitua pelo ID real do usuário logado
         
-        // 1. Buscar ID do usuário logado do localStorage (exemplo)
-        const userIdLogado = localStorage.getItem('userId');
-        
-        if (!userIdLogado) {
-          navigate('/login'); // Redireciona se não estiver logado
-          return;
+        // Buscar dados do usuário logado
+        const responseUser = await fetch(`${API_URL}/${userIdLogado}`);
+        if (responseUser.ok) {
+          const userData = await responseUser.json();
+          setUserLogado(userData);
         }
 
-        // 2. Buscar dados do usuário logado
-        const [userResponse, usersResponse, produtosResponse, pedidosResponse] = await Promise.all([
-          fetch(`${USUARIO_URL}/${userIdLogado}`),
-          fetch(USUARIO_URL),
-          fetch(PRODUTO_URL),
-          fetch(`${PEDIDO_URL}/hoje`) // Endpoint fictício para pedidos de hoje
-        ]);
-
-        // Verificar respostas
-        if (!userResponse.ok) throw new Error('Erro ao carregar usuário');
-        if (!usersResponse.ok) throw new Error('Erro ao carregar lista de usuários');
-        if (!produtosResponse.ok) throw new Error('Erro ao carregar lista de produtos');
-        
-        // Processar dados
-        const userData = await userResponse.json();
-        const allUsers = await usersResponse.json();
-        const allProdutos = await produtosResponse.json();
-        
-        setUserLogado(userData);
-        setTotalUsuarios(allUsers.length);
-        setTotalProdutos(allProdutos.length);
-
-        // Tentar processar pedidos (pode falhar silenciosamente)
-        try {
-          if (pedidosResponse.ok) {
-            const pedidosHojeData = await pedidosResponse.json();
-            setPedidosHoje(pedidosHojeData.length);
-          }
-        } catch (e) {
-          console.warn('Não foi possível carregar pedidos:', e);
+        // Buscar contagem total de usuários
+        const responseTotal = await fetch(API_URL);
+        if (responseTotal.ok) {
+          const allUsers = await responseTotal.json();
+          setTotalUsuarios(allUsers.length);
         }
-
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  }, []);
 
   const renderConteudo = () => {
     switch (menuAtivo) {
       case 'Dashboard':
         return (
           <div className="dashboard-content">
-            {loading ? (
-              <div className="loading-spinner">Carregando...</div>
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <>
-                <h2>Bem-vindo, {userLogado?.nome || 'Administrador'}!</h2>
-                <p className="user-email">{userLogado?.email}</p>
-                
-                <div className="dashboard-stats">
-                  <div className="stat-card">
-                    <h3>Total de Usuários</h3>
-                    <div className="stat-value">{totalUsuarios}</div>
-                    <div className="stat-trend">+5% em relação ao mês passado</div>
-                  </div>
-                  
-                  <div className="stat-card">
-                    <h3>Total de Produtos</h3>
-                    <div className="stat-value">{totalProdutos}</div>
-                    <div className="stat-trend">+12% em relação ao mês passado</div>
-                  </div>
-                  
-                  <div className="stat-card">
-                    <h3>Pedidos Hoje</h3>
-                    <div className="stat-value">{pedidosHoje}</div>
-                    <div className="stat-trend">+3% em relação a ontem</div>
-                  </div>
-                </div>
-
-                <div className="recent-activity">
-                  <h3>Atividade Recente</h3>
-                  <ul>
-                    <li>Novo usuário cadastrado: João Silva</li>
-                    <li>Pedido #1234 realizado com sucesso</li>
-                    <li>Produto "Ração Premium" atualizado</li>
-                  </ul>
-                </div>
-              </>
-            )}
+            <h2>Bem-vindo, {userLogado ? userLogado.nome : 'Administrador'}!</h2>
+            <div className="dashboard-charts">
+              <div className="chart-box">
+                <h3>Vendas Mensais</h3>
+                <div className="chart-placeholder"></div>
+              </div>
+              <div className="chart-box">
+                <h3>Usuários Ativos</h3>
+                <div className="chart-placeholder"></div>
+              </div>
+            </div>
+            <div className="dashboard-cards">
+              <div className="card">
+                <h3>Total de Produtos</h3>
+                <p>124</p>
+              </div>
+              <div className="card">
+                <h3>Pedidos Hoje</h3>
+                <p>18</p>
+              </div>
+              <div className="card">
+                <h3>Usuários Registrados</h3>
+                <p>{totalUsuarios}</p>
+              </div>
+            </div>
           </div>
         );
       case 'Produtos':
@@ -135,31 +76,13 @@ export default function AdminPage() {
       case 'Pedidos':
         return (
           <div className="dashboard-content">
-            <h2>Pedidos recentes</h2>
-            <div className="coming-soon">Módulo em desenvolvimento</div>
+            <h2>Pedidos recentes (em breve)</h2>
           </div>
         );
       case 'Configurações':
         return (
           <div className="dashboard-content">
             <h2>Configurações do sistema</h2>
-            <div className="settings-section">
-              <h3>Preferências</h3>
-              <div className="setting-item">
-                <label>Notificações por email</label>
-                <input type="checkbox" defaultChecked />
-              </div>
-              <div className="setting-item">
-                <label>Tema escuro</label>
-                <input type="checkbox" />
-              </div>
-            </div>
-            <div className="settings-section">
-              <h3>Sessão</h3>
-              <button onClick={handleLogout} className="logout-btn">
-                Sair do Sistema
-              </button>
-            </div>
           </div>
         );
       default:
@@ -174,52 +97,26 @@ export default function AdminPage() {
   return (
     <div className="admin-container">
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <h1 className="logo">PetShop Admin</h1>
-          {userLogado && (
-            <div className="user-info">
-              <img 
-                src={userLogado.foto || 'https://i.imgur.com/8Km9tLL.jpg'} 
-                alt={userLogado.nome}
-                className="user-avatar"
-              />
-              <span className="user-name">{userLogado.nome}</span>
-              <span className="user-role">{userLogado.isAdmin ? 'Administrador' : 'Usuário'}</span>
-            </div>
-          )}
-        </div>
-        
+        <h1 className="logo">Admin</h1>
         <nav className="menu">
           <ul>
             <li className={menuAtivo === 'Dashboard' ? 'ativo' : ''} onClick={() => setMenuAtivo('Dashboard')}>
-              <i className="icon dashboard-icon"></i>
               Dashboard
             </li>
             <li className={menuAtivo === 'Produtos' ? 'ativo' : ''} onClick={() => setMenuAtivo('Produtos')}>
-              <i className="icon products-icon"></i>
               Produtos
             </li>
             <li className={menuAtivo === 'Usuários' ? 'ativo' : ''} onClick={() => setMenuAtivo('Usuários')}>
-              <i className="icon users-icon"></i>
               Usuários
             </li>
             <li className={menuAtivo === 'Pedidos' ? 'ativo' : ''} onClick={() => setMenuAtivo('Pedidos')}>
-              <i className="icon orders-icon"></i>
               Pedidos
             </li>
             <li className={menuAtivo === 'Configurações' ? 'ativo' : ''} onClick={() => setMenuAtivo('Configurações')}>
-              <i className="icon settings-icon"></i>
               Configurações
             </li>
           </ul>
         </nav>
-        
-        <div className="sidebar-footer">
-          <button onClick={handleLogout} className="logout-btn">
-            <i className="icon logout-icon"></i>
-            Sair
-          </button>
-        </div>
       </aside>
 
       <main className="main-content">
