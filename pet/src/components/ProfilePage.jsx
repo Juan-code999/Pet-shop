@@ -18,6 +18,7 @@ import {
   FiLock,
   FiAlertCircle,
   FiCheckCircle,
+  FiX,
   FiCamera,
   FiTrash2,
   FiCreditCard,
@@ -41,7 +42,9 @@ const ProfilePage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState(null);
   const [activeTab, setActiveTab] = useState('personal');
+  const [message, setMessage] = useState({ text: '', type: '' });
   
   // Estado do formulário
   const [form, setForm] = useState({
@@ -119,6 +122,11 @@ const ProfilePage = () => {
     return () => unsubscribe();
   }, [auth, fetchUserData]);
 
+  // Log dos dados do formulário para debug
+  useEffect(() => {
+    console.log("Dados atuais do formulário:", JSON.stringify(form, null, 2));
+  }, [form]);
+
   // Manipulador de mudanças no formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -140,6 +148,8 @@ const ProfilePage = () => {
   // Upload de imagem para o Cloudinary
   const uploadImageToCloudinary = async (file) => {
     setUploadingImage(true);
+    setImageError(null);
+    
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -152,12 +162,17 @@ const ProfilePage = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Upload progress: ${progress}%`);
+          }
         }
       );
 
       return response.data.secure_url;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem:', error);
+      setImageError('Falha no upload da imagem. Tente novamente.');
       throw error;
     } finally {
       setUploadingImage(false);
@@ -167,21 +182,38 @@ const ProfilePage = () => {
   // Manipulador de upload de foto
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPhotoPreview(reader.result);
-        };
-        reader.readAsDataURL(file);
+    
+    if (!file) return;
+    
+    // Verificação do tipo e tamanho do arquivo
+    if (!file.type.match('image.*')) {
+      setImageError('Por favor, selecione um arquivo de imagem válido.');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      setImageError('A imagem deve ter menos de 5MB.');
+      return;
+    }
 
-        const imageUrl = await uploadImageToCloudinary(file);
-        setForm(prev => ({ ...prev, foto: imageUrl }));
-        
-      } catch (error) {
-        console.error("Erro ao fazer upload da imagem:", error);
-        alert("Erro ao fazer upload da imagem. Tente novamente.");
-      }
+    try {
+      // Cria pré-visualização
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Faz upload para Cloudinary
+      const imageUrl = await uploadImageToCloudinary(file);
+      
+      // Atualiza o estado do formulário com a URL do Cloudinary
+      setForm(prev => ({ ...prev, foto: imageUrl }));
+      
+    } catch (error) {
+      setPhotoPreview(null);
+      console.error("Erro ao processar imagem:", error);
+      setMessage({ text: 'Erro ao enviar imagem. Tente novamente.', type: 'error' });
     }
   };
 
@@ -189,23 +221,35 @@ const ProfilePage = () => {
   const handleRemovePhoto = () => {
     setPhotoPreview(null);
     setForm(prev => ({ ...prev, foto: "" }));
+    setImageError(null);
   };
 
   // Validação do formulário
   const validateForm = () => {
-    if (!form.nome.trim()) return "O nome é obrigatório";
-    if (!form.email.trim()) return "O email é obrigatório";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Email inválido";
-    if (form.telefone && !/^[\d\s()-]+$/.test(form.telefone)) return "Telefone inválido";
+    const errors = {};
     
-    if (!form.endereco.rua.trim()) return "A rua é obrigatória";
-    if (!form.endereco.numero.trim()) return "O número é obrigatório";
-    if (!form.endereco.bairro.trim()) return "O bairro é obrigatório";
-    if (!form.endereco.cidade.trim()) return "A cidade é obrigatória";
-    if (!form.endereco.estado.trim()) return "O estado é obrigatório";
-    if (!form.endereco.cep.trim()) return "O CEP é obrigatório";
+    if (!form.nome.trim()) errors.nome = 'Nome é obrigatório';
+    else if (form.nome.trim().length < 3) errors.nome = 'Nome deve ter pelo menos 3 caracteres';
+
+    if (!form.email.trim()) errors.email = 'Email é obrigatório';
+    else if (!/^\S+@\S+\.\S+$/.test(form.email)) errors.email = 'Email inválido';
+
+    if (!form.telefone.trim()) errors.telefone = 'Telefone é obrigatório';
+    else if (!/^[\d\s()-]+$/.test(form.telefone)) errors.telefone = 'Telefone inválido';
+
+    // Validação de endereço
+    if (!form.endereco.rua.trim()) errors.rua = 'Rua é obrigatória';
+    if (!form.endereco.numero.trim()) errors.numero = 'Número é obrigatório';
+    if (!form.endereco.bairro.trim()) errors.bairro = 'Bairro é obrigatório';
+    if (!form.endereco.cidade.trim()) errors.cidade = 'Cidade é obrigatória';
     
-    return null;
+    if (!form.endereco.estado.trim()) errors.estado = 'Estado é obrigatório';
+    else if (form.endereco.estado.trim().length !== 2) errors.estado = 'Estado deve ter 2 caracteres (UF)';
+    
+    if (!form.endereco.cep.trim()) errors.cep = 'CEP é obrigatório';
+    else if (!/^\d{5}-?\d{3}$/.test(form.endereco.cep)) errors.cep = 'CEP inválido';
+
+    return Object.keys(errors).length > 0 ? errors : null;
   };
 
   // Enviar email de verificação
@@ -221,25 +265,28 @@ const ProfilePage = () => {
   };
 
   // Atualizar dados do usuário na API
-  const updateUserData = async () => {
+   const updateUserData = async () => {
     try {
+      const token = await currentUser.getIdToken();
+      
+      // Primeiro obtemos os dados atuais do usuário para pegar a senha
       const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`);
       if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário");
       
       const currentUserData = await userResponse.json();
-      const token = await currentUser.getIdToken();
-      
-      const body = {
-        id: usuarioId,
+
+      // Prepara os dados para atualização com todos os campos obrigatórios
+      const updateData = {
+        id: usuarioId, // Campo Id obrigatório
         nome: form.nome,
         email: form.email,
-        telefone: form.telefone || "",
-        foto: form.foto || "",
-        senha: currentUserData.senha,
+        telefone: form.telefone,
+        senha: currentUserData.senha, // Mantemos a senha atual
+        foto: form.foto || null,
         endereco: {
           rua: form.endereco.rua,
           numero: form.endereco.numero,
-          complemento: form.endereco.complemento || "",
+          complemento: form.endereco.complemento || null,
           bairro: form.endereco.bairro,
           cidade: form.endereco.cidade,
           estado: form.endereco.estado,
@@ -248,23 +295,37 @@ const ProfilePage = () => {
         isAdmin: currentUserData.isAdmin || false
       };
 
+      console.log("Dados sendo enviados para atualização:", JSON.stringify(updateData, null, 2));
+
       const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(updateData),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.title || "Falha na atualização");
+        console.error("Detalhes do erro da API:", responseData);
+        
+        let errorMessage = "Erro ao atualizar os dados";
+        if (responseData.errors) {
+          errorMessage = Object.values(responseData.errors).join("\n");
+        } else if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (responseData.title) {
+          errorMessage = responseData.title;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      return responseData;
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error);
+      console.error("Erro completo ao atualizar usuário:", error);
       throw error;
     }
   };
@@ -293,6 +354,7 @@ const ProfilePage = () => {
       
       setShowPasswordModal(false);
       setEditMode(false);
+      setMessage({ text: 'Email atualizado com sucesso! Verifique seu novo email.', type: 'success' });
     } catch (error) {
       console.error("Erro na autenticação:", error);
       setAuthError(
@@ -305,14 +367,20 @@ const ProfilePage = () => {
 
   // Manipulador de atualização de dados
   const handleAtualizar = async () => {
-    const validationError = validateForm();
-    if (validationError) {
-      alert(validationError);
+    const validationErrors = validateForm();
+    if (validationErrors) {
+      setMessage({ 
+        text: Object.values(validationErrors).join('\n'), 
+        type: 'error' 
+      });
       return;
     }
 
     if (!usuarioId) {
-      alert("ID do usuário não está carregado ainda. Tente novamente em alguns segundos.");
+      setMessage({ 
+        text: 'ID do usuário não está carregado ainda. Tente novamente em alguns segundos.', 
+        type: 'error' 
+      });
       return;
     }
 
@@ -324,11 +392,20 @@ const ProfilePage = () => {
         return;
       }
       
-      await updateUserData();
+      const updatedUser = await updateUserData();
+      console.log("Usuário atualizado com sucesso:", updatedUser);
+      
+      setMessage({ text: 'Dados atualizados com sucesso!', type: 'success' });
       setEditMode(false);
+      
+      // Recarrega os dados atualizados
       fetchUserData(form.email);
     } catch (error) {
-      alert(`Erro ao atualizar os dados: ${error.message}`);
+      console.error("Erro ao atualizar:", error);
+      setMessage({ 
+        text: error.message || 'Erro ao atualizar os dados', 
+        type: 'error' 
+      });
     } finally {
       setUpdating(false);
     }
@@ -366,7 +443,9 @@ const ProfilePage = () => {
               </div>
               <h3>Confirmação de Segurança</h3>
             </div>
-            <p className="modal-description">Para proteger sua conta, precisamos que você confirme sua senha atual antes de alterar o email.</p>
+            <p className="modal-description">
+              Para proteger sua conta, precisamos que você confirme sua senha atual antes de alterar o email.
+            </p>
             <div className="form-group">
               <label>Sua senha atual</label>
               <input
@@ -398,49 +477,68 @@ const ProfilePage = () => {
         </div>
       )}
 
+      {/* Mensagens de feedback */}
+      {message.text && (
+        <div className={`message-box ${message.type}`}>
+          {message.type === 'success' ? <FiCheckCircle /> : <FiAlertCircle />}
+          <span>{message.text}</span>
+          <button 
+            onClick={() => setMessage({ text: '', type: '' })}
+            className="message-close-btn"
+          >
+            <FiX />
+          </button>
+        </div>
+      )}
+
       {/* Cabeçalho do Perfil */}
       <div className="profile-header">
         <div className="header-background"></div>
         <div className="profile-header-content">
           <div className="avatar-container">
             <div className="avatar-wrapper">
-              <img
-                src={photoPreview || form.foto || "/default-avatar.jpg"}
-                alt="Perfil"
-                className="avatar-image"
-                onError={(e) => {
-                  e.target.src = "/default-avatar.jpg";
-                }}
-              />
-              {editMode && (
-                <div className="avatar-actions">
-                  <label className="avatar-action-btn">
-                    <FiCamera size={16} />
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handlePhotoChange}
-                      style={{ display: 'none' }}
-                      disabled={uploadingImage}
-                    />
-                  </label>
-                  {(photoPreview || form.foto) && (
-                    <button 
-                      className="avatar-action-btn danger"
-                      onClick={handleRemovePhoto}
-                      disabled={uploadingImage}
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              )}
-              {uploadingImage && (
+              {uploadingImage ? (
                 <div className="uploading-overlay">
-                  <div className="spinner small"></div>
+                  <div className="spinner"></div>
+                  <span>Enviando imagem...</span>
                 </div>
+              ) : (
+                <>
+                  <img
+                    src={photoPreview || form.foto || "/default-avatar.jpg"}
+                    alt="Perfil"
+                    className="avatar-image"
+                    onError={(e) => {
+                      e.target.src = "/default-avatar.jpg";
+                    }}
+                  />
+                  {editMode && (
+                    <div className="avatar-actions">
+                      <label className="avatar-action-btn">
+                        <FiCamera size={16} />
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handlePhotoChange}
+                          style={{ display: 'none' }}
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                      {(photoPreview || form.foto) && (
+                        <button 
+                          className="avatar-action-btn danger"
+                          onClick={handleRemovePhoto}
+                          disabled={uploadingImage}
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
+            {imageError && <div className="error-message">{imageError}</div>}
           </div>
 
           <div className="profile-info">

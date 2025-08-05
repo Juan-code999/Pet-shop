@@ -41,13 +41,31 @@ namespace Pet_shop.Controllers
         public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioUpdateDTO usuarioDTO)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return BadRequest(new { Errors = errors });
+            }
 
-            var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, usuarioDTO);
-            if (!usuarioAtualizado)
-                return NotFound();
+            try
+            {
+                var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, usuarioDTO);
 
-            return NoContent();
+                if (!usuarioAtualizado)
+                    return NotFound(new { Message = "Usuário não encontrado" });
+
+                return Ok(new
+                {
+                    Message = "Usuário atualizado com sucesso",
+                    Usuario = await _usuarioService.BuscarUsuarioPorIdAsync(id)
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Erro interno no servidor", Details = ex.Message });
+            }
         }
 
 

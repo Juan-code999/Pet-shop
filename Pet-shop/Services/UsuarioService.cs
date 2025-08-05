@@ -58,39 +58,41 @@ namespace Pet_shop.Services
             try
             {
                 var existente = await _firebase.Child("usuarios").Child(id).OnceSingleAsync<Usuario>();
-                if (existente == null)
-                    return false;
+                if (existente == null) return false;
 
-                var senhaHash = string.IsNullOrWhiteSpace(dto.Senha)
-                    ? existente.Senha
-                    : BCrypt.Net.BCrypt.HashPassword(dto.Senha);
+                // Atualiza campos básicos
+                if (!string.IsNullOrWhiteSpace(dto.Nome)) existente.Nome = dto.Nome;
+                if (!string.IsNullOrWhiteSpace(dto.Email)) existente.Email = dto.Email.ToLower();
+                if (!string.IsNullOrWhiteSpace(dto.Senha)) existente.Senha = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
+                if (!string.IsNullOrWhiteSpace(dto.Telefone)) existente.Telefone = dto.Telefone;
+                if (dto.Foto != null) existente.Foto = dto.Foto;
+                existente.IsAdmin = dto.IsAdmin;
 
-                var usuarioAtualizado = new Usuario
+                // Atualiza endereço
+                if (dto.Endereco != null)
                 {
-                    Id = id,
-                    Nome = dto.Nome,
-                    Email = dto.Email.ToLower(),
-                    Senha = senhaHash,
-                    Telefone = dto.Telefone,
-                    Foto = dto.Foto,
-                    Endereco = new Endereco
-                    {
-                        Rua = dto.Endereco.Rua,
-                        Numero = dto.Endereco.Numero,
-                        Complemento = dto.Endereco.Complemento,
-                        Bairro = dto.Endereco.Bairro,
-                        Cidade = dto.Endereco.Cidade,
-                        Estado = dto.Endereco.Estado,
-                        Cep = dto.Endereco.Cep
-                    },
-                    IsAdmin = dto.IsAdmin
-                };
+                    existente.Endereco ??= new Endereco();
 
-                await _firebase.Child("usuarios").Child(id).PutAsync(usuarioAtualizado);
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Rua)) existente.Endereco.Rua = dto.Endereco.Rua;
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Numero)) existente.Endereco.Numero = dto.Endereco.Numero;
+                    if (dto.Endereco.Complemento != null) existente.Endereco.Complemento = dto.Endereco.Complemento;
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Bairro)) existente.Endereco.Bairro = dto.Endereco.Bairro;
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Cidade)) existente.Endereco.Cidade = dto.Endereco.Cidade;
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Estado)) existente.Endereco.Estado = dto.Endereco.Estado;
+                    if (!string.IsNullOrWhiteSpace(dto.Endereco.Cep)) existente.Endereco.Cep = dto.Endereco.Cep;
+                }
+
+                await _firebase.Child("usuarios").Child(id).PutAsync(existente);
                 return true;
             }
-            catch
+            catch (FirebaseException fireEx)
             {
+                Console.WriteLine($"Firebase Error: {fireEx.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
                 return false;
             }
         }
