@@ -59,10 +59,6 @@
 }
 
 /* Mobile Filters Toggle */
-.filtros-toggle {
-  display: none;
-}
-
 .filtros-mobile-toggle {
   display: none;
   background-color: #007BFF;
@@ -73,6 +69,9 @@
   font-weight: 600;
   cursor: pointer;
   position: relative;
+  align-items: center;
+  gap: 8px;
+  border: none;
 }
 
 .filtros-badge {
@@ -102,7 +101,7 @@
   position: sticky;
   top: 20px;
   transition: transform 0.3s ease;
-  z-index: 10;
+  z-index: 100;
 }
 
 .filtros-header {
@@ -122,9 +121,12 @@
 
 .fechar-filtros {
   display: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   color: #555;
+  background: none;
+  border: none;
+  padding: 5px;
 }
 
 .filtros-aplicados-container {
@@ -730,16 +732,18 @@
     border-radius: 0;
   }
   
-  .filtros-toggle:checked ~ .sidebar-filtros {
+  .sidebar-filtros.show {
     transform: translateX(0);
   }
   
   .filtros-mobile-toggle {
-    display: block;
+    display: flex;
   }
   
   .fechar-filtros {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .produtos-grid {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { FaStar, FaRegStar, FaHeart, FaShoppingCart } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart, FaShoppingCart, FaFilter, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import { toast } from 'react-toastify';
@@ -20,7 +20,8 @@ const Produtos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [favoritos, setFavoritos] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState(null);
   const produtosPorPagina = 12;
   const navigate = useNavigate();
 
@@ -29,16 +30,8 @@ const Produtos = () => {
   const tiposAnimaisFixos = ["Cachorro", "Gato", "Pássaro", "Peixe", "Roedor", "Réptil"];
   const idadesFixas = ["Filhote", "Adulto", "Sênior"];
 
-  // Verificar se é mobile
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 992);
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Verificar tamanho da tela
+  const checkIsMobile = () => window.innerWidth < 992;
 
   // Buscar produtos
   useEffect(() => {
@@ -64,7 +57,7 @@ const Produtos = () => {
     setFavoritos(favs);
   }, []);
 
-  // Filtragem com debounce para melhor performance
+  // Filtragem com debounce
   const aplicarFiltros = useCallback(debounce((produtos, filtros) => {
     const { categorias, animais, idades, min, max } = filtros;
     
@@ -129,6 +122,10 @@ const Produtos = () => {
     setArray(array.filter((item) => item !== valor));
   };
 
+  const toggleFilterTab = (tab) => {
+    setActiveFilterTab(activeFilterTab === tab ? null : tab);
+  };
+
   const adicionarAoCarrinho = async (e, produto) => {
     e.stopPropagation();
     const usuarioId = localStorage.getItem("usuarioId");
@@ -148,7 +145,6 @@ const Produtos = () => {
       return;
     }
 
-    // Feedback visual de carregamento
     const btn = e.target;
     const originalText = btn.innerHTML;
     btn.innerHTML = '<FaShoppingCart /> Adicionando...';
@@ -156,14 +152,13 @@ const Produtos = () => {
 
     const itemCarrinho = {
       produtoId: produto.id,
-      tamanho: produto.tamanhos[0].tamanho, // Pega o primeiro tamanho disponível
+      tamanho: produto.tamanhos[0].tamanho,
       quantidade: 1,
     };
 
     try {
       await axios.post(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
       
-      // Feedback visual de sucesso
       btn.innerHTML = '<FaShoppingCart /> Adicionado!';
       btn.style.backgroundColor = '#28a745';
       
@@ -172,7 +167,6 @@ const Produtos = () => {
         closeOnClick: true,
       });
 
-      // Reset do botão após 2 segundos
       setTimeout(() => {
         btn.innerHTML = originalText;
         btn.style.backgroundColor = '';
@@ -181,13 +175,11 @@ const Produtos = () => {
     } catch (error) {
       console.error("Erro ao adicionar ao carrinho:", error);
       
-      // Feedback visual de erro
       btn.innerHTML = '<FaShoppingCart /> Erro!';
       btn.style.backgroundColor = '#dc3545';
       
       toast.error(error.response?.data?.message || "Erro ao adicionar ao carrinho");
 
-      // Reset do botão após 2 segundos
       setTimeout(() => {
         btn.innerHTML = originalText;
         btn.style.backgroundColor = '';
@@ -307,23 +299,30 @@ const Produtos = () => {
   return (
     <div className="container-produtos">
       <div className="produtos-content-wrapper">
-        {/* Sidebar de Filtros (oculto em mobile e mostrado via botão) */}
-        <input type="checkbox" id="filtros-toggle" className="filtros-toggle" />
-        <label htmlFor="filtros-toggle" className="filtros-mobile-toggle">
-          {categoriasSelecionadas.length + tiposAnimalSelecionados.length + idadesSelecionadas.length > 0 ? (
+        {/* Botão de filtros mobile */}
+        <button 
+          className="filtros-mobile-toggle"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <FaFilter />
+          {categoriasSelecionadas.length + tiposAnimalSelecionados.length + idadesSelecionadas.length > 0 && (
             <span className="filtros-badge">
               {categoriasSelecionadas.length + tiposAnimalSelecionados.length + idadesSelecionadas.length}
             </span>
-          ) : null}
+          )}
           Filtros
-        </label>
+        </button>
         
-        <aside className="sidebar-filtros">
+        {/* Sidebar de Filtros */}
+        <aside className={`sidebar-filtros ${showFilters ? 'show' : ''}`}>
           <div className="filtros-header">
             <h3>Filtrar Produtos</h3>
-            <label htmlFor="filtros-toggle" className="fechar-filtros">
-              &times;
-            </label>
+            <button 
+              className="fechar-filtros"
+              onClick={() => setShowFilters(false)}
+            >
+              <FaTimes />
+            </button>
           </div>
 
           <div className="filtros-aplicados-container">
@@ -389,12 +388,12 @@ const Produtos = () => {
           </div>
 
           {/* Filtro de Categorias */}
-          <div className={`filtro ${!isMobile ? 'aberto' : ''}`}>
+          <div className={`filtro ${activeFilterTab === 'categorias' ? 'aberto' : ''}`}>
             <h4>
               <button 
                 className="filtro-toggle"
-                onClick={(e) => e.currentTarget.closest('.filtro').classList.toggle('aberto')}
-                aria-expanded={!isMobile}
+                onClick={() => toggleFilterTab('categorias')}
+                aria-expanded={activeFilterTab === 'categorias'}
               >
                 CATEGORIAS
                 <svg className="filtro-seta" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -418,12 +417,12 @@ const Produtos = () => {
           </div>
 
           {/* Filtro de Tipo de Animal */}
-          <div className={`filtro ${!isMobile ? 'aberto' : ''}`}>
+          <div className={`filtro ${activeFilterTab === 'animais' ? 'aberto' : ''}`}>
             <h4>
               <button 
                 className="filtro-toggle"
-                onClick={(e) => e.currentTarget.closest('.filtro').classList.toggle('aberto')}
-                aria-expanded={!isMobile}
+                onClick={() => toggleFilterTab('animais')}
+                aria-expanded={activeFilterTab === 'animais'}
               >
                 TIPO DE ANIMAL
                 <svg className="filtro-seta" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -447,12 +446,12 @@ const Produtos = () => {
           </div>
 
           {/* Filtro de Idade */}
-          <div className={`filtro ${!isMobile ? 'aberto' : ''}`}>
+          <div className={`filtro ${activeFilterTab === 'idades' ? 'aberto' : ''}`}>
             <h4>
               <button 
                 className="filtro-toggle"
-                onClick={(e) => e.currentTarget.closest('.filtro').classList.toggle('aberto')}
-                aria-expanded={!isMobile}
+                onClick={() => toggleFilterTab('idades')}
+                aria-expanded={activeFilterTab === 'idades'}
               >
                 IDADE
                 <svg className="filtro-seta" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -476,12 +475,12 @@ const Produtos = () => {
           </div>
 
           {/* Filtro de Faixa de Preço */}
-          <div className={`filtro ${!isMobile ? 'aberto' : ''}`}>
+          <div className={`filtro ${activeFilterTab === 'preco' ? 'aberto' : ''}`}>
             <h4>
               <button 
                 className="filtro-toggle"
-                onClick={(e) => e.currentTarget.closest('.filtro').classList.toggle('aberto')}
-                aria-expanded={!isMobile}
+                onClick={() => toggleFilterTab('preco')}
+                aria-expanded={activeFilterTab === 'preco'}
               >
                 FAIXA DE PREÇO
                 <svg className="filtro-seta" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
