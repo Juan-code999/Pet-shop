@@ -40,17 +40,19 @@ namespace Pet_shop.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioUpdateDTO usuarioDTO)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-                return BadRequest(new { Errors = errors });
-            }
-
             try
             {
+                // Se senha foi fornecida, aplica hash
+                if (!string.IsNullOrEmpty(usuarioDTO.Senha))
+                {
+                    usuarioDTO.Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDTO.Senha);
+                }
+                else
+                {
+                    // Remove a senha do DTO para não sobrescrever a existente
+                    usuarioDTO.Senha = null;
+                }
+
                 var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, usuarioDTO);
 
                 if (!usuarioAtualizado)
@@ -64,7 +66,11 @@ namespace Pet_shop.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Erro interno no servidor", Details = ex.Message });
+                return StatusCode(500, new
+                {
+                    Message = "Erro interno no servidor",
+                    Details = ex.Message
+                });
             }
         }
 
@@ -82,10 +88,6 @@ namespace Pet_shop.Controllers
         }
 
 
-
-
-
-
         // GET: api/Usuario/admincheck/email/{email}
         [HttpGet("email/{email}")]
         public async Task<IActionResult> BuscarUsuarioPorEmail(string email)
@@ -97,11 +99,6 @@ namespace Pet_shop.Controllers
             }
             return Ok(usuario);
         }
-
-
-
-
-
 
 
         // GET: api/Usuario

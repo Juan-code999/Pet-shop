@@ -129,22 +129,37 @@ const ProfilePage = () => {
 
   // Manipulador de mudanças no formulário
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setForm(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+  const { name, value } = e.target;
+  
+  // Formatação automática
+  let processedValue = value;
+  
+  if (name === 'endereco.cep') {
+    // Remove tudo que não é dígito
+    processedValue = value.replace(/\D/g, '');
+    // Aplica a máscara 12345-678
+    if (processedValue.length > 5) {
+      processedValue = `${processedValue.substring(0, 5)}-${processedValue.substring(5, 8)}`;
     }
-  };
-
+  }
+  
+  if (name === 'endereco.estado') {
+    processedValue = value.toUpperCase();
+  }
+  
+  if (name.includes('.')) {
+    const [parent, child] = name.split('.');
+    setForm(prev => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [child]: processedValue
+      }
+    }));
+  } else {
+    setForm(prev => ({ ...prev, [name]: processedValue }));
+  }
+};
   // Upload de imagem para o Cloudinary
   const uploadImageToCloudinary = async (file) => {
     setUploadingImage(true);
@@ -226,31 +241,38 @@ const ProfilePage = () => {
 
   // Validação do formulário
   const validateForm = () => {
-    const errors = {};
-    
-    if (!form.nome.trim()) errors.nome = 'Nome é obrigatório';
-    else if (form.nome.trim().length < 3) errors.nome = 'Nome deve ter pelo menos 3 caracteres';
+  const errors = {};
+  
+  // Validação básica
+  if (!form.nome.trim()) errors.nome = 'Nome é obrigatório';
+  if (!form.telefone.trim()) errors.telefone = 'Telefone é obrigatório';
+  
+  // Validação de endereço
+  if (!form.endereco.rua.trim()) errors.rua = 'Rua é obrigatória';
+  
+  if (!form.endereco.numero.trim()) {
+    errors.numero = 'Número é obrigatório';
+  } else if (isNaN(form.endereco.numero) || form.endereco.numero.length > 10) {
+    errors.numero = 'Número inválido';
+  }
+  
+  if (!form.endereco.bairro.trim()) errors.bairro = 'Bairro é obrigatório';
+  if (!form.endereco.cidade.trim()) errors.cidade = 'Cidade é obrigatória';
+  
+  if (!form.endereco.estado.trim()) {
+    errors.estado = 'Estado é obrigatório';
+  } else if (form.endereco.estado.length !== 2 || !/^[A-Za-z]{2}$/.test(form.endereco.estado)) {
+    errors.estado = 'Use a sigla com 2 letras (ex: MG)';
+  }
+  
+  if (!form.endereco.cep.trim()) {
+    errors.cep = 'CEP é obrigatório';
+  } else if (!/^\d{5}-?\d{3}$/.test(form.endereco.cep)) {
+    errors.cep = 'CEP inválido (use 12345-678 ou 12345678)';
+  }
 
-    if (!form.email.trim()) errors.email = 'Email é obrigatório';
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) errors.email = 'Email inválido';
-
-    if (!form.telefone.trim()) errors.telefone = 'Telefone é obrigatório';
-    else if (!/^[\d\s()-]+$/.test(form.telefone)) errors.telefone = 'Telefone inválido';
-
-    // Validação de endereço
-    if (!form.endereco.rua.trim()) errors.rua = 'Rua é obrigatória';
-    if (!form.endereco.numero.trim()) errors.numero = 'Número é obrigatório';
-    if (!form.endereco.bairro.trim()) errors.bairro = 'Bairro é obrigatório';
-    if (!form.endereco.cidade.trim()) errors.cidade = 'Cidade é obrigatória';
-    
-    if (!form.endereco.estado.trim()) errors.estado = 'Estado é obrigatório';
-    else if (form.endereco.estado.trim().length !== 2) errors.estado = 'Estado deve ter 2 caracteres (UF)';
-    
-    if (!form.endereco.cep.trim()) errors.cep = 'CEP é obrigatório';
-    else if (!/^\d{5}-?\d{3}$/.test(form.endereco.cep)) errors.cep = 'CEP inválido';
-
-    return Object.keys(errors).length > 0 ? errors : null;
-  };
+  return Object.keys(errors).length > 0 ? errors : null;
+};
 
   // Enviar email de verificação
   const sendVerificationEmail = async (user) => {
@@ -265,70 +287,65 @@ const ProfilePage = () => {
   };
 
   // Atualizar dados do usuário na API
-   const updateUserData = async () => {
-    try {
-      const token = await currentUser.getIdToken();
+ const updateUserData = async () => {
+  try {
+    const token = await currentUser.getIdToken();
+    
+    // Prepara os dados completos para atualização
+    const updateData = {
+      nome: form.nome,
+      email: form.email, // Inclua mesmo que não mude
+      telefone: form.telefone,
+      foto: form.foto || "", // Envie string vazia se não houver foto
+      senha: "", // Campo obrigatório mas pode ser vazio para atualização
+      endereco: {
+        rua: form.endereco.rua,
+        numero: form.endereco.numero,
+        complemento: form.endereco.complemento || "",
+        bairro: form.endereco.bairro,
+        cidade: form.endereco.cidade,
+        estado: form.endereco.estado,
+        cep: form.endereco.cep.replace(/\D/g, '') // Remove formatação
+      },
+      isAdmin: false // Ou mantenha o valor atual se aplicável
+    };
+
+    console.log("Dados enviados:", JSON.stringify(updateData, null, 2));
+
+    const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Detalhes do erro:", errorData);
       
-      // Primeiro obtemos os dados atuais do usuário para pegar a senha
-      const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`);
-      if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário");
-      
-      const currentUserData = await userResponse.json();
-
-      // Prepara os dados para atualização com todos os campos obrigatórios
-      const updateData = {
-        id: usuarioId, // Campo Id obrigatório
-        nome: form.nome,
-        email: form.email,
-        telefone: form.telefone,
-        senha: currentUserData.senha, // Mantemos a senha atual
-        foto: form.foto || null,
-        endereco: {
-          rua: form.endereco.rua,
-          numero: form.endereco.numero,
-          complemento: form.endereco.complemento || null,
-          bairro: form.endereco.bairro,
-          cidade: form.endereco.cidade,
-          estado: form.endereco.estado,
-          cep: form.endereco.cep
-        },
-        isAdmin: currentUserData.isAdmin || false
-      };
-
-      console.log("Dados sendo enviados para atualização:", JSON.stringify(updateData, null, 2));
-
-      const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error("Detalhes do erro da API:", responseData);
-        
-        let errorMessage = "Erro ao atualizar os dados";
-        if (responseData.errors) {
-          errorMessage = Object.values(responseData.errors).join("\n");
-        } else if (responseData.message) {
-          errorMessage = responseData.message;
-        } else if (responseData.title) {
-          errorMessage = responseData.title;
-        }
-        
-        throw new Error(errorMessage);
+      // Melhor tratamento das mensagens de erro
+      let errorMessage = "Erro ao atualizar os dados";
+      if (errorData.errors) {
+        errorMessage = Object.entries(errorData.errors)
+          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+          .join('\n');
+      } else if (errorData.Message) {
+        errorMessage = errorData.Message;
+      } else if (errorData.title) {
+        errorMessage = errorData.title;
       }
-
-      return responseData;
-    } catch (error) {
-      console.error("Erro completo ao atualizar usuário:", error);
-      throw error;
+      
+      throw new Error(errorMessage);
     }
-  };
+
+    return await response.json();
+  } catch (error) {
+    console.error("Erro completo:", error);
+    throw error;
+  }
+};
 
   // Manipulador de envio de senha no modal
   const handlePasswordSubmit = async () => {
@@ -366,50 +383,40 @@ const ProfilePage = () => {
   };
 
   // Manipulador de atualização de dados
-  const handleAtualizar = async () => {
-    const validationErrors = validateForm();
-    if (validationErrors) {
-      setMessage({ 
-        text: Object.values(validationErrors).join('\n'), 
-        type: 'error' 
-      });
-      return;
-    }
+const handleAtualizar = async () => {
+  // Validações básicas
+  if (!form.nome.trim()) {
+    setMessage({ text: 'Nome é obrigatório', type: 'error' });
+    return;
+  }
 
-    if (!usuarioId) {
-      setMessage({ 
-        text: 'ID do usuário não está carregado ainda. Tente novamente em alguns segundos.', 
-        type: 'error' 
-      });
-      return;
-    }
+  // Se estiver alterando a senha, valida o tamanho
+  if (form.senha && form.senha.trim().length > 0 && form.senha.trim().length < 6) {
+    setMessage({ text: 'A senha deve ter no mínimo 6 caracteres', type: 'error' });
+    return;
+  }
 
-    try {
-      setUpdating(true);
-      
-      if (form.email !== currentUser.email) {
-        setShowPasswordModal(true);
-        return;
-      }
-      
-      const updatedUser = await updateUserData();
-      console.log("Usuário atualizado com sucesso:", updatedUser);
-      
-      setMessage({ text: 'Dados atualizados com sucesso!', type: 'success' });
-      setEditMode(false);
-      
-      // Recarrega os dados atualizados
-      fetchUserData(form.email);
-    } catch (error) {
-      console.error("Erro ao atualizar:", error);
-      setMessage({ 
-        text: error.message || 'Erro ao atualizar os dados', 
-        type: 'error' 
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
+  try {
+    setUpdating(true);
+    await updateUserData();
+    
+    setMessage({ text: 'Dados atualizados com sucesso!', type: 'success' });
+    setEditMode(false);
+    
+    // Recarrega os dados
+    await fetchUserData(form.email);
+  } catch (error) {
+    setMessage({ 
+      text: error.message.includes('validation errors') 
+        ? 'Verifique os dados e tente novamente' 
+        : error.message,
+      type: 'error'
+    });
+  } finally {
+    setUpdating(false);
+  }
+};
+
 
   if (loading) {
     return (
