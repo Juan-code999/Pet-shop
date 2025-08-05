@@ -156,8 +156,8 @@ const ProdutoDetalhes = () => {
       <nav aria-label="Navegação do breadcrumb">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
-            <Link to="/" className="breadcrumb-link" aria-label="Página inicial">
-              <FaHome size={14} aria-hidden="true" />
+            <Link to="/" className="breadcrumb-link">
+              <FaHome size={14} />
             </Link>
           </li>
           <li className="breadcrumb-item">
@@ -170,24 +170,23 @@ const ProdutoDetalhes = () => {
               </Link>
             </li>
           )}
-          <li className="breadcrumb-item active" aria-current="page">
+          <li className="breadcrumb-item active">
             {produto.nome}
           </li>
         </ol>
       </nav>
 
       <div className="produto-detalhes-container">
+        {/* Galeria */}
         <div className="produto-galeria">
-          <div className="miniaturas-vertical" role="list">
+          <div className="miniaturas-vertical">
             {produto.imagensUrl?.map((url, i) => (
               <button
                 key={i}
                 className={`miniatura-wrapper ${imagemPrincipal === url ? "miniatura-ativa" : ""}`}
                 onClick={() => setImagemPrincipal(url)}
-                aria-label={`Visualizar imagem ${i + 1} do produto`}
-                role="listitem"
               >
-                <img src={url} alt={`Miniatura ${i + 1}`} className="miniatura" loading="lazy" />
+                <img src={url} alt={`Miniatura ${i + 1}`} className="miniatura" />
               </button>
             ))}
           </div>
@@ -196,19 +195,16 @@ const ProdutoDetalhes = () => {
               className="imagem-principal"
               src={imagemPrincipal || "https://via.placeholder.com/500"}
               alt={produto.nome}
-              loading="eager"
-              aria-label="Imagem principal do produto"
             />
           </div>
         </div>
 
+        {/* Informações */}
         <div className="produto-info-central">
           <h1>{produto.nome}</h1>
 
-          <div className="avaliacao" aria-label={`Avaliação: ${produto.avaliacao?.toFixed(1) || "4.9"} de 5 estrelas`}>
-            <div className="estrelas" aria-hidden="true">
-              {renderAvaliacao(produto.avaliacao || 4.9)}
-            </div>
+          <div className="avaliacao">
+            <div className="estrelas">{renderAvaliacao(produto.avaliacao || 4.9)}</div>
             <span className="nota">{produto.avaliacao?.toFixed(1) || "4.9"}</span>
             <span className="reviews">({produto.numeroAvaliacoes || 25} reviews)</span>
           </div>
@@ -217,13 +213,11 @@ const ProdutoDetalhes = () => {
             <div
               className={`descricao ${descricaoExpandida ? 'expandida' : 'recolhida'}`}
               dangerouslySetInnerHTML={{ __html: produto.descricao || 'Descrição não disponível' }}
-              aria-label="Descrição do produto"
             />
             {produto.descricao && produto.descricao.length > 200 && (
               <button
                 className="btn-expandir-descricao"
                 onClick={() => setDescricaoExpandida(!descricaoExpandida)}
-                aria-expanded={descricaoExpandida}
               >
                 {descricaoExpandida ? 'Mostrar menos' : 'Continuar lendo...'}
               </button>
@@ -233,20 +227,15 @@ const ProdutoDetalhes = () => {
           {produto.tamanhos?.length > 0 && (
             <div className="tamanhos-container">
               <h3>Tamanhos disponíveis</h3>
-              <div className="tamanhos-grid" role="group" aria-labelledby="tamanhos-label">
+              <div className="tamanhos-grid">
                 {produto.tamanhos.map((tamanho, index) => (
                   <button
                     key={`${tamanho.tamanho}-${index}`}
                     className={`tamanho-opcao ${tamanhoSelecionado?.tamanho === tamanho.tamanho ? "tamanho-selecionado" : ""}`}
                     onClick={() => setTamanhoSelecionado(tamanho)}
-                    aria-pressed={tamanhoSelecionado?.tamanho === tamanho.tamanho}
-                    aria-label={`Tamanho ${tamanho.tamanho} - R$${tamanho.precoTotal.toFixed(2)}`}
                   >
                     <span className="tamanho-nome">{tamanho.tamanho}</span>
                     <span className="tamanho-preco">R$ {tamanho.precoTotal.toFixed(2)}</span>
-                    {tamanho.precoPorKg > 0 && (
-                      <span className="tamanho-preco-kg">(R$ {tamanho.precoPorKg.toFixed(2)})</span>
-                    )}
                   </button>
                 ))}
               </div>
@@ -254,7 +243,8 @@ const ProdutoDetalhes = () => {
           )}
         </div>
 
-        <aside className="resumo-pedido" aria-label="Resumo do pedido">
+        {/* Resumo */}
+        <aside className="resumo-pedido">
           <div className="precos">
             {produto.desconto > 0 && (
               <div className="preco-original-wrapper">
@@ -268,14 +258,9 @@ const ProdutoDetalhes = () => {
           </div>
 
           <div className="quantidade-container">
-            <label htmlFor="quantidade-input" className="quantidade-label">Quantidade</label>
+            <label htmlFor="quantidade-input">Quantidade</label>
             <div className="quantidade-control">
-              <button
-                className="quantidade-btn"
-                onClick={() => setQuantidade(prev => Math.max(1, prev - 1))}
-                aria-label="Reduzir quantidade"
-                disabled={quantidade <= 1}
-              >
+              <button onClick={() => setQuantidade(prev => Math.max(1, prev - 1))} disabled={quantidade <= 1}>
                 <FaMinus />
               </button>
               <input
@@ -284,47 +269,23 @@ const ProdutoDetalhes = () => {
                 min="1"
                 max="100"
                 value={quantidade}
-                onChange={(e) => {
-                  const value = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
-                  setQuantidade(value);
-                }}
-                className="quantidade-input"
-                aria-label="Quantidade do produto"
+                onChange={(e) => setQuantidade(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
               />
-              <button
-                className="quantidade-btn"
-                onClick={() => setQuantidade(prev => prev + 1)}
-                aria-label="Aumentar quantidade"
-                disabled={quantidade >= 100}
-              >
+              <button onClick={() => setQuantidade(prev => prev + 1)} disabled={quantidade >= 100}>
                 <FaPlus />
               </button>
             </div>
           </div>
 
-          <button
-            className="btn-add-carrinho"
-            onClick={adicionarAoCarrinho}
-            disabled={adicionandoAoCarrinho || !tamanhoSelecionado}
-            aria-label="Adicionar ao carrinho"
-          >
-            <BiCart size={20} aria-hidden="true" />
+          <button className="btn-add-carrinho" onClick={adicionarAoCarrinho} disabled={adicionandoAoCarrinho}>
+            <BiCart size={20} />
             {adicionandoAoCarrinho ? 'Adicionando...' : 'Adicionar ao carrinho'}
           </button>
 
-          <button className="btn-comprar" aria-label="Comprar agora">
-            <FiShoppingCart size={18} aria-hidden="true" />
-            <span>Comprar agora</span>
+          <button className="btn-comprar">
+            <FiShoppingCart size={18} />
+            Comprar agora
           </button>
-
-          <div className="recorrencia-info">
-            <ul>
-              <li>• Frete grátis para assinantes</li>
-              <li>• Entrega programada</li>
-              <li>• Cancelamento fácil</li>
-            </ul>
-            <p className="nota">Descontos não cumulativos. O maior desconto elegível será aplicado no carrinho.</p>
-          </div>
         </aside>
       </div>
     </div>
