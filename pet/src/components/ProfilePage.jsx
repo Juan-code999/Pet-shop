@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  reauthenticateWithCredential, 
-  EmailAuthProvider, 
+import {
+  getAuth,
+  onAuthStateChanged,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   updateEmail,
   sendEmailVerification
 } from 'firebase/auth';
-import { 
-  FiEdit, 
-  FiSave, 
-  FiUser, 
-  FiPhone, 
-  FiMail, 
-  FiMapPin, 
-  FiHome, 
+import {
+  FiEdit,
+  FiSave,
+  FiUser,
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiHome,
   FiLock,
   FiAlertCircle,
   FiCheckCircle,
@@ -45,7 +45,7 @@ const ProfilePage = () => {
   const [imageError, setImageError] = useState(null);
   const [activeTab, setActiveTab] = useState('personal');
   const [message, setMessage] = useState({ text: '', type: '' });
-  
+
   // Estado do formulário
   const [form, setForm] = useState({
     nome: "",
@@ -71,21 +71,21 @@ const ProfilePage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
-      
+
       if (!response.ok) {
         throw new Error("Erro ao buscar usuário por email");
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.id) {
         throw new Error("ID do usuário não encontrado na resposta.");
       }
-      
+
       setUsuarioId(data.id);
-      
+
       setForm({
         nome: data.nome || "",
         telefone: data.telefone || "",
@@ -101,7 +101,7 @@ const ProfilePage = () => {
           cep: data.endereco?.cep || "",
         }
       });
-      
+
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
       setError(err.message);
@@ -129,42 +129,42 @@ const ProfilePage = () => {
 
   // Manipulador de mudanças no formulário
   const handleChange = (e) => {
-  const { name, value } = e.target;
-  
-  // Formatação automática
-  let processedValue = value;
-  
-  if (name === 'endereco.cep') {
-    // Remove tudo que não é dígito
-    processedValue = value.replace(/\D/g, '');
-    // Aplica a máscara 12345-678
-    if (processedValue.length > 5) {
-      processedValue = `${processedValue.substring(0, 5)}-${processedValue.substring(5, 8)}`;
-    }
-  }
-  
-  if (name === 'endereco.estado') {
-    processedValue = value.toUpperCase();
-  }
-  
-  if (name.includes('.')) {
-    const [parent, child] = name.split('.');
-    setForm(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [child]: processedValue
+    const { name, value } = e.target;
+
+    // Formatação automática
+    let processedValue = value;
+
+    if (name === 'endereco.cep') {
+      // Remove tudo que não é dígito
+      processedValue = value.replace(/\D/g, '');
+      // Aplica a máscara 12345-678
+      if (processedValue.length > 5) {
+        processedValue = `${processedValue.substring(0, 5)}-${processedValue.substring(5, 8)}`;
       }
-    }));
-  } else {
-    setForm(prev => ({ ...prev, [name]: processedValue }));
-  }
-};
+    }
+
+    if (name === 'endereco.estado') {
+      processedValue = value.toUpperCase();
+    }
+
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setForm(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: processedValue
+        }
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: processedValue }));
+    }
+  };
   // Upload de imagem para o Cloudinary
   const uploadImageToCloudinary = async (file) => {
     setUploadingImage(true);
     setImageError(null);
-    
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -197,15 +197,15 @@ const ProfilePage = () => {
   // Manipulador de upload de foto
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
-    
+
     if (!file) return;
-    
+
     // Verificação do tipo e tamanho do arquivo
     if (!file.type.match('image.*')) {
       setImageError('Por favor, selecione um arquivo de imagem válido.');
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) { // 5MB
       setImageError('A imagem deve ter menos de 5MB.');
       return;
@@ -221,10 +221,10 @@ const ProfilePage = () => {
 
       // Faz upload para Cloudinary
       const imageUrl = await uploadImageToCloudinary(file);
-      
+
       // Atualiza o estado do formulário com a URL do Cloudinary
       setForm(prev => ({ ...prev, foto: imageUrl }));
-      
+
     } catch (error) {
       setPhotoPreview(null);
       console.error("Erro ao processar imagem:", error);
@@ -241,38 +241,38 @@ const ProfilePage = () => {
 
   // Validação do formulário
   const validateForm = () => {
-  const errors = {};
-  
-  // Validação básica
-  if (!form.nome.trim()) errors.nome = 'Nome é obrigatório';
-  if (!form.telefone.trim()) errors.telefone = 'Telefone é obrigatório';
-  
-  // Validação de endereço
-  if (!form.endereco.rua.trim()) errors.rua = 'Rua é obrigatória';
-  
-  if (!form.endereco.numero.trim()) {
-    errors.numero = 'Número é obrigatório';
-  } else if (isNaN(form.endereco.numero) || form.endereco.numero.length > 10) {
-    errors.numero = 'Número inválido';
-  }
-  
-  if (!form.endereco.bairro.trim()) errors.bairro = 'Bairro é obrigatório';
-  if (!form.endereco.cidade.trim()) errors.cidade = 'Cidade é obrigatória';
-  
-  if (!form.endereco.estado.trim()) {
-    errors.estado = 'Estado é obrigatório';
-  } else if (form.endereco.estado.length !== 2 || !/^[A-Za-z]{2}$/.test(form.endereco.estado)) {
-    errors.estado = 'Use a sigla com 2 letras (ex: MG)';
-  }
-  
-  if (!form.endereco.cep.trim()) {
-    errors.cep = 'CEP é obrigatório';
-  } else if (!/^\d{5}-?\d{3}$/.test(form.endereco.cep)) {
-    errors.cep = 'CEP inválido (use 12345-678 ou 12345678)';
-  }
+    const errors = {};
 
-  return Object.keys(errors).length > 0 ? errors : null;
-};
+    // Validação básica
+    if (!form.nome.trim()) errors.nome = 'Nome é obrigatório';
+    if (!form.telefone.trim()) errors.telefone = 'Telefone é obrigatório';
+
+    // Validação de endereço
+    if (!form.endereco.rua.trim()) errors.rua = 'Rua é obrigatória';
+
+    if (!form.endereco.numero.trim()) {
+      errors.numero = 'Número é obrigatório';
+    } else if (isNaN(form.endereco.numero) || form.endereco.numero.length > 10) {
+      errors.numero = 'Número inválido';
+    }
+
+    if (!form.endereco.bairro.trim()) errors.bairro = 'Bairro é obrigatório';
+    if (!form.endereco.cidade.trim()) errors.cidade = 'Cidade é obrigatória';
+
+    if (!form.endereco.estado.trim()) {
+      errors.estado = 'Estado é obrigatório';
+    } else if (form.endereco.estado.length !== 2 || !/^[A-Za-z]{2}$/.test(form.endereco.estado)) {
+      errors.estado = 'Use a sigla com 2 letras (ex: MG)';
+    }
+
+    if (!form.endereco.cep.trim()) {
+      errors.cep = 'CEP é obrigatório';
+    } else if (!/^\d{5}-?\d{3}$/.test(form.endereco.cep)) {
+      errors.cep = 'CEP inválido (use 12345-678 ou 12345678)';
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
+  };
 
   // Enviar email de verificação
   const sendVerificationEmail = async (user) => {
@@ -287,72 +287,79 @@ const ProfilePage = () => {
   };
 
   // Atualizar dados do usuário na API
- const updateUserData = async () => {
-  try {
-    const token = await currentUser.getIdToken();
-    
-    // Prepara os dados completos para atualização
-    const updateData = {
-      nome: form.nome,
-      email: form.email, // Inclua mesmo que não mude
-      telefone: form.telefone,
-      foto: form.foto || "", // Envie string vazia se não houver foto
-      senha: "", // Campo obrigatório mas pode ser vazio para atualização
-      endereco: {
-        rua: form.endereco.rua,
-        numero: form.endereco.numero,
-        complemento: form.endereco.complemento || "",
-        bairro: form.endereco.bairro,
-        cidade: form.endereco.cidade,
-        estado: form.endereco.estado,
-        cep: form.endereco.cep.replace(/\D/g, '') // Remove formatação
-      },
-      isAdmin: false // Ou mantenha o valor atual se aplicável
-    };
+  const updateUserData = async () => {
+    try {
+      const token = await currentUser.getIdToken();
 
-    console.log("Dados enviados:", JSON.stringify(updateData, null, 2));
+      // Primeiro obtemos os dados atuais do usuário
+      const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
 
-    const response = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(updateData),
-    });
+      if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário");
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Detalhes do erro:", errorData);
-      
-      // Melhor tratamento das mensagens de erro
-      let errorMessage = "Erro ao atualizar os dados";
-      if (errorData.errors) {
-        errorMessage = Object.entries(errorData.errors)
-          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-          .join('\n');
-      } else if (errorData.Message) {
-        errorMessage = errorData.Message;
-      } else if (errorData.title) {
-        errorMessage = errorData.title;
+      const currentUserData = await userResponse.json();
+
+      // Prepara os dados para atualização
+      const dataToUpdate = {
+        nome: form.nome,
+        email: form.email,
+        telefone: form.telefone,
+        foto: form.foto || null,
+        endereco: {
+          rua: form.endereco.rua,
+          numero: form.endereco.numero,
+          complemento: form.endereco.complemento || null,
+          bairro: form.endereco.bairro,
+          cidade: form.endereco.cidade,
+          estado: form.endereco.estado,
+          cep: form.endereco.cep
+        },
+        isAdmin: currentUserData.isAdmin || false
+      };
+
+      console.log("Dados sendo enviados para atualização:", JSON.stringify(dataToUpdate, null, 2));
+
+      const response = await fetch(`http://localhost:5005/api/Usuario/profile/${usuarioId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToUpdate),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Detalhes do erro da API:", errorData);
+
+        let errorMessage = "Erro ao atualizar os dados";
+        if (errorData.errors) {
+          errorMessage = Object.values(errorData.errors).join("\n");
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.title) {
+          errorMessage = errorData.title;
+        }
+
+        throw new Error(errorMessage);
       }
-      
-      throw new Error(errorMessage);
-    }
 
-    return await response.json();
-  } catch (error) {
-    console.error("Erro completo:", error);
-    throw error;
-  }
-};
+      return await response.json();
+    } catch (error) {
+      console.error("Erro completo ao atualizar usuário:", error);
+      throw error;
+    }
+  };
 
   // Manipulador de envio de senha no modal
   const handlePasswordSubmit = async () => {
     try {
       setAuthError(null);
       const user = auth.currentUser;
-      
+
       if (!user || !user.email) {
         throw new Error("Usuário não autenticado");
       }
@@ -364,11 +371,11 @@ const ProfilePage = () => {
 
       const credential = EmailAuthProvider.credential(user.email, password);
       await reauthenticateWithCredential(user, credential);
-      
+
       await updateEmail(user, form.email);
       await sendVerificationEmail(user);
       await updateUserData();
-      
+
       setShowPasswordModal(false);
       setEditMode(false);
       setMessage({ text: 'Email atualizado com sucesso! Verifique seu novo email.', type: 'success' });
@@ -376,46 +383,46 @@ const ProfilePage = () => {
       console.error("Erro na autenticação:", error);
       setAuthError(
         error.code === 'auth/wrong-password' ? "Senha incorreta" :
-        error.code === 'auth/requires-recent-login' ? "Sessão expirou. Faça login novamente." :
-        error.message
+          error.code === 'auth/requires-recent-login' ? "Sessão expirou. Faça login novamente." :
+            error.message
       );
     }
   };
 
   // Manipulador de atualização de dados
-const handleAtualizar = async () => {
-  // Validações básicas
-  if (!form.nome.trim()) {
-    setMessage({ text: 'Nome é obrigatório', type: 'error' });
-    return;
-  }
+  const handleAtualizar = async () => {
+    // Validações básicas
+    if (!form.nome.trim()) {
+      setMessage({ text: 'Nome é obrigatório', type: 'error' });
+      return;
+    }
 
-  // Se estiver alterando a senha, valida o tamanho
-  if (form.senha && form.senha.trim().length > 0 && form.senha.trim().length < 6) {
-    setMessage({ text: 'A senha deve ter no mínimo 6 caracteres', type: 'error' });
-    return;
-  }
+    // Se estiver alterando a senha, valida o tamanho
+    if (form.senha && form.senha.trim().length > 0 && form.senha.trim().length < 6) {
+      setMessage({ text: 'A senha deve ter no mínimo 6 caracteres', type: 'error' });
+      return;
+    }
 
-  try {
-    setUpdating(true);
-    await updateUserData();
-    
-    setMessage({ text: 'Dados atualizados com sucesso!', type: 'success' });
-    setEditMode(false);
-    
-    // Recarrega os dados
-    await fetchUserData(form.email);
-  } catch (error) {
-    setMessage({ 
-      text: error.message.includes('validation errors') 
-        ? 'Verifique os dados e tente novamente' 
-        : error.message,
-      type: 'error'
-    });
-  } finally {
-    setUpdating(false);
-  }
-};
+    try {
+      setUpdating(true);
+      await updateUserData();
+
+      setMessage({ text: 'Dados atualizados com sucesso!', type: 'success' });
+      setEditMode(false);
+
+      // Recarrega os dados
+      await fetchUserData(form.email);
+    } catch (error) {
+      setMessage({
+        text: error.message.includes('validation errors')
+          ? 'Verifique os dados e tente novamente'
+          : error.message,
+        type: 'error'
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
 
 
   if (loading) {
@@ -437,6 +444,33 @@ const handleAtualizar = async () => {
       </div>
     );
   }
+
+  const getAvatarUrl = () => {
+    // 1. Pré-visualização tem prioridade máxima
+    if (photoPreview) return photoPreview;
+
+    // 2. Foto salva no banco de dados
+    if (form.foto) return form.foto;
+
+    // 3. Avatar padrão baseado no nome
+    if (form.nome) {
+      const initial = form.nome.charAt(0).toUpperCase();
+      const hue = hashCode(form.nome) % 360; // Função para gerar cor consistente
+      return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='hsl(${hue}, 70%, 60%)'/><text x='50' y='60' text-anchor='middle' font-size='50' fill='white'>${initial}</text></svg>`;
+    }
+
+    // 4. Fallback absoluto
+    return "/default-avatar.jpg";
+  };
+
+  // Função auxiliar para gerar hash do nome (adicione fora do componente)
+  const hashCode = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+  };
 
   return (
     <div className="profile-container">
@@ -465,15 +499,15 @@ const handleAtualizar = async () => {
             </div>
             {authError && <div className="modal-error">{authError}</div>}
             <div className="modal-buttons">
-              <button 
-                className="btn btn-outline" 
+              <button
+                className="btn btn-outline"
                 onClick={() => setShowPasswordModal(false)}
                 disabled={updating}
               >
                 Cancelar
               </button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handlePasswordSubmit}
                 disabled={updating}
               >
@@ -489,7 +523,7 @@ const handleAtualizar = async () => {
         <div className={`message-box ${message.type}`}>
           {message.type === 'success' ? <FiCheckCircle /> : <FiAlertCircle />}
           <span>{message.text}</span>
-          <button 
+          <button
             onClick={() => setMessage({ text: '', type: '' })}
             className="message-close-btn"
           >
@@ -512,7 +546,7 @@ const handleAtualizar = async () => {
               ) : (
                 <>
                   <img
-                    src={photoPreview || form.foto || "/default-avatar.jpg"}
+                    src={getAvatarUrl()} // Função separada para melhor organização
                     alt="Perfil"
                     className="avatar-image"
                     onError={(e) => {
@@ -523,19 +557,17 @@ const handleAtualizar = async () => {
                     <div className="avatar-actions">
                       <label className="avatar-action-btn">
                         <FiCamera size={16} />
-                        <input 
-                          type="file" 
-                          accept="image/*" 
+                        <input
+                          type="file"
+                          accept="image/*"
                           onChange={handlePhotoChange}
                           style={{ display: 'none' }}
-                          disabled={uploadingImage}
                         />
                       </label>
                       {(photoPreview || form.foto) && (
-                        <button 
+                        <button
                           className="avatar-action-btn danger"
                           onClick={handleRemovePhoto}
-                          disabled={uploadingImage}
                         >
                           <FiTrash2 size={16} />
                         </button>
@@ -563,15 +595,15 @@ const handleAtualizar = async () => {
           <div className="profile-actions">
             {editMode ? (
               <>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={handleAtualizar} 
+                <button
+                  className="btn btn-primary"
+                  onClick={handleAtualizar}
                   disabled={updating || uploadingImage}
                 >
                   <FiSave /> {updating ? "Salvando..." : "Salvar Alterações"}
                 </button>
-                <button 
-                  className="btn btn-outline" 
+                <button
+                  className="btn btn-outline"
                   onClick={() => setEditMode(false)}
                   disabled={updating || uploadingImage}
                 >
@@ -595,7 +627,7 @@ const handleAtualizar = async () => {
             <h3>Minha Conta</h3>
           </div>
           <ul className="sidebar-menu">
-            <li 
+            <li
               className={`menu-item ${activeTab === 'personal' ? 'active' : ''}`}
               onClick={() => setActiveTab('personal')}
             >
@@ -604,7 +636,7 @@ const handleAtualizar = async () => {
               </div>
               <span>Informações Pessoais</span>
             </li>
-            <li 
+            <li
               className={`menu-item ${activeTab === 'address' ? 'active' : ''}`}
               onClick={() => setActiveTab('address')}
             >
@@ -613,7 +645,7 @@ const handleAtualizar = async () => {
               </div>
               <span>Endereço</span>
             </li>
-            <li 
+            <li
               className={`menu-item ${activeTab === 'payment' ? 'active' : ''}`}
               onClick={() => setActiveTab('payment')}
             >
@@ -622,7 +654,7 @@ const handleAtualizar = async () => {
               </div>
               <span>Pagamentos</span>
             </li>
-            <li 
+            <li
               className={`menu-item ${activeTab === 'favorites' ? 'active' : ''}`}
               onClick={() => setActiveTab('favorites')}
             >
@@ -631,7 +663,7 @@ const handleAtualizar = async () => {
               </div>
               <span>Favoritos</span>
             </li>
-            <li 
+            <li
               className={`menu-item ${activeTab === 'security' ? 'active' : ''}`}
               onClick={() => setActiveTab('security')}
             >
@@ -640,7 +672,7 @@ const handleAtualizar = async () => {
               </div>
               <span>Segurança</span>
             </li>
-            <li 
+            <li
               className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
               onClick={() => setActiveTab('settings')}
             >
@@ -667,12 +699,12 @@ const handleAtualizar = async () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Nome Completo</label>
-                    <input 
-                      type="text" 
-                      name="nome" 
-                      value={form.nome} 
-                      onChange={handleChange} 
-                      required 
+                    <input
+                      type="text"
+                      name="nome"
+                      value={form.nome}
+                      onChange={handleChange}
+                      required
                       disabled={!editMode}
                       className={editMode ? "input-edit-mode" : ""}
                     />
@@ -682,12 +714,12 @@ const handleAtualizar = async () => {
                     <label>Email</label>
                     <div className="input-with-icon">
                       <FiMail className="input-icon" />
-                      <input 
-                        type="email" 
-                        name="email" 
-                        value={form.email} 
-                        onChange={handleChange} 
-                        required 
+                      <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
                         disabled={!editMode}
                         className={editMode ? "input-edit-mode" : ""}
                       />
@@ -696,8 +728,8 @@ const handleAtualizar = async () => {
                       <div className="verification-notice">
                         <FiAlertCircle />
                         <span>Seu email não está verificado. </span>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="text-link"
                           onClick={() => sendVerificationEmail(currentUser)}
                         >
@@ -716,11 +748,11 @@ const handleAtualizar = async () => {
                     <label>Telefone</label>
                     <div className="input-with-icon">
                       <FiPhone className="input-icon" />
-                      <input 
-                        type="tel" 
-                        name="telefone" 
-                        value={form.telefone} 
-                        onChange={handleChange} 
+                      <input
+                        type="tel"
+                        name="telefone"
+                        value={form.telefone}
+                        onChange={handleChange}
                         disabled={!editMode}
                         placeholder="(00) 00000-0000"
                         className={editMode ? "input-edit-mode" : ""}
@@ -747,11 +779,11 @@ const handleAtualizar = async () => {
                     <label>Rua</label>
                     <div className="input-with-icon">
                       <FiHome className="input-icon" />
-                      <input 
-                        type="text" 
-                        name="endereco.rua" 
-                        value={form.endereco.rua} 
-                        onChange={handleChange} 
+                      <input
+                        type="text"
+                        name="endereco.rua"
+                        value={form.endereco.rua}
+                        onChange={handleChange}
                         required
                         disabled={!editMode}
                         className={editMode ? "input-edit-mode" : ""}
@@ -761,11 +793,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>Número</label>
-                    <input 
-                      type="text" 
-                      name="endereco.numero" 
-                      value={form.endereco.numero} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.numero"
+                      value={form.endereco.numero}
+                      onChange={handleChange}
                       required
                       disabled={!editMode}
                       className={editMode ? "input-edit-mode" : ""}
@@ -774,11 +806,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>Complemento</label>
-                    <input 
-                      type="text" 
-                      name="endereco.complemento" 
-                      value={form.endereco.complemento} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.complemento"
+                      value={form.endereco.complemento}
+                      onChange={handleChange}
                       disabled={!editMode}
                       className={editMode ? "input-edit-mode" : ""}
                     />
@@ -786,11 +818,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>Bairro</label>
-                    <input 
-                      type="text" 
-                      name="endereco.bairro" 
-                      value={form.endereco.bairro} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.bairro"
+                      value={form.endereco.bairro}
+                      onChange={handleChange}
                       required
                       disabled={!editMode}
                       className={editMode ? "input-edit-mode" : ""}
@@ -799,11 +831,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>Cidade</label>
-                    <input 
-                      type="text" 
-                      name="endereco.cidade" 
-                      value={form.endereco.cidade} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.cidade"
+                      value={form.endereco.cidade}
+                      onChange={handleChange}
                       required
                       disabled={!editMode}
                       className={editMode ? "input-edit-mode" : ""}
@@ -812,11 +844,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>Estado</label>
-                    <input 
-                      type="text" 
-                      name="endereco.estado" 
-                      value={form.endereco.estado} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.estado"
+                      value={form.endereco.estado}
+                      onChange={handleChange}
                       required
                       disabled={!editMode}
                       maxLength="2"
@@ -827,11 +859,11 @@ const handleAtualizar = async () => {
 
                   <div className="form-group">
                     <label>CEP</label>
-                    <input 
-                      type="text" 
-                      name="endereco.cep" 
-                      value={form.endereco.cep} 
-                      onChange={handleChange} 
+                    <input
+                      type="text"
+                      name="endereco.cep"
+                      value={form.endereco.cep}
+                      onChange={handleChange}
                       required
                       disabled={!editMode}
                       placeholder="00000-000"

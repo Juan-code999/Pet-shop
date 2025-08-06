@@ -123,86 +123,91 @@ const Registrar = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  e.preventDefault();
+  setIsSubmitting(true);
+  setMessage({ text: '', type: '' }); // Limpa mensagens anteriores
 
-    if (!validateForm()) {
+  if (!validateForm()) {
+    setIsSubmitting(false);
+    setMessage({ text: 'Por favor, corrija os erros no formulário', type: 'error' });
+    return;
+  }
+
+  try {
+    // 1. Criar usuário no Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+    const userId = userCredential.user.uid;
+    const avatarUrl = generateAvatar(formData.nome);
+
+    // 2. Atualizar perfil no Firebase
+    await updateProfile(userCredential.user, {
+      displayName: formData.nome,
+      photoURL: avatarUrl
+    });
+
+    // 3. Enviar dados para sua API
+    const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        Id: userId,
+        Nome: formData.nome,
+        Email: formData.email,
+        Senha: formData.senha,
+        Telefone: formData.telefone,
+        Endereco: {
+          Rua: formData.endereco.rua,
+          Numero: formData.endereco.numero,
+          Bairro: formData.endereco.bairro,
+          Cidade: formData.endereco.cidade,
+          Estado: formData.endereco.estado,
+          Cep: formData.endereco.cep,
+          Complemento: formData.endereco.complemento,
+        },
+        IsAdmin: false,
+        Foto: avatarUrl, // Agora enviando o avatar gerado
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Erro na API:', errorData);
+      setMessage({ text: 'Erro ao salvar dados na API.', type: 'error' });
+
+      // Remove usuário do Firebase se a API falhar
+      if (userCredential?.user) {
+        await userCredential.user.delete();
+      }
+
       setIsSubmitting(false);
-      setMessage({ text: 'Por favor, corrija os erros no formulário', type: 'error' });
       return;
     }
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+    setMessage({ 
+      text: 'Cadastro realizado com sucesso! Redirecionando...', 
+      type: 'success' 
+    });
 
-      await updateProfile(userCredential.user, {
-        displayName: formData.nome,
-        photoURL: generateAvatar(formData.nome)
-      });
+    // Desloga usuário para evitar login automático
+    await signOut(auth);
+    setTimeout(() => navigate('/login'), 1500);
 
-      // Envia os dados do usuário para sua API
-      const userId = userCredential.user.uid;
-
-      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          Id: userId,
-          Nome: formData.nome,
-          Email: formData.email,
-          Senha: formData.senha,
-          Telefone: formData.telefone,
-          Endereco: {
-            Rua: formData.endereco.rua,
-            Numero: formData.endereco.numero,
-            Bairro: formData.endereco.bairro,
-            Cidade: formData.endereco.cidade,
-            Estado: formData.endereco.estado,
-            Cep: formData.endereco.cep,
-            Complemento: formData.endereco.complemento,
-          },
-          IsAdmin: false,
-          Foto: '',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro na API:', errorData);
-        setMessage({ text: 'Erro ao salvar dados na API.', type: 'error' });
-
-        // Remove usuário do Firebase se a API falhar
-        if (userCredential && userCredential.user) {
-          await userCredential.user.delete();
-        }
-
-        setIsSubmitting(false);
-        return;
-      }
-
-      setMessage({ text: 'Cadastro realizado com sucesso!', type: 'success' });
-
-      // **Desloga usuário para evitar login automático**
-      await signOut(auth);
-
-      setTimeout(() => navigate('/login'), 1500);
-    } catch (error) {
-      console.error('Erro no registro:', error);
-      let errorMessage = 'Erro ao realizar cadastro';
-
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este email já está em uso';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'A senha deve ter pelo menos 6 caracteres';
-      }
-
-      setMessage({ text: errorMessage, type: 'error' });
-
-      setIsSubmitting(false);
+  } catch (error) {
+    console.error('Erro no registro:', error);
+    
+    let errorMessage = 'Erro ao realizar cadastro';
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'Este e-mail já está cadastrado. Por favor, use outro e-mail ou faça login.';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'A senha deve ter pelo menos 6 caracteres';
     }
-  };
+
+    setMessage({ text: errorMessage, type: 'error' });
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="registrar-container">

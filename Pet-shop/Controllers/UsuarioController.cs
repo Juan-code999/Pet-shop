@@ -37,40 +37,38 @@ namespace Pet_shop.Controllers
 
 
         // PUT: api/Usuario/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> AtualizarUsuario(string id, [FromBody] UsuarioUpdateDTO usuarioDTO)
+        [HttpPut("profile/{id}")]
+        public async Task<IActionResult> AtualizarPerfil(string id, [FromBody] UsuarioProfileUpdateDTO usuarioDTO)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
-                // Se senha foi fornecida, aplica hash
-                if (!string.IsNullOrEmpty(usuarioDTO.Senha))
+                // Converter para UsuarioUpdateDTO sem senha
+                var updateDto = new UsuarioUpdateDTO
                 {
-                    usuarioDTO.Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDTO.Senha);
-                }
-                else
-                {
-                    // Remove a senha do DTO para não sobrescrever a existente
-                    usuarioDTO.Senha = null;
-                }
+                    Nome = usuarioDTO.Nome,
+                    Email = usuarioDTO.Email,
+                    Telefone = usuarioDTO.Telefone,
+                    Foto = usuarioDTO.Foto,
+                    Endereco = usuarioDTO.Endereco
+                };
 
-                var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, usuarioDTO);
+                var usuarioAtualizado = await _usuarioService.AtualizarUsuarioAsync(id, updateDto);
 
                 if (!usuarioAtualizado)
                     return NotFound(new { Message = "Usuário não encontrado" });
 
                 return Ok(new
                 {
-                    Message = "Usuário atualizado com sucesso",
+                    Message = "Perfil atualizado com sucesso",
                     Usuario = await _usuarioService.BuscarUsuarioPorIdAsync(id)
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    Message = "Erro interno no servidor",
-                    Details = ex.Message
-                });
+                return StatusCode(500, new { Message = "Erro interno no servidor", Details = ex.Message });
             }
         }
 

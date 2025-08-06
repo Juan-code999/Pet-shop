@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logoDark from '../img/logo1.png'; // Logo para desktop
-import logoLight from '../img/logo1.png'; // Logo para mobile
+import logoDark from '../img/logo1.png';
+import logoLight from '../img/logo1.png';
 import {
   FaHome,
   FaBoxOpen,
@@ -20,6 +20,23 @@ import {
 } from "react-icons/fa";
 import "../styles/NavBar.css";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+
+// Função auxiliar para gerar hash do nome
+const hashCode = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return hash;
+};
+
+// Função para gerar avatar padrão
+const generateDefaultAvatar = (name) => {
+  if (!name) return '';
+  const initial = name.charAt(0).toUpperCase();
+  const hue = hashCode(name) % 360;
+  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='hsl(${hue}, 70%, 60%)'/><text x='50' y='60' text-anchor='middle' font-size='50' fill='white'>${initial}</text></svg>`;
+};
 
 const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
   const location = useLocation();
@@ -59,7 +76,7 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
         setShortName(formattedName);
         setUser({
           name: nome,
-          photo: currentUser.photoURL,
+          photo: currentUser.photoURL || generateDefaultAvatar(nome),
           isAdmin: isAdmin,
         });
       } else {
@@ -256,9 +273,18 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
                       src={user.photo} 
                       alt={`Foto de ${shortName}`} 
                       className="nav-user-photo" 
+                      onError={(e) => {
+                        e.target.src = generateDefaultAvatar(user.name);
+                      }}
                     />
                   ) : (
-                    <div className="user-avatar">
+                    <div 
+                      className="user-avatar"
+                      style={{ 
+                        backgroundColor: `hsl(${hashCode(user.name) % 360}, 70%, 60%)`,
+                        color: 'white'
+                      }}
+                    >
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -281,9 +307,18 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
                             src={user.photo} 
                             alt={`Foto de ${shortName}`} 
                             className="dropdown-user-photo" 
+                            onError={(e) => {
+                              e.target.src = generateDefaultAvatar(user.name);
+                            }}
                           />
                         ) : (
-                          <div className="dropdown-user-avatar">
+                          <div 
+                            className="dropdown-user-avatar"
+                            style={{ 
+                              backgroundColor: `hsl(${hashCode(user.name) % 360}, 70%, 60%)`,
+                              color: 'white'
+                            }}
+                          >
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                         )}

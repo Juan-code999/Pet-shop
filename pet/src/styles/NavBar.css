@@ -169,6 +169,59 @@
   font-weight: 600;
 }
 
+/* ============ [NOVO] Estilos para Fotos/Avatares ============ */
+.nav-user-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 2px solid var(--primary-color);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dropdown-user-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+  margin-right: 10px;
+}
+
+.dropdown-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid var(--primary-color);
+}
+
+/* Efeitos hover para avatares */
+.nav-user-container:hover .nav-user-photo,
+.nav-user-container:hover .user-avatar {
+  transform: scale(1.05);
+  border-color: var(--primary-hover);
+}
+
+/* ============ Fim dos novos estilos ============ */
+
 /* User Info */
 .nav-user-container {
   position: relative;
@@ -189,27 +242,6 @@
 .nav-user-info:hover {
   background-color: var(--bg-hover);
   border-color: var(--border-color);
-}
-
-.nav-user-photo {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--border-color);
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
 }
 
 .nav-user-name {
@@ -258,27 +290,6 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.dropdown-user-photo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--border-color);
-}
-
-.dropdown-user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 1rem;
 }
 
 .dropdown-user-name {
@@ -543,6 +554,17 @@
 
   .brand-name {
     color: var(--mobile-text);
+  }
+
+  /* [NOVO] Estilos mobile para avatares */
+  .nav-user-photo,
+  .user-avatar {
+    border-color: var(--mobile-primary);
+  }
+
+  .dropdown-user-photo,
+  .dropdown-user-avatar {
+    border-color: var(--mobile-primary);
   }
 }
 
