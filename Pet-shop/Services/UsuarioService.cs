@@ -22,22 +22,33 @@ namespace Pet_shop.Services
             if (existente != null)
                 return null;
 
+            // Gera avatar padrão se não houver foto
+            var fotoUrl = usuarioDTO.Foto;
+            if (string.IsNullOrEmpty(fotoUrl))
+            {
+                var initial = usuarioDTO.Nome?.Length > 0
+                    ? usuarioDTO.Nome[0].ToString().ToUpper()
+                    : "U";
+                var hue = new Random().Next(360);
+                fotoUrl = $"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'><rect width='150' height='150' fill='hsl({hue}, 70%, 60%)' rx='75'/><text x='50%' y='50%' dy='.35em' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='#fff'>{initial}</text></svg>";
+            }
+
             var usuario = new Usuario
             {
                 Nome = usuarioDTO.Nome,
                 Email = usuarioDTO.Email.ToLower(),
                 Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDTO.Senha),
                 Telefone = usuarioDTO.Telefone,
-                Foto = usuarioDTO.Foto,
+                Foto = fotoUrl, // Usa a foto fornecida ou a gerada
                 Endereco = new Endereco
                 {
-                    Rua = usuarioDTO.Endereco.Rua,
-                    Numero = usuarioDTO.Endereco.Numero,
-                    Complemento = usuarioDTO.Endereco.Complemento,
-                    Bairro = usuarioDTO.Endereco.Bairro,
-                    Cidade = usuarioDTO.Endereco.Cidade,
-                    Estado = usuarioDTO.Endereco.Estado,
-                    Cep = usuarioDTO.Endereco.Cep
+                    Rua = usuarioDTO.Endereco?.Rua,
+                    Numero = usuarioDTO.Endereco?.Numero,
+                    Complemento = usuarioDTO.Endereco?.Complemento,
+                    Bairro = usuarioDTO.Endereco?.Bairro,
+                    Cidade = usuarioDTO.Endereco?.Cidade,
+                    Estado = usuarioDTO.Endereco?.Estado,
+                    Cep = usuarioDTO.Endereco?.Cep
                 },
                 IsAdmin = usuarioDTO.IsAdmin
             };
