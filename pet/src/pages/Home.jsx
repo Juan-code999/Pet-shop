@@ -47,7 +47,7 @@ const Home = () => {
     {
       id: 1,
       name: "Alimentação",
-      description: "Raçães, petiscos e suplementos para todas as fases",
+      description: "Rações, petiscos e suplementos para todas as fases",
       icon: faPaw
     },
     {
@@ -78,53 +78,76 @@ const Home = () => {
         const response = await fetch('http://localhost:5005/api/Produtos');
         
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao carregar produtos');
+          throw new Error('Erro ao carregar produtos');
         }
         
         const data = await response.json();
+        console.log('Dados brutos da API:', data);
         
-        // Filter products with Destaque = true
-        const featuredProducts = data.filter(produto => produto.Destaque);
+        // Filtro melhorado para produtos em destaque
+        const featuredProducts = data.filter(produto => {
+          const isFeatured = 
+            produto.Destaque === true || 
+            produto.destaque === true || 
+            produto.isFeatured === true ||
+            produto.featured === true;
+          
+          const isAvailable = 
+            produto.Disponivel !== false && 
+            produto.available !== false;
+          
+          return isFeatured && isAvailable;
+        });
         
-        const produtosFormatados = featuredProducts.map(produto => ({
-          id: produto.Id,
-          name: produto.Nome,
-          description: produto.Descricao,
-          category: produto.Categoria,
-          brand: produto.Marca,
-          species: produto.EspecieAnimal || 'Cachorro',
-          age: produto.IdadeRecomendada,
-          size: produto.PorteAnimal,
-          images: produto.ImagensUrl || [],
-          available: produto.Disponivel,
-          registrationDate: produto.DataCadastro,
+        console.log('Produtos em destaque filtrados:', featuredProducts);
+        
+        const produtosFormatados = featuredProducts.map(produto => {
+          const mainImage = 
+            produto.ImagensUrl?.[0] || 
+            produto.imagens?.[0] || 
+            produto.Imagem || 
+            produto.image || 
+            '';
           
-          // Price information
-          sizes: produto.Tamanhos?.map(t => ({
-            size: t.Tamanho,
-            price: t.PrecoTotal,
-            unitPrice: t.PrecoPorKg
-          })) || [],
+          const sizes = produto.Tamanhos || produto.sizes || [];
+          const formattedSizes = sizes.map(size => ({
+            size: size.Tamanho || size.size || 'Único',
+            price: size.PrecoTotal || size.price || 0,
+            unitPrice: size.PrecoUnitario || size.unitPrice
+          }));
           
-          // Highlight information
-          isFeatured: produto.Destaque,
-          discount: produto.Desconto,
+          const basePrice = formattedSizes[0]?.price || 0;
+          const discount = produto.Desconto || produto.discount || 0;
+          const finalPrice = discount > 0 ? 
+            basePrice * (1 - discount / 100) : basePrice;
           
-          // Calculated fields
-          price: produto.Tamanhos?.[0]?.PrecoTotal || 0,
-          oldPrice: produto.Desconto ? 
-            (produto.Tamanhos?.[0]?.PrecoTotal || 0) / (1 - (produto.Desconto / 100)) : null,
-          
-          rating: 4.5 + Math.random() * 0.5, // Mock rating for now
-          tag: produto.Desconto ? `Promoção ${produto.Desconto}%` : "Destaque",
-          tagClass: produto.Desconto ? "sale" : "best-seller"
-        }));
+          return {
+            id: produto.Id || produto.id || Math.random().toString(36).substr(2, 9),
+            name: produto.Nome || produto.name || 'Produto sem nome',
+            description: produto.Descricao || produto.description || 'Descrição não disponível',
+            brand: produto.Marca || produto.brand || 'Marca não especificada',
+            species: produto.EspecieAnimal || produto.species || 'Cachorro',
+            age: produto.IdadeRecomendada || produto.age || 'Todas as idades',
+            size: produto.PorteAnimal || produto.size || 'Todos os portes',
+            images: [mainImage].filter(Boolean),
+            available: true,
+            
+            sizes: formattedSizes,
+            discount: discount,
+            
+            price: finalPrice,
+            oldPrice: discount > 0 ? basePrice : null,
+            
+            rating: 4.5 + Math.random() * 0.5,
+            tag: discount > 0 ? `Promoção ${discount}%` : "Destaque",
+            tagClass: discount > 0 ? "sale" : "best-seller"
+          };
+        });
         
         setFeaturedProducts(produtosFormatados);
       } catch (error) {
-        setError(error.message);
-        console.error('Erro na requisição:', error);
+        console.error('Erro ao carregar produtos:', error);
+        setError(`Erro ao carregar produtos: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -161,29 +184,30 @@ const Home = () => {
 
     return (
       <div className="countdown">
-        <div className="countdown-item">
-          <span>{String(timeLeft.days).padStart(2, '0')}</span>
-          <small>Dias</small>
-        </div>
-        <div className="countdown-item">
-          <span>{String(timeLeft.hours).padStart(2, '0')}</span>
-          <small>Horas</small>
-        </div>
-        <div className="countdown-item">
-          <span>{String(timeLeft.minutes).padStart(2, '0')}</span>
-          <small>Min</small>
-        </div>
+        {Object.entries(timeLeft).map(([unit, value]) => (
+          unit !== 'seconds' && (
+            <div key={unit} className="countdown-item">
+              <span>{String(value).padStart(2, '0')}</span>
+              <small>
+                {unit === 'days' ? 'Dias' : 
+                 unit === 'hours' ? 'Horas' : 'Min'}
+              </small>
+            </div>
+          )
+        ))}
       </div>
     );
   };
 
   const ProductCard = ({ product }) => {
     const [isFavorite, setIsFavorite] = useState(false);
-    const [selectedSize, setSelectedSize] = useState(product.sizes[0]?.size || '');
+    const [selectedSize, setSelectedSize] = useState(
+      product.sizes[0]?.size || 'Único'
+    );
 
     const currentSize = product.sizes.find(s => s.size === selectedSize) || product.sizes[0];
     const currentPrice = currentSize?.price || product.price;
-    const currentOldPrice = product.discount ? 
+    const currentOldPrice = product.discount > 0 ? 
       currentPrice / (1 - (product.discount / 100)) : null;
 
     return (
@@ -221,14 +245,12 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="product-details">
-            <p className="description">{product.description}</p>
-            <div className="specs">
-              <span>Espécie: {product.species}</span>
-              {product.age && <span>Idade: {product.age}</span>}
-              {product.size && <span>Porte: {product.size}</span>}
-              <span>Disponível: {product.available ? 'Sim' : 'Não'}</span>
-            </div>
+          <p className="description">{product.description}</p>
+          
+          <div className="specs">
+            <span>Espécie: {product.species}</span>
+            <span>Idade: {product.age}</span>
+            {product.size && <span>Porte: {product.size}</span>}
           </div>
           
           {product.sizes.length > 0 && (
@@ -249,18 +271,19 @@ const Home = () => {
           )}
           
           <div className="price-container">
-            <span className="current-price">R$ {currentPrice.toFixed(2).replace('.', ',')}</span>
+            <span className="current-price">
+              R$ {currentPrice.toFixed(2).replace('.', ',')}
+            </span>
             {currentOldPrice && (
-              <span className="old-price">R$ {currentOldPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="old-price">
+                R$ {currentOldPrice.toFixed(2).replace('.', ',')}
+              </span>
             )}
           </div>
           
-          <button 
-            className="product-button"
-            disabled={!product.available}
-          >
+          <button className="product-button">
             <FontAwesomeIcon icon={faShoppingCart} /> 
-            {product.available ? 'Adicionar ao Carrinho' : 'Indisponível'}
+            Adicionar ao Carrinho
           </button>
         </div>
       </div>
@@ -285,9 +308,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-        <div className="testimonial-content">
-          <p>{testimonial.content}</p>
-        </div>
+        <p className="testimonial-content">{testimonial.content}</p>
         <div className="pet-info">
           <FontAwesomeIcon icon={testimonial.petIcon} />
           <span>{testimonial.pet}</span>
@@ -316,7 +337,7 @@ const Home = () => {
         <meta name="description" content="Encontre os melhores produtos e serviços para o bem-estar do seu pet. Frete grátis em compras acima de R$ 99." />
       </Helmet>
 
-      {/* Header/Hero Section */}
+      {/* Hero Section */}
       <header className="header">
         <div className="header-overlay"></div>
         <div className="header-content">
@@ -330,7 +351,7 @@ const Home = () => {
               <br />Frete grátis em compras acima de R$ 99.
             </p>
             <div className="cta-buttons">
-              <button className="btn-primary" aria-label="Comprar produtos agora">
+              <button className="btn-primary">
                 <FontAwesomeIcon icon={faShoppingCart} /> Comprar Agora
               </button>
               <button className="btn-secondary">Nossos Serviços</button>
@@ -374,7 +395,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Featured Products */}
       <section className="featured-section">
         <div className="section-header">
           <h2>Nossos <span>Destaques</span></h2>
@@ -402,6 +423,9 @@ const Home = () => {
         ) : (
           <div className="no-products">
             <p>Nenhum produto em destaque no momento</p>
+            <p className="debug-info">
+              (Verifique se existem produtos marcados como "Destaque" no banco de dados)
+            </p>
           </div>
         )}
       </section>
@@ -447,8 +471,7 @@ const Home = () => {
         <div className="story-content">
           <div className="story-text">
             <h2>Nossa <span>História</span></h2>
-            <p>Fundada em 2010 por amantes de animais, nossa petshop nasceu da paixão por proporcionar o melhor cuidado para os pets. Começamos como uma pequena loja de bairro e hoje somos referência em qualidade e atendimento.</p>
-            <p>Nosso diferencial está na seleção criteriosa de produtos e no atendimento personalizado, onde cada pet é tratado como parte da família.</p>
+            <p>Fundada em 2010 por amantes de animais, nossa petshop nasceu da paixão por proporcionar o melhor cuidado para os pets.</p>
             <div className="stats-container">
               <div className="stat-item">
                 <FontAwesomeIcon icon={faSmile} />
