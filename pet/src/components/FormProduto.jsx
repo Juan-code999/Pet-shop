@@ -74,7 +74,7 @@ function FormProduto() {
         }))
       };
 
-      await axios.post("http://localhost:5005/api/Produtos", produtoData);
+      await axios.post("https://pet-shop-eiab.onrender.com/api/Produtos", produtoData);
       alert("Produto cadastrado com sucesso!");
 
       // Limpar

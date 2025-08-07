@@ -30,14 +30,6 @@ const hashCode = (str) => {
   return hash;
 };
 
-// Função para gerar avatar padrão
-const generateDefaultAvatar = (name) => {
-  if (!name) return '';
-  const initial = name.charAt(0).toUpperCase();
-  const hue = hashCode(name) % 360;
-  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='hsl(${hue}, 70%, 60%)'/><text x='50' y='60' text-anchor='middle' font-size='50' fill='white'>${initial}</text></svg>`;
-};
-
 const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,23 +42,26 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
   const userMenuRef = useRef(null);
   const userButtonRef = useRef(null);
   const userMenuTimer = useRef(null);
+  const updateIntervalRef = useRef(null);
 
-  // Debounce resize handler
-  const handleResize = useCallback(() => {
-    const mobile = window.innerWidth < 768;
-    setIsMobile(mobile);
-    if (!mobile) {
-      setMobileMenuOpen(false);
-    }
+  // Função para gerar avatar padrão
+  const generateDefaultAvatar = useCallback((name) => {
+    if (!name) return '';
+    const initial = name.charAt(0).toUpperCase();
+    const hue = hashCode(name) % 360;
+    return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='hsl(${hue}, 70%, 60%)'/><text x='50' y='60' text-anchor='middle' font-size='50' fill='white'>${initial}</text></svg>`;
   }, []);
 
-  // Auth state listener
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        const nome = localStorage.getItem("usuarioNome") || currentUser.displayName || "Usuário";
-        const isAdmin = localStorage.getItem("isAdmin") === "true";
+  // Busca os dados atualizados do usuário
+  const fetchUserData = useCallback(async (currentUser) => {
+    try {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/email/${currentUser.email}`);
+      if (response.ok) {
+        const userData = await response.json();
+        
+        const nome = userData.nome || currentUser.displayName || "Usuário";
+        const isAdmin = userData.isAdmin || false;
+        const foto = userData.foto || currentUser.photoURL || generateDefaultAvatar(nome);
 
         const nameParts = nome.split(' ');
         const formattedName = nameParts.length > 1
@@ -76,16 +71,58 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
         setShortName(formattedName);
         setUser({
           name: nome,
-          photo: currentUser.photoURL || generateDefaultAvatar(nome),
+          photo: foto,
           isAdmin: isAdmin,
         });
+
+        localStorage.setItem("usuarioNome", nome);
+        localStorage.setItem("isAdmin", isAdmin.toString());
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  }, [generateDefaultAvatar]);
+
+  // Monitora estado de autenticação e atualizações do usuário
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        await fetchUserData(currentUser);
+        
+        // Configura intervalo para verificar atualizações (5 minutos)
+        if (updateIntervalRef.current) {
+          clearInterval(updateIntervalRef.current);
+        }
+        updateIntervalRef.current = setInterval(async () => {
+          await fetchUserData(currentUser);
+        }, 300000); // 5 minutos
       } else {
         setUser(null);
         setShortName("");
+        localStorage.removeItem("usuarioNome");
+        localStorage.removeItem("isAdmin");
+        if (updateIntervalRef.current) {
+          clearInterval(updateIntervalRef.current);
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+      }
+    };
+  }, [fetchUserData]);
+
+  // Debounce resize handler
+  const handleResize = useCallback(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    if (!mobile) {
+      setMobileMenuOpen(false);
+    }
   }, []);
 
   // Event listeners setup
@@ -136,6 +173,7 @@ const NavBar = ({ cartCount = 0, favoritesCount = 0 }) => {
       await signOut(auth);
       localStorage.clear();
       setUser(null);
+      setShortName("");
       navigate("/login");
       closeAllMenus();
     } catch (error) {

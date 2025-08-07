@@ -1,29 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHandPaper,
-  faDog,
-  faPaw,
-  faLeaf,
-  faShoppingCart,
-  faStar,
-  faTruck,
-  faShieldAlt,
-  faSmile,
-  faCat,
-  faHeart
-} from '@fortawesome/free-solid-svg-icons';
+import { FaStar, FaRegStar, FaHeart, FaShoppingCart } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../styles/Home.css';
 import dogBanner from '../img/banner.jpg';
-import teamImage from '../img/dog.jpg';
+import teamImage from '../img/cat.jpeg';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [favoritos, setFavoritos] = useState([]);
+  const navigate = useNavigate();
 
-  // Mock data for other sections
+  // Mock data for when API fails
+  const mockProducts = [
+    {
+      id: 1,
+      nome: "Ração Premium para Cães",
+      descricao: "Ração super premium para todas as raças",
+      marca: "Royal Canin",
+      imagensUrl: ["/placeholder-produto.jpg"],
+      tamanhos: [{ tamanho: "5kg", precoTotal: 120.90 }],
+      desconto: 10,
+      especieAnimal: "Cachorro",
+      avaliacaoMedia: 4.8,
+      numAvaliacoes: 42
+    },
+    {
+      id: 2,
+      nome: "Brinquedo para Gatos",
+      descricao: "Brinquedo interativo com penas",
+      marca: "PetGames",
+      imagensUrl: ["/placeholder-produto.jpg"],
+      tamanhos: [{ tamanho: "Único", precoTotal: 45.50 }],
+      desconto: 0,
+      especieAnimal: "Gato",
+      avaliacaoMedia: 4.5,
+      numAvaliacoes: 36
+    }
+  ];
+
+  // Other mock data
   const testimonials = [
     {
       id: 1,
@@ -31,7 +52,6 @@ const Home = () => {
       rating: 5,
       content: "Meu cachorro adorou a ração premium que comprei aqui. Notamos diferença na pelagem e energia dele em poucas semanas!",
       pet: "Thor, Golden Retriever",
-      petIcon: faDog
     },
     {
       id: 2,
@@ -39,7 +59,6 @@ const Home = () => {
       rating: 5,
       content: "Atendimento excepcional e entrega super rápida. Meus gatos estão viciados nos brinquedos que comprei.",
       pet: "Luna e Loki, Gatos Siameses",
-      petIcon: faCat
     }
   ];
 
@@ -48,247 +67,189 @@ const Home = () => {
       id: 1,
       name: "Alimentação",
       description: "Rações, petiscos e suplementos para todas as fases",
-      icon: faPaw
+      icon: "paw"
     },
     {
       id: 2,
       name: "Brinquedos",
       description: "Diversão e entretenimento para seu companheiro",
-      icon: faDog
+      icon: "dog"
     },
     {
       id: 3,
       name: "Higiene",
       description: "Produtos para manter seu pet limpo e cheiroso",
-      icon: faHandPaper
+      icon: "hand-paper"
     },
     {
       id: 4,
       name: "Produtos Naturais",
       description: "Alternativas saudáveis para cuidados especiais",
-      icon: faLeaf
+      icon: "leaf"
     }
   ];
 
   const brands = ["Royal Canin", "Premier", "Pedigree", "Whiskas", "Golden"];
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
+  const fetchFeaturedProducts = async () => {
+    try {
+      setLoading(true);
+      
+      // Default to mock data initially
+      let productsData = mockProducts;
+      
       try {
-        const response = await fetch('http://localhost:5005/api/Produtos');
+        const response = await axios.get('https://pet-shop-eiab.onrender.com/api/Produtos/destaques');
         
-        if (!response.ok) {
-          throw new Error('Erro ao carregar produtos');
+        // Handle different response formats
+        if (Array.isArray(response.data)) {
+          productsData = response.data; // Direct array response
+        } else if (response.data && Array.isArray(response.data.data)) {
+          productsData = response.data.data; // Object with data array
+        } else if (response.data && Array.isArray(response.data.produtos)) {
+          productsData = response.data.produtos; // Object with produtos array
         }
         
-        const data = await response.json();
-        console.log('Dados brutos da API:', data);
-        
-        // Filtro melhorado para produtos em destaque
-        const featuredProducts = data.filter(produto => {
-          const isFeatured = 
-            produto.Destaque === true || 
-            produto.destaque === true || 
-            produto.isFeatured === true ||
-            produto.featured === true;
-          
-          const isAvailable = 
-            produto.Disponivel !== false && 
-            produto.available !== false;
-          
-          return isFeatured && isAvailable;
-        });
-        
-        console.log('Produtos em destaque filtrados:', featuredProducts);
-        
-        const produtosFormatados = featuredProducts.map(produto => {
-          const mainImage = 
-            produto.ImagensUrl?.[0] || 
-            produto.imagens?.[0] || 
-            produto.Imagem || 
-            produto.image || 
-            '';
-          
-          const sizes = produto.Tamanhos || produto.sizes || [];
-          const formattedSizes = sizes.map(size => ({
-            size: size.Tamanho || size.size || 'Único',
-            price: size.PrecoTotal || size.price || 0,
-            unitPrice: size.PrecoUnitario || size.unitPrice
-          }));
-          
-          const basePrice = formattedSizes[0]?.price || 0;
-          const discount = produto.Desconto || produto.discount || 0;
-          const finalPrice = discount > 0 ? 
-            basePrice * (1 - discount / 100) : basePrice;
-          
-          return {
-            id: produto.Id || produto.id || Math.random().toString(36).substr(2, 9),
-            name: produto.Nome || produto.name || 'Produto sem nome',
-            description: produto.Descricao || produto.description || 'Descrição não disponível',
-            brand: produto.Marca || produto.brand || 'Marca não especificada',
-            species: produto.EspecieAnimal || produto.species || 'Cachorro',
-            age: produto.IdadeRecomendada || produto.age || 'Todas as idades',
-            size: produto.PorteAnimal || produto.size || 'Todos os portes',
-            images: [mainImage].filter(Boolean),
-            available: true,
-            
-            sizes: formattedSizes,
-            discount: discount,
-            
-            price: finalPrice,
-            oldPrice: discount > 0 ? basePrice : null,
-            
-            rating: 4.5 + Math.random() * 0.5,
-            tag: discount > 0 ? `Promoção ${discount}%` : "Destaque",
-            tagClass: discount > 0 ? "sale" : "best-seller"
-          };
-        });
-        
-        setFeaturedProducts(produtosFormatados);
-      } catch (error) {
-        console.error('Erro ao carregar produtos:', error);
-        setError(`Erro ao carregar produtos: ${error.message}`);
-      } finally {
-        setLoading(false);
+        console.log('Products data:', productsData); // Debug log
+      } catch (apiError) {
+        console.warn('API request failed, using mock data', apiError);
       }
-    };
+      
+      // Process the products data
+      const produtosFormatados = productsData.map(produto => {
+        const tamanhos = produto.tamanhos || [];
+        const precoBase = tamanhos[0]?.precoTotal || 0;
+        const desconto = parseFloat(produto.desconto) || 0;
+        const precoFinal = desconto > 0 ? precoBase * (1 - desconto / 100) : precoBase;
 
-    fetchFeaturedProducts();
+        return {
+          id: produto.id || produto._id || Math.random().toString(36).substr(2, 9),
+          nome: produto.nome || 'Produto sem nome',
+          descricao: produto.descricao || '',
+          marca: produto.marca || '',
+          especie: produto.especieAnimal || 'Cachorro',
+          idade: produto.idadeRecomendada || '',
+          porte: produto.porteAnimal || '',
+          imagens: produto.imagensUrl || produto.imagens || ["/placeholder-produto.jpg"],
+          tamanhos: tamanhos,
+          desconto: desconto,
+          preco: precoFinal,
+          precoOriginal: desconto > 0 ? precoBase : null,
+          avaliacaoMedia: produto.avaliacaoMedia || (4 + Math.random()).toFixed(1),
+          numAvaliacoes: produto.numAvaliacoes || Math.floor(Math.random() * 100) + 1
+        };
+      });
+
+      setFeaturedProducts(produtosFormatados);
+      setError(null);
+    } catch (error) {
+      console.error('Error processing products:', error);
+      setError('Erro ao carregar produtos. Mostrando dados de exemplo.');
+      setFeaturedProducts(mockProducts);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchFeaturedProducts();
+}, []);
+
+  useEffect(() => {
+    const favs = JSON.parse(localStorage.getItem('favoritos')) || [];
+    setFavoritos(favs);
   }, []);
 
-  const CountdownTimer = () => {
-    const [timeLeft, setTimeLeft] = useState({
-      days: 2,
-      hours: 12,
-      minutes: 45,
-      seconds: 0
-    });
+  const handleProductClick = (id) => {
+    navigate(`/produto/${id}`);
+  };
 
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setTimeLeft(prev => {
-          const { days, hours, minutes, seconds } = prev;
-          
-          if (seconds > 0) return { ...prev, seconds: seconds - 1 };
-          if (minutes > 0) return { ...prev, minutes: minutes - 1, seconds: 59 };
-          if (hours > 0) return { ...prev, hours: hours - 1, minutes: 59, seconds: 59 };
-          if (days > 0) return { ...prev, days: days - 1, hours: 23, minutes: 59, seconds: 59 };
-          
-          clearInterval(timer);
-          return prev;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }, []);
-
-    return (
-      <div className="countdown">
-        {Object.entries(timeLeft).map(([unit, value]) => (
-          unit !== 'seconds' && (
-            <div key={unit} className="countdown-item">
-              <span>{String(value).padStart(2, '0')}</span>
-              <small>
-                {unit === 'days' ? 'Dias' : 
-                 unit === 'hours' ? 'Horas' : 'Min'}
-              </small>
-            </div>
-          )
-        ))}
-      </div>
+  const handleFavoritar = (e, id) => {
+    e.stopPropagation();
+    const newFavoritos = favoritos.includes(id) 
+      ? favoritos.filter(favId => favId !== id)
+      : [...favoritos, id];
+    
+    setFavoritos(newFavoritos);
+    localStorage.setItem('favoritos', JSON.stringify(newFavoritos));
+    
+    toast.success(
+      favoritos.includes(id) 
+        ? 'Removido dos favoritos' 
+        : 'Adicionado aos favoritos',
+      {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+      }
     );
   };
 
-  const ProductCard = ({ product }) => {
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [selectedSize, setSelectedSize] = useState(
-      product.sizes[0]?.size || 'Único'
-    );
+  const adicionarAoCarrinho = async (e, produto) => {
+    e.stopPropagation();
+    const usuarioId = localStorage.getItem("usuarioId");
+    
+    if (!usuarioId) {
+      toast.info("Você precisa estar logado para adicionar itens ao carrinho", {
+        autoClose: 3000,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      navigate('/login', { state: { from: '/' } });
+      return;
+    }
 
-    const currentSize = product.sizes.find(s => s.size === selectedSize) || product.sizes[0];
-    const currentPrice = currentSize?.price || product.price;
-    const currentOldPrice = product.discount > 0 ? 
-      currentPrice / (1 - (product.discount / 100)) : null;
+    if (!produto.tamanhos?.length) {
+      toast.warning("Este produto não possui tamanhos disponíveis");
+      return;
+    }
 
-    return (
-      <div className="featured-card">
-        <div className={`product-tag ${product.tagClass}`}>{product.tag}</div>
-        <button 
-          className={`favorite-button ${isFavorite ? 'active' : ''}`}
-          onClick={() => setIsFavorite(!isFavorite)}
-          aria-label={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-        >
-          <FontAwesomeIcon icon={faHeart} />
-        </button>
-        
-        <div className="product-image">
-          {product.images[0] ? (
-            <img 
-              src={product.images[0]} 
-              alt={product.name}
-              loading="lazy"
-            />
-          ) : (
-            <div className="image-placeholder">
-              <FontAwesomeIcon icon={product.species === 'Gato' ? faCat : faDog} />
-            </div>
-          )}
-        </div>
-        
-        <div className="product-info">
-          <h3>{product.name}</h3>
-          <div className="product-meta">
-            <div className="brand">{product.brand}</div>
-            <div className="rating">
-              <FontAwesomeIcon icon={faStar} />
-              <span>{product.rating.toFixed(1)}</span>
-            </div>
-          </div>
-          
-          <p className="description">{product.description}</p>
-          
-          <div className="specs">
-            <span>Espécie: {product.species}</span>
-            <span>Idade: {product.age}</span>
-            {product.size && <span>Porte: {product.size}</span>}
-          </div>
-          
-          {product.sizes.length > 0 && (
-            <div className="size-selector">
-              <label>Tamanho/Opção:</label>
-              <select 
-                value={selectedSize} 
-                onChange={(e) => setSelectedSize(e.target.value)}
-              >
-                {product.sizes.map((size, index) => (
-                  <option key={index} value={size.size}>
-                    {size.size} - R$ {size.price.toFixed(2).replace('.', ',')}
-                    {size.unitPrice && ` (${size.unitPrice.toFixed(2).replace('.', ',')}/kg)`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          
-          <div className="price-container">
-            <span className="current-price">
-              R$ {currentPrice.toFixed(2).replace('.', ',')}
-            </span>
-            {currentOldPrice && (
-              <span className="old-price">
-                R$ {currentOldPrice.toFixed(2).replace('.', ',')}
-              </span>
-            )}
-          </div>
-          
-          <button className="product-button">
-            <FontAwesomeIcon icon={faShoppingCart} /> 
-            Adicionar ao Carrinho
-          </button>
-        </div>
-      </div>
-    );
+    const btn = e.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<FaShoppingCart /> Adicionando...';
+    btn.disabled = true;
+
+    const itemCarrinho = {
+      produtoId: produto.id,
+      tamanho: produto.tamanhos[0].tamanho,
+      quantidade: 1,
+    };
+
+    try {
+      await axios.post(`/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      
+      btn.innerHTML = '<FaShoppingCart /> Adicionado!';
+      btn.style.backgroundColor = '#28a745';
+      
+      toast.success("Produto adicionado ao carrinho com sucesso!", {
+        autoClose: 2000,
+        closeOnClick: true,
+      });
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = '';
+        btn.disabled = false;
+      }, 2000);
+    } catch (error) {
+      console.error("Erro ao adicionar ao carrinho:", error);
+      
+      btn.innerHTML = '<FaShoppingCart /> Erro!';
+      btn.style.backgroundColor = '#dc3545';
+      
+      toast.error(error.response?.data?.message || "Erro ao adicionar ao carrinho");
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.backgroundColor = '';
+        btn.disabled = false;
+      }, 2000);
+    }
   };
+
+
 
   const TestimonialCard = ({ testimonial }) => {
     return (
@@ -299,9 +260,8 @@ const Home = () => {
             <h4>{testimonial.name}</h4>
             <div className="user-rating">
               {[...Array(5)].map((_, i) => (
-                <FontAwesomeIcon 
+                <FaStar 
                   key={i} 
-                  icon={faStar} 
                   className={i < testimonial.rating ? 'filled' : ''} 
                 />
               ))}
@@ -310,7 +270,6 @@ const Home = () => {
         </div>
         <p className="testimonial-content">{testimonial.content}</p>
         <div className="pet-info">
-          <FontAwesomeIcon icon={testimonial.petIcon} />
           <span>{testimonial.pet}</span>
         </div>
       </div>
@@ -321,14 +280,39 @@ const Home = () => {
     return (
       <div className="category-card">
         <div className="category-icon">
-          <FontAwesomeIcon icon={category.icon} />
+          {category.icon === 'paw' && <span>🐾</span>}
+          {category.icon === 'dog' && <span>🐶</span>}
+          {category.icon === 'hand-paper' && <span>✋</span>}
+          {category.icon === 'leaf' && <span>🍃</span>}
         </div>
         <h3>{category.name}</h3>
         <p>{category.description}</p>
-        <a href="#!" className="category-link">Ver produtos →</a>
+        <a href={`/produtos?categoria=${category.name}`} className="category-link">
+          Ver produtos →
+        </a>
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="home loading-container">
+        <div className="loading-spinner"></div>
+        <p>Carregando produtos em destaque...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home error-container">
+        <p className="error-message">{error}</p>
+        <button onClick={() => window.location.reload()} className="btn-reload">
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="home">
@@ -351,22 +335,22 @@ const Home = () => {
               <br />Frete grátis em compras acima de R$ 99.
             </p>
             <div className="cta-buttons">
-              <button className="btn-primary">
-                <FontAwesomeIcon icon={faShoppingCart} /> Comprar Agora
+              <button className="btn-primary" onClick={() => navigate('/produtos')}>
+                <FaShoppingCart /> Comprar Agora
               </button>
-              <button className="btn-secondary">Nossos Serviços</button>
+              <button className="btn-secondary"onClick={() => navigate('/empresa')}>Nossos Serviços</button>
             </div>
             <div className="trust-badges">
               <div className="badge">
-                <FontAwesomeIcon icon={faStar} />
+                <FaStar />
                 <span>Avaliação 4.9/5</span>
               </div>
               <div className="badge">
-                <FontAwesomeIcon icon={faTruck} />
+                <span>🚚</span>
                 <span>Entrega Rápida</span>
               </div>
               <div className="badge">
-                <FontAwesomeIcon icon={faShieldAlt} />
+                <span>🛡️</span>
                 <span>Compra Segura</span>
               </div>
             </div>
@@ -402,32 +386,74 @@ const Home = () => {
           <p>Os produtos mais amados pelos nossos clientes</p>
         </div>
         
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Carregando produtos...</p>
-          </div>
-        ) : error ? (
-          <div className="error-message">
-            <p>{error}</p>
-            <button onClick={() => window.location.reload()} className="btn-primary">
-              Tentar novamente
-            </button>
-          </div>
-        ) : featuredProducts.length > 0 ? (
-          <div className="featured-grid">
-            {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="no-products">
-            <p>Nenhum produto em destaque no momento</p>
-            <p className="debug-info">
-              (Verifique se existem produtos marcados como "Destaque" no banco de dados)
-            </p>
-          </div>
-        )}
+        <div className="featured-grid">
+          {featuredProducts.map(produto => {
+            const isFavorito = favoritos.includes(produto.id);
+            const imagemPrincipal = produto.imagens?.[0] || "/placeholder-produto.jpg";
+
+            return (
+              <div 
+                key={produto.id} 
+                className="card-produto"
+                onClick={() => handleProductClick(produto.id)}
+              >
+                <button 
+                  className={`icon-favorito ${isFavorito ? 'favoritado' : ''}`}
+                  onClick={(e) => handleFavoritar(e, produto.id)}
+                >
+                  <FaHeart />
+                </button>
+                {produto.desconto > 0 && (
+                  <span className="badge-desconto">-{produto.desconto}%</span>
+                )}
+                <div className="img-wrapper">
+                  <img 
+                    src={imagemPrincipal}
+                    alt={produto.nome} 
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder-produto.jpg";
+                    }}
+                  />
+                </div>
+                <div className="info-produto">
+                  <div className="avaliacao">
+                    {[1, 2, 3, 4, 5].map((i) => 
+                      i <= Math.floor(produto.avaliacaoMedia) ? 
+                        <FaStar key={i} /> : 
+                        <FaRegStar key={i} />
+                    )}
+                    <span className="num-avaliacoes">({produto.numAvaliacoes})</span>
+                  </div>
+                  <h3 className="nome-produto">{produto.nome}</h3>
+                  <p className="marca-produto">{produto.marca}</p>
+                  <p className="precos">
+                    {produto.preco > 0 ? (
+                      <>
+                        <span className="preco-atual">
+                          R$ {produto.preco.toFixed(2).replace('.', ',')}
+                        </span>
+                        {produto.precoOriginal && (
+                          <span className="preco-original">
+                            R$ {produto.precoOriginal.toFixed(2).replace('.', ',')}
+                          </span>
+                        )}
+                      </>
+                    ) : <span className="preco-indisponivel">Preço indisponível</span>}
+                  </p>
+                  <button 
+                    className="btn-cart"
+                    onClick={(e) => adicionarAoCarrinho(e, produto)}
+                    disabled={!produto.tamanhos?.length}
+                  >
+                    <FaShoppingCart /> Adicionar ao carrinho
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* Categories Section */}
@@ -456,15 +482,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Promo Banner */}
-      <section className="promo-banner">
-        <div className="promo-content">
-          <h2>Black Pet <span>50% OFF</span></h2>
-          <p>Aproveite nossa maior promoção do ano em todos os produtos</p>
-          <CountdownTimer />
-          <button className="btn-promo">Aproveitar Oferta</button>
-        </div>
-      </section>
 
       {/* Story Section */}
       <section className="story-section">
@@ -474,14 +491,14 @@ const Home = () => {
             <p>Fundada em 2010 por amantes de animais, nossa petshop nasceu da paixão por proporcionar o melhor cuidado para os pets.</p>
             <div className="stats-container">
               <div className="stat-item">
-                <FontAwesomeIcon icon={faSmile} />
+                <span>😊</span>
                 <div>
                   <span>+5.000</span>
                   <small>Clientes Satisfeitos</small>
                 </div>
               </div>
               <div className="stat-item">
-                <FontAwesomeIcon icon={faDog} />
+                <span>🐾</span>
                 <div>
                   <span>+10.000</span>
                   <small>Pets Felizes</small>

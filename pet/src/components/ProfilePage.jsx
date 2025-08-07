@@ -72,7 +72,7 @@ const ProfilePage = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/email/${encodeURIComponent(email)}`);
 
       if (!response.ok) {
         throw new Error("Erro ao buscar usuário por email");
@@ -292,7 +292,7 @@ const ProfilePage = () => {
       const token = await currentUser.getIdToken();
 
       // Primeiro obtemos os dados atuais do usuário
-      const userResponse = await fetch(`http://localhost:5005/api/Usuario/${usuarioId}`, {
+      const userResponse = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/${usuarioId}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -322,7 +322,7 @@ const ProfilePage = () => {
 
       console.log("Dados sendo enviados para atualização:", JSON.stringify(dataToUpdate, null, 2));
 
-      const response = await fetch(`http://localhost:5005/api/Usuario/profile/${usuarioId}`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/profile/${usuarioId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
