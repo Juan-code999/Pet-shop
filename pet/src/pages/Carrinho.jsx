@@ -51,8 +51,8 @@ export default function Carrinho() {
     setErro(null);
     try {
       const [resCarrinho, resProdutos] = await Promise.all([
-        fetch(`http://localhost:5005/api/Carrinho/${usuarioId}`),
-        fetch("http://localhost:5005/api/Produtos")
+        fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}`),
+        fetch("https://pet-shop-eiab.onrender.com/api/Produtos")
       ]);
 
       if (!resCarrinho.ok) throw new Error("Erro ao buscar carrinho");
@@ -109,7 +109,7 @@ export default function Carrinho() {
     if (!carrinho) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/remover`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/remover`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export default function Carrinho() {
     try {
       const promises = selectedItems.map(itemKey => {
         const [produtoId, tamanho] = itemKey.split('-');
-        return fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/remover`, {
+        return fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/remover`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ export default function Carrinho() {
     if (!carrinho || novaQuantidade < 1) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +266,7 @@ export default function Carrinho() {
     if (!itemToEdit || !newSize || newSize === itemToEdit.tamanho) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

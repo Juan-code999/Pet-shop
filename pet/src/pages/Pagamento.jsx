@@ -31,7 +31,7 @@ const Pagamento = () => {
         const produtosCompletos = await Promise.all(
           dadosCarrinho.items.map(async (item) => {
             try {
-              const response = await axios.get(`http://localhost:5005/api/produtos/${item.produtoId}`);
+              const response = await axios.get(`https://pet-shop-eiab.onrender.com/api/produtos/${item.produtoId}`);
               const produtoAPI = response.data;
               
               // Encontra o preço específico para o tamanho selecionado

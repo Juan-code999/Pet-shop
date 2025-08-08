@@ -52,7 +52,7 @@ const Login = () => {
       await login(email, senha);
 
       // Depois do login, pode buscar dados extras do usuário
-      const response = await fetch(`http://localhost:5005/api/Usuario/email/${encodeURIComponent(email)}`);
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/email/${encodeURIComponent(email)}`);
       if (!response.ok) {
         showMessage('Usuário não encontrado no banco de dados.', 'error');
         return;
