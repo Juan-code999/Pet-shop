@@ -162,7 +162,7 @@ export default function Carrinho() {
     if (!carrinho || novaQuantidade < 1) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +266,7 @@ export default function Carrinho() {
     if (!itemToEdit || !newSize || newSize === itemToEdit.tamanho) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
