@@ -8,6 +8,7 @@
   --dark-gray: #7f8c8d;
   --success-color: #27ae60;
   --error-color: #e74c3c;
+  --erros-color: #000000;
   --discount-color: #e67e22;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -754,7 +755,7 @@
 
 .error-icon {
   font-size: 3rem;
-  color: var(--error-color);
+  color: var(--erros-color);
   margin-bottom: 10px;
 }
 

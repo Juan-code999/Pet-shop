@@ -16,6 +16,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@hookform/resolvers": "^5.2.1",
     "@sendgrid/mail": "^8.1.5",
+    "@types/gsap": "^1.20.2",
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "firebase": "^11.9.1",
