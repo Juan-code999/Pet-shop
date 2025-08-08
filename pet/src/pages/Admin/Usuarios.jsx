@@ -29,7 +29,7 @@ const Usuarios = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:5005/api/Usuario');
+      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario');
       if (!response.ok) throw new Error('Erro ao carregar usuários');
       
       const data = await response.json();
@@ -102,7 +102,7 @@ const Usuarios = () => {
   const toggleAdminStatus = async (userId, email, isCurrentlyAdmin) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5005/api/Usuario/promover', {
+      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario/promover', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -131,7 +131,7 @@ const Usuarios = () => {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5005/api/Usuario/${userToDelete.id}`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Usuario/${userToDelete.id}`, {
         method: 'DELETE'
       });
       

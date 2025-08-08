@@ -133,6 +133,33 @@ public class ProdutoService
         }
     }
 
+    public async Task<Produto?> ExcluirProdutoAsync(string produtoId)
+    {
+        try
+        {
+            // Busca o produto para verificar se existe
+            var produto = await _firebase
+                .Child("produtos")
+                .Child(produtoId)
+                .OnceSingleAsync<Produto>();
+
+            if (produto == null)
+                return null;
+
+            // Remove o produto do Firebase
+            await _firebase
+                .Child("produtos")
+                .Child(produtoId)
+                .DeleteAsync();
+
+            return produto;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 
 }
 

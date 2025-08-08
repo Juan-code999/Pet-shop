@@ -63,6 +63,24 @@ public class ProdutosController : ControllerBase
         return Ok(produtosCurtidos);
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> ExcluirProduto(string id)
+    {
+        try
+        {
+            var produtoExcluido = await _produtoService.ExcluirProdutoAsync(id);
+
+            if (produtoExcluido == null)
+                return NotFound("Produto não encontrado");
+
+            return Ok(new { mensagem = "Produto excluído com sucesso!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao excluir produto: {ex.Message}");
+        }
+    }
+
 
 }
 

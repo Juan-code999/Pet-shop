@@ -31,7 +31,7 @@ const ProductEdit = () => {
 
   const [categories, setCategories] = useState([]);
   const [species, setSpecies] = useState([]);
-  const API_URL = 'http://localhost:5005/api/Produtos';
+  const API_URL = 'https://pet-shop-eiab.onrender.com/api/Produtos';
 
   // Load product data
   useEffect(() => {

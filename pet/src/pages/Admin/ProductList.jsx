@@ -28,7 +28,7 @@ const ProductList = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   
-  const API_URL = 'http://localhost:5005/api/Produtos';
+  const API_URL = 'https://pet-shop-eiab.onrender.com/api/Produtos';
   const navigate = useNavigate();
 
   // Load products with axios and better error handling
