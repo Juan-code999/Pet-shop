@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Pet_shop.DTOs;
+using Pet_shop.Models;
 using Pet_shop.Services;
 
 namespace Pet_shop.Controllers
@@ -111,11 +112,16 @@ namespace Pet_shop.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletarUsuario(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest(new { Message = "ID do usuário não fornecido" });
+            }
+
             var deletado = await _usuarioService.DeletarUsuarioAsync(id);
             if (!deletado)
-                return NotFound();
+                return NotFound(new { Message = "Usuário não encontrado" });
 
-            return NoContent();
+            return Ok(new { Message = "Usuário excluído com sucesso" });
         }
 
         // POST: api/Usuario/promover
@@ -128,6 +134,17 @@ namespace Pet_shop.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("admin-status")]
+        public async Task<IActionResult> AlterarAdminStatus([FromBody] AdminStatusRequest request)
+        {
+            var promovido = await _usuarioService.AlterarAdminStatusAsync(request.Email, request.IsAdmin);
+            if (!promovido)
+                return NotFound();
+
+            return NoContent();
+        }
+
 
 
     }

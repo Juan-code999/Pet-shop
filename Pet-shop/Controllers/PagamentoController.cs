@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Controllers/PagamentoController.cs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Pet_shop.DTOs;
 using Pet_shop.Services;
 using System;
@@ -6,15 +8,19 @@ using System.Threading.Tasks;
 
 namespace Pet_shop.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class PagamentoController : ControllerBase
     {
         private readonly IPagamentoService _pagamentoService;
+        private readonly ILogger<PagamentoController> _logger;
 
-        public PagamentoController(IPagamentoService pagamentoService)
+        public PagamentoController(
+            IPagamentoService pagamentoService,
+            ILogger<PagamentoController> logger)
         {
             _pagamentoService = pagamentoService;
+            _logger = logger;
         }
 
         [HttpPost("processar")]
@@ -22,7 +28,11 @@ namespace Pet_shop.Controllers
         {
             try
             {
+                _logger.LogInformation("Iniciando processamento de pagamento");
+
                 var pagamento = await _pagamentoService.ProcessarPagamentoAsync(pagamentoDto);
+
+                _logger.LogInformation($"Pagamento {pagamento.Id} processado com status {pagamento.Status}");
 
                 return Ok(new
                 {
@@ -32,19 +42,21 @@ namespace Pet_shop.Controllers
                     Metodo = pagamento.MetodoPagamento,
                     Dados = new
                     {
-                        ChavePix = pagamento.Dados?.ChavePix,
-                        CodigoBoleto = pagamento.Dados?.CodigoBoleto,
-                        DataVencimento = pagamento.Dados?.DataVencimento
+                        pagamento.Dados.ChavePix,
+                        pagamento.Dados.CodigoBoleto,
+                        pagamento.Dados.DataVencimento
                     }
                 });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { Success = false, Mensagem = ex.Message });
+                _logger.LogWarning(ex, "Erro de validação no pagamento");
+                return BadRequest(new { Success = false, ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Mensagem = $"Erro ao processar pagamento: {ex.Message}" });
+                _logger.LogError(ex, "Erro ao processar pagamento");
+                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao processar pagamento" });
             }
         }
 
@@ -54,22 +66,25 @@ namespace Pet_shop.Controllers
             try
             {
                 var pagamento = await _pagamentoService.ObterPagamentoAsync(pagamentoId);
-                if (pagamento == null)
-                    return NotFound(new { Success = false, Mensagem = "Pagamento não encontrado" });
 
                 return Ok(new
                 {
                     Success = true,
-                    Status = pagamento.Status,
-                    DataCriacao = pagamento.DataCriacao,
-                    DataAtualizacao = pagamento.DataAtualizacao,
-                    ValorTotal = pagamento.ValorTotal,
-                    MetodoPagamento = pagamento.MetodoPagamento
+                    pagamento.Status,
+                    pagamento.DataCriacao,
+                    pagamento.DataAtualizacao,
+                    pagamento.ValorTotal,
+                    pagamento.MetodoPagamento
                 });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Success = false, ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Mensagem = $"Erro ao obter status do pagamento: {ex.Message}" });
+                _logger.LogError(ex, $"Erro ao buscar pagamento {pagamentoId}");
+                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao buscar pagamento" });
             }
         }
 
@@ -78,8 +93,10 @@ namespace Pet_shop.Controllers
         {
             try
             {
-                if (confirmacaoDto == null || string.IsNullOrEmpty(confirmacaoDto.PagamentoId))
-                    return BadRequest(new { Success = false, Mensagem = "Dados de confirmação inválidos" });
+                if (!ModelState.IsValid)
+                    return BadRequest(new { Success = false, Mensagem = "Dados inválidos" });
+
+                _logger.LogInformation($"Atualizando status do pagamento {confirmacaoDto.PagamentoId} para {confirmacaoDto.Status}");
 
                 var pagamento = await _pagamentoService.AtualizarStatusPagamentoAsync(
                     confirmacaoDto.PagamentoId,
@@ -93,9 +110,14 @@ namespace Pet_shop.Controllers
                     Mensagem = "Status atualizado com sucesso"
                 });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Success = false, ex.Message });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Mensagem = $"Erro ao atualizar status do pagamento: {ex.Message}" });
+                _logger.LogError(ex, $"Erro no webhook para pagamento {confirmacaoDto?.PagamentoId}");
+                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao processar webhook" });
             }
         }
     }

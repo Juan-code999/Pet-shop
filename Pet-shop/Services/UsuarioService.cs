@@ -294,6 +294,40 @@ namespace Pet_shop.Services
             {
                 return false;
             }
+
+
+
+
+        }
+
+        public async Task<bool> AlterarAdminStatusAsync(string email, bool isAdmin)
+        {
+            try
+            {
+                var usuarioSnapshot = await _firebase
+                    .Child("usuarios")
+                    .OrderBy("Email")
+                    .EqualTo(email.ToLower())
+                    .OnceAsync<Usuario>();
+
+                if (!usuarioSnapshot.Any())
+                    return false;
+
+                var key = usuarioSnapshot.First().Key;
+
+                await _firebase
+                    .Child("usuarios")
+                    .Child(key)
+                    .Child("IsAdmin")
+                    .PutAsync(isAdmin);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
+

@@ -2,7 +2,7 @@
 {
     public class DadosPagamento
     {
-        // Para cartão de crédito
+        // Cartão
         public string NumeroCartao { get; set; }
         public string NomeCartao { get; set; }
         public string Validade { get; set; }
@@ -10,10 +10,10 @@
         public string CPF { get; set; }
         public int Parcelas { get; set; }
 
-        // Para PIX
+        // PIX
         public string ChavePix { get; set; }
 
-        // Para boleto
+        // Boleto
         public string CodigoBoleto { get; set; }
         public DateTime? DataVencimento { get; set; }
     }
