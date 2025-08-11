@@ -45,6 +45,7 @@ const Usuarios = () => {
     setIsLoading(true);
     setError(null);
     try {
+
       const response = await fetch('http://localhost:5005/api/Usuario', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -55,6 +56,7 @@ const Usuarios = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Erro ${response.status}: ${response.statusText}`);
       }
+
       
       const data = await response.json();
       
@@ -172,8 +174,10 @@ const Usuarios = () => {
 
     setIsLoading(true);
     try {
+
       const response = await fetch('http://localhost:5005/api/Usuario/admin-status', {
         method: 'PUT',
+
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -234,8 +238,10 @@ const Usuarios = () => {
 
   // Handle user deletion
   const handleDelete = async () => {
+
     if (!userToDelete?.id) {
       setError('Nenhum usuário selecionado para exclusão');
+
       setShowDeleteModal(false);
       return;
     }

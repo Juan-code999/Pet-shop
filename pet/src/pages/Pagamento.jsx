@@ -15,9 +15,12 @@ const Pagamento = () => {
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState(null);
   const [cupom, setCupom] = useState("");
+  const [usuario, setUsuario] = useState(null);
+
 
   // Dados do cartão (se método for cartão)
   const [dadosCartao, setDadosCartao] = useState({
+
     numeroCartao: "",
     nomeCartao: "",
     validade: "",
@@ -35,10 +38,15 @@ const Pagamento = () => {
   // Obter ID do usuário de forma consistente com Carrinho.jsx
   const usuarioId = localStorage.getItem("usuarioId");
 
+
   useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    setUsuario(userData);
+
     const carregarDados = async () => {
       try {
         setCarregandoProdutos(true);
+
 
         // Verificar se usuário está logado
         if (!usuarioId) {
@@ -55,13 +63,15 @@ const Pagamento = () => {
         };
 
         // Busca os detalhes completos dos produtos do backend
+
         const produtosCompletos = await Promise.all(
           dadosCarrinho.items.map(async (item) => {
             try {
-              const response = await axios.get(`http://localhost:5005/api/produtos/${item.produtoId}`);
+              const response = await axios.get(`https://pet-shop-eiab.onrender.com/api/produtos/${item.produtoId}`);
               const produtoAPI = response.data;
 
               const tamanhoInfo = produtoAPI.tamanhos?.find((t) => t.tamanho === item.tamanho) || {};
+
 
               return {
                 ...item,
@@ -84,6 +94,7 @@ const Pagamento = () => {
         );
 
         setProdutos(produtosCompletos);
+
 
         // Calcula total somando os preços de cada produto
         const totalCalculado = produtosCompletos.reduce((sum, p) => sum + Number(p.precoTotal || 0), 0);
@@ -153,6 +164,7 @@ const Pagamento = () => {
   };
 
   const handlePagamento = async () => {
+
     setErro(null);
 
     // Verificação consistente do usuário logado
@@ -272,10 +284,176 @@ const Pagamento = () => {
       }
 
       setErro(serverMessage);
+
     } finally {
       setCarregando(false);
     }
   };
+
+  const renderFormularioPagamento = () => {
+    switch (metodoPagamento) {
+      case "cartao":
+        return (
+          <div style={{ marginTop: 20 }}>
+            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Dados do Cartão</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 5 }}>Nome no Cartão</label>
+                <input
+                  type="text"
+                  name="nomeCartao"
+                  value={dadosPagamento.nomeCartao}
+                  onChange={handleChange}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: "block", marginBottom: 5 }}>Número do Cartão</label>
+                <input
+                  type="text"
+                  name="numeroCartao"
+                  value={dadosPagamento.numeroCartao}
+                  onChange={handleChange}
+                  maxLength={19}
+                  placeholder="0000 0000 0000 0000"
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                  required
+                />
+              </div>
+              
+              <div style={{ display: "flex", gap: 15 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 5 }}>Validade (MM/AA)</label>
+                  <input
+                    type="text"
+                    name="validade"
+                    value={dadosPagamento.validade}
+                    onChange={handleChange}
+                    maxLength={5}
+                    placeholder="MM/AA"
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                    required
+                  />
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 5 }}>CVV</label>
+                  <input
+                    type="text"
+                    name="cvv"
+                    value={dadosPagamento.cvv}
+                    onChange={handleChange}
+                    maxLength={4}
+                    placeholder="123"
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label style={{ display: "block", marginBottom: 5 }}>CPF do Titular</label>
+                <input
+                  type="text"
+                  name="cpf"
+                  value={dadosPagamento.cpf}
+                  onChange={handleChange}
+                  placeholder="000.000.000-00"
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: "block", marginBottom: 5 }}>Parcelas</label>
+                <select
+                  name="parcelas"
+                  value={dadosPagamento.parcelas}
+                  onChange={handleChange}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
+                    <option key={num} value={num}>
+                      {num}x de R$ {((total - desconto) / num).toFixed(2)} {num > 1 ? '(sem juros)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case "pix":
+        return (
+          <div style={{ marginTop: 20 }}>
+            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Pagamento via PIX</h3>
+            <p style={{ color: "#666", marginBottom: 15 }}>
+              Informe sua chave PIX para recebimento:
+            </p>
+            <div>
+              <label style={{ display: "block", marginBottom: 5 }}>Chave PIX</label>
+              <input
+                type="text"
+                name="chavePix"
+                value={dadosPagamento.chavePix}
+                onChange={handleChange}
+                style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+                required
+              />
+            </div>
+          </div>
+        );
+      
+      case "boleto":
+        return (
+          <div style={{ marginTop: 20 }}>
+            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Pagamento via Boleto</h3>
+            <p style={{ color: "#666", marginBottom: 15 }}>
+              O boleto será gerado após a confirmação do pedido.
+            </p>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  const renderContato = () => (
+    <div style={{ marginTop: 20 }}>
+      <h3 style={{ fontSize: 18, marginBottom: 15 }}>Informações de Contato</h3>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+        <div>
+          <label style={{ display: "block", marginBottom: 5 }}>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={dadosPagamento.email}
+            onChange={handleChange}
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+            required
+          />
+        </div>
+        
+        <div>
+          <label style={{ display: "block", marginBottom: 5 }}>Telefone</label>
+          <input
+            type="tel"
+            name="telefone"
+            value={dadosPagamento.telefone}
+            onChange={handleChange}
+            placeholder="(00) 00000-0000"
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
+            required
+          />
+        </div>
+      </div>
+    </div>
+  );
 
   const ImagemProduto = ({ src, alt }) => {
     const [imgSrc, setImgSrc] = useState(src);
@@ -340,7 +518,7 @@ const Pagamento = () => {
         </div>
       ) : (
         <div style={{ display: "flex", gap: 30, flexWrap: "wrap" }}>
-          {/* Lista de Produtos */}
+          {/* Lista de Produtos e Formulário */}
           <div style={{ flex: 2, minWidth: 300 }}>
             <h2 style={{ fontSize: 20, marginBottom: 15 }}>Seus Produtos</h2>
 
@@ -563,6 +741,12 @@ const Pagamento = () => {
                 </div>
               )}
             </div>
+
+            {/* Formulário de pagamento específico */}
+            {renderFormularioPagamento()}
+            
+            {/* Informações de contato (comum a todos os métodos) */}
+            {renderContato()}
           </div>
 
           {/* Resumo do Pedido */}
@@ -636,6 +820,7 @@ const Pagamento = () => {
                   fontWeight: "bold",
                 }}
               >
+
                 <MdCheckCircle size={24} />
                 <span>Pagamento aprovado com sucesso!</span>
               </div>
@@ -656,6 +841,7 @@ const Pagamento = () => {
                 <span>{erro}</span>
               </div>
             )}
+
           </div>
         </div>
       )}
