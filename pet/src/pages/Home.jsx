@@ -59,6 +59,13 @@ const Home = () => {
       rating: 5,
       content: "Atendimento excepcional e entrega super rápida. Meus gatos estão viciados nos brinquedos que comprei.",
       pet: "Luna e Loki, Gatos Siameses",
+    },
+    {
+      id: 3,
+      name: "Juan Charles",
+      rating: 5,
+      content: "Fiquei impressionado com a agilidade na entrega e a qualidade dos produtos. Meus gatos simplesmente amaram os brinquedos, não largam mais!",
+      pet: "Lua e Sol, Gatos Simoes",
     }
   ];
 
@@ -488,7 +495,29 @@ const Home = () => {
         <div className="story-content">
           <div className="story-text">
             <h2>Nossa <span>História</span></h2>
-            <p>Fundada em 2010 por amantes de animais, nossa petshop nasceu da paixão por proporcionar o melhor cuidado para os pets.</p>
+            <p>Fundada em 2010 por um grupo de amantes de animais, nossa pet shop nasceu da paixão por proporcionar o melhor cuidado para os pets. Desde o início, acreditamos que os animais de estimação não são apenas companheiros, mas membros essenciais da família, merecendo todo o carinho, atenção e bem-estar possível.
+
+Compromisso com Qualidade e Bem-Estar
+
+Nossa missão sempre foi oferecer produtos e serviços de alta qualidade, garantindo saúde, conforto e alegria para cães, gatos e outras espécies. Trabalhamos com as melhores marcas de alimentos, acessórios, brinquedos e itens de higiene, sempre priorizando a segurança e a satisfação dos pets e de seus tutores.
+
+Atendimento Personalizado
+
+Sabemos que cada animal é único, com necessidades e personalidades diferentes. Por isso, nossa equipe é formada por profissionais apaixonados e capacitados, prontos para orientar e ajudar na escolha dos melhores produtos, além de oferecer serviços como banho e tosa especializados, consultas com veterinários e até mesmo hospedagem com todo o conforto.
+
+Crescimento com Responsabilidade
+
+Ao longo dos anos, expandimos nossa atuação, mas nunca perdemos de vista nossos valores: amor pelos animais, ética e dedicação. Participamos de projetos de adoção responsável, apoiamos causas de proteção animal e buscamos sempre inovar, trazendo novidades que tornam a vida dos pets ainda mais feliz e saudável.
+
+Venha nos Conhecer!
+
+Seja para encontrar a ração ideal, mimar seu pet com um banho relaxante ou simplesmente bater um papo sobre o mundo animal, estamos aqui para receber você e seu melhor amigo de quatro patas. Aqui, o amor pelos pets é o que nos move todos os dias!
+
+Sua felicidade é o nosso maior objetivo. 💙
+
+(Assinatura: Equipe [Lat Miau])</p>
+
+
             <div className="stats-container">
               <div className="stat-item">
                 <span>😊</span>
