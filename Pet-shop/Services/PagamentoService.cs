@@ -29,71 +29,42 @@ namespace Pet_shop.Services
 
         public async Task<Pagamento> ProcessarPagamentoAsync(PagamentoDTO pagamentoDto)
         {
-            try
+            // Validações adicionais
+            if (pagamentoDto.Itens == null || !pagamentoDto.Itens.Any())
             {
-                _logger.LogInformation("Validando pagamento DTO");
-                ValidarPagamentoDto(pagamentoDto);
-
-                var pagamento = new Pagamento
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    UsuarioId = pagamentoDto.UsuarioId,
-                    CarrinhoId = pagamentoDto.CarrinhoId,
-                    ValorTotal = pagamentoDto.ValorTotal,
-                    MetodoPagamento = pagamentoDto.MetodoPagamento.ToLower(),
-                    Status = "pendente",
-                    Dados = new DadosPagamento()
-                };
-
-                _logger.LogInformation("Processando método de pagamento...");
-                await ProcessarMetodoPagamento(pagamentoDto, pagamento);
-
-                _logger.LogInformation("Simulando processamento...");
-                await SimularProcessamento(pagamento);
-
-                _logger.LogInformation("Salvando pagamento no Firebase...");
-                await SalvarPagamento(pagamento);
-
-                _logger.LogInformation($"Pagamento {pagamento.Id} salvo com status {pagamento.Status}");
-
-                return pagamento;
+                throw new ArgumentException("O pagamento deve conter itens");
             }
-            catch (Exception ex)
+
+            // Criação do objeto Pagamento
+            var pagamento = new Pagamento
             {
-                _logger.LogError(ex, "Erro ao processar pagamento no serviço");
-                throw;
-            }
+                UsuarioId = pagamentoDto.UsuarioId,
+                CarrinhoId = pagamentoDto.CarrinhoId,
+                ValorTotal = pagamentoDto.ValorTotal,
+                MetodoPagamento = pagamentoDto.MetodoPagamento,
+                Dados = pagamentoDto.Dados,
+                Status = "pendente",
+                DataCriacao = DateTime.UtcNow,
+                DataAtualizacao = DateTime.UtcNow
+            };
+
+            // Salva no Firebase
+            var result = await _firebase
+                .Child("pagamentos")
+                .PostAsync(pagamento);
+
+            pagamento.Id = result.Key;
+
+            // Atualiza com o ID
+            await _firebase
+                .Child("pagamentos")
+                .Child(result.Key)
+                .PutAsync(pagamento);
+
+            return pagamento;
         }
 
-        private void ValidarPagamentoDto(PagamentoDTO dto)
-        {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (string.IsNullOrWhiteSpace(dto.UsuarioId)) throw new ArgumentException("UsuárioID é obrigatório");
-            if (dto.ValorTotal <= 0) throw new ArgumentException("Valor total deve ser positivo");
-            if (!_metodosValidos.Contains(dto.MetodoPagamento?.ToLower()))
-                throw new ArgumentException($"Método inválido. Use: {string.Join(", ", _metodosValidos)}");
-            if (dto.Itens == null || !dto.Itens.Any()) throw new ArgumentException("Carrinho vazio");
-        }
-
-        private async Task ProcessarMetodoPagamento(PagamentoDTO dto, Pagamento pagamento)
-        {
-            switch (pagamento.MetodoPagamento)
-            {
-                case "cartao":
-                    ValidarDadosCartao(dto.Dados);
-                    pagamento.Dados = MapearDadosCartao(dto.Dados);
-                    break;
-
-                case "pix":
-                    pagamento.Dados.ChavePix = GerarChavePix();
-                    break;
-
-                case "boleto":
-                    pagamento.Dados.CodigoBoleto = GerarCodigoBoleto();
-                    pagamento.Dados.DataVencimento = DateTime.UtcNow.AddDays(3);
-                    break;
-            }
-        }
+        
 
         private void ValidarDadosCartao(DadosPagamentoDTO dados)
         {

@@ -99,68 +99,68 @@ const Home = () => {
   const brands = ["Royal Canin", "Premier", "Pedigree", "Whiskas", "Golden"];
 
   useEffect(() => {
-  const fetchFeaturedProducts = async () => {
-    try {
-      setLoading(true);
-      
-      // Default to mock data initially
-      let productsData = mockProducts;
-      
+    const fetchFeaturedProducts = async () => {
       try {
-        const response = await axios.get('https://pet-shop-eiab.onrender.com/api/Produtos/destaques');
+        setLoading(true);
         
-        // Handle different response formats
-        if (Array.isArray(response.data)) {
-          productsData = response.data; // Direct array response
-        } else if (response.data && Array.isArray(response.data.data)) {
-          productsData = response.data.data; // Object with data array
-        } else if (response.data && Array.isArray(response.data.produtos)) {
-          productsData = response.data.produtos; // Object with produtos array
+        // Default to mock data initially
+        let productsData = mockProducts;
+        
+        try {
+          const response = await axios.get('https://pet-shop-eiab.onrender.com/api/Produtos/destaques');
+          
+          // Handle different response formats
+          if (Array.isArray(response.data)) {
+            productsData = response.data; // Direct array response
+          } else if (response.data && Array.isArray(response.data.data)) {
+            productsData = response.data.data; // Object with data array
+          } else if (response.data && Array.isArray(response.data.produtos)) {
+            productsData = response.data.produtos; // Object with produtos array
+          }
+          
+          console.log('Products data:', productsData); // Debug log
+        } catch (apiError) {
+          console.warn('API request failed, using mock data', apiError);
         }
         
-        console.log('Products data:', productsData); // Debug log
-      } catch (apiError) {
-        console.warn('API request failed, using mock data', apiError);
+        // Process the products data
+        const produtosFormatados = productsData.map(produto => {
+          const tamanhos = produto.tamanhos || [];
+          const precoBase = tamanhos[0]?.precoTotal || 0;
+          const desconto = parseFloat(produto.desconto) || 0;
+          const precoFinal = desconto > 0 ? precoBase * (1 - desconto / 100) : precoBase;
+
+          return {
+            id: produto.id || produto._id || Math.random().toString(36).substr(2, 9),
+            nome: produto.nome || 'Produto sem nome',
+            descricao: produto.descricao || '',
+            marca: produto.marca || '',
+            especie: produto.especieAnimal || 'Cachorro',
+            idade: produto.idadeRecomendada || '',
+            porte: produto.porteAnimal || '',
+            imagens: produto.imagensUrl || produto.imagens || ["/placeholder-produto.jpg"],
+            tamanhos: tamanhos,
+            desconto: desconto,
+            preco: precoFinal,
+            precoOriginal: desconto > 0 ? precoBase : null,
+            avaliacaoMedia: produto.avaliacaoMedia || (4 + Math.random()).toFixed(1),
+            numAvaliacoes: produto.numAvaliacoes || Math.floor(Math.random() * 100) + 1
+          };
+        });
+
+        setFeaturedProducts(produtosFormatados);
+        setError(null);
+      } catch (error) {
+        console.error('Error processing products:', error);
+        setError('Erro ao carregar produtos. Mostrando dados de exemplo.');
+        setFeaturedProducts(mockProducts);
+      } finally {
+        setLoading(false);
       }
-      
-      // Process the products data
-      const produtosFormatados = productsData.map(produto => {
-        const tamanhos = produto.tamanhos || [];
-        const precoBase = tamanhos[0]?.precoTotal || 0;
-        const desconto = parseFloat(produto.desconto) || 0;
-        const precoFinal = desconto > 0 ? precoBase * (1 - desconto / 100) : precoBase;
+    };
 
-        return {
-          id: produto.id || produto._id || Math.random().toString(36).substr(2, 9),
-          nome: produto.nome || 'Produto sem nome',
-          descricao: produto.descricao || '',
-          marca: produto.marca || '',
-          especie: produto.especieAnimal || 'Cachorro',
-          idade: produto.idadeRecomendada || '',
-          porte: produto.porteAnimal || '',
-          imagens: produto.imagensUrl || produto.imagens || ["/placeholder-produto.jpg"],
-          tamanhos: tamanhos,
-          desconto: desconto,
-          preco: precoFinal,
-          precoOriginal: desconto > 0 ? precoBase : null,
-          avaliacaoMedia: produto.avaliacaoMedia || (4 + Math.random()).toFixed(1),
-          numAvaliacoes: produto.numAvaliacoes || Math.floor(Math.random() * 100) + 1
-        };
-      });
-
-      setFeaturedProducts(produtosFormatados);
-      setError(null);
-    } catch (error) {
-      console.error('Error processing products:', error);
-      setError('Erro ao carregar produtos. Mostrando dados de exemplo.');
-      setFeaturedProducts(mockProducts);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchFeaturedProducts();
-}, []);
+    fetchFeaturedProducts();
+  }, []);
 
   useEffect(() => {
     const favs = JSON.parse(localStorage.getItem('favoritos')) || [];
@@ -225,7 +225,7 @@ const Home = () => {
     };
 
     try {
-      await axios.post(`/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      await axios.post(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
       
       btn.innerHTML = '<FaShoppingCart /> Adicionado!';
       btn.style.backgroundColor = '#28a745';
@@ -255,8 +255,6 @@ const Home = () => {
       }, 2000);
     }
   };
-
-
 
   const TestimonialCard = ({ testimonial }) => {
     return (
@@ -345,7 +343,7 @@ const Home = () => {
               <button className="btn-primary" onClick={() => navigate('/produtos')}>
                 <FaShoppingCart /> Comprar Agora
               </button>
-              <button className="btn-secondary"onClick={() => navigate('/empresa')}>Nossos Serviços</button>
+              <button className="btn-secondary" onClick={() => navigate('/empresa')}>Nossos Serviços</button>
             </div>
             <div className="trust-badges">
               <div className="badge">
@@ -489,7 +487,6 @@ const Home = () => {
         </div>
       </section>
 
-
       {/* Story Section */}
       <section className="story-section">
         <div className="story-content">
@@ -516,7 +513,6 @@ Seja para encontrar a ração ideal, mimar seu pet com um banho relaxante ou sim
 Sua felicidade é o nosso maior objetivo. 💙
 
 (Assinatura: Equipe [Lat Miau])</p>
-
 
             <div className="stats-container">
               <div className="stat-item">

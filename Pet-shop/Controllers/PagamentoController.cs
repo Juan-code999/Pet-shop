@@ -19,13 +19,31 @@ namespace Pet_shop.Controllers
             _pagamentoService = pagamentoService;
             _logger = logger;
         }
-
         [HttpPost("processar")]
         public async Task<IActionResult> ProcessarPagamento([FromBody] PagamentoDTO pagamentoDto)
         {
             try
             {
-                _logger.LogInformation("Iniciando processamento de pagamento");
+                _logger.LogInformation("Recebido PagamentoDTO: {@PagamentoDto}", pagamentoDto);
+
+                // Validação manual adicional
+                if (pagamentoDto.ValorTotal <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Mensagem = "Valor total deve ser maior que zero"
+                    });
+                }
+
+                if (pagamentoDto.MetodoPagamento == "pix" && string.IsNullOrEmpty(pagamentoDto.Dados.ChavePix))
+                {
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Mensagem = "Chave PIX é obrigatória para pagamento com PIX"
+                    });
+                }
 
                 var pagamento = await _pagamentoService.ProcessarPagamentoAsync(pagamentoDto);
 
@@ -48,7 +66,12 @@ namespace Pet_shop.Controllers
             catch (ArgumentException ex)
             {
                 _logger.LogWarning(ex, "Erro de validação no pagamento");
-                return BadRequest(new { Success = false, Mensagem = ex.Message });
+                return BadRequest(new
+                {
+                    Success = false,
+                    Mensagem = ex.Message,
+                    Errors = ModelState.Values.SelectMany(v => v.Errors)
+                });
             }
             catch (Exception ex)
             {
@@ -57,9 +80,7 @@ namespace Pet_shop.Controllers
                 {
                     Success = false,
                     Mensagem = "Erro interno ao processar pagamento",
-                    ErroDetalhado = ex.Message,
-                    StackTrace = ex.StackTrace,
-                    InnerException = ex.InnerException?.Message
+                    ErroDetalhado = ex.Message
                 });
             }
         }
