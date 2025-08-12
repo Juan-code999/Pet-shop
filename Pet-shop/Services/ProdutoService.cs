@@ -159,7 +159,43 @@ public class ProdutoService
             return null;
         }
     }
+    public async Task<Produto?> AtualizarProdutoAsync(string id, ProdutoDTO produtoDto)
+    {
+        try
+        {
+            var produtoRef = _firebase
+                .Child("produtos")
+                .Child(id);
 
+            var produtoAtualizado = new Produto
+            {
+                Id = id,
+                Nome = produtoDto.Nome,
+                Descricao = produtoDto.Descricao,
+                Categoria = produtoDto.Categoria,
+                EspecieAnimal = produtoDto.EspecieAnimal,
+                Marca = produtoDto.Marca,
+                ImagensUrl = produtoDto.ImagensUrl ?? new List<string>(),
+                Tamanhos = produtoDto.Tamanhos?.Select(t => new TamanhoPreco
+                {
+                    Tamanho = t.Tamanho,
+                    PrecoPorKg = t.PrecoPorKg,
+                    PrecoTotal = t.PrecoTotal
+                }).ToList() ?? new List<TamanhoPreco>(),
+                Destaque = produtoDto.Destaque,
+                Desconto = produtoDto.Desconto,
+                Disponivel = produtoDto.Disponivel
+            };
+
+            await produtoRef.PutAsync(produtoAtualizado);
+            return produtoAtualizado;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao atualizar produto: {ex.Message}");
+            return null;
+        }
+    }
 
 }
 

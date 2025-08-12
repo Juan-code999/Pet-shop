@@ -1,5 +1,4 @@
-﻿// Services/PagamentoService.cs
-using Firebase.Database;
+﻿using Firebase.Database;
 using Firebase.Database.Query;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -16,8 +15,8 @@ namespace Pet_shop.Services
     {
         private readonly FirebaseClient _firebase;
         private readonly ILogger<PagamentoService> _logger;
-        private readonly List<string> _metodosValidos = new List<string> { "cartao", "pix", "boleto" };
-        private readonly List<string> _statusValidos = new List<string> { "pendente", "processando", "aprovado", "recusado", "cancelado" };
+        private readonly List<string> _metodosValidos = new() { "cartao", "pix", "boleto" };
+        private readonly List<string> _statusValidos = new() { "pendente", "processando", "aprovado", "recusado", "cancelado" };
 
         public PagamentoService(IConfiguration configuration, ILogger<PagamentoService> logger)
         {
@@ -32,6 +31,7 @@ namespace Pet_shop.Services
         {
             try
             {
+                _logger.LogInformation("Validando pagamento DTO");
                 ValidarPagamentoDto(pagamentoDto);
 
                 var pagamento = new Pagamento
@@ -45,15 +45,22 @@ namespace Pet_shop.Services
                     Dados = new DadosPagamento()
                 };
 
+                _logger.LogInformation("Processando método de pagamento...");
                 await ProcessarMetodoPagamento(pagamentoDto, pagamento);
+
+                _logger.LogInformation("Simulando processamento...");
                 await SimularProcessamento(pagamento);
+
+                _logger.LogInformation("Salvando pagamento no Firebase...");
                 await SalvarPagamento(pagamento);
+
+                _logger.LogInformation($"Pagamento {pagamento.Id} salvo com status {pagamento.Status}");
 
                 return pagamento;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao processar pagamento");
+                _logger.LogError(ex, "Erro ao processar pagamento no serviço");
                 throw;
             }
         }
@@ -105,7 +112,7 @@ namespace Pet_shop.Services
         {
             return new DadosPagamento
             {
-                NumeroCartao = dados.NumeroCartao, // Em produção, criptografe este dado
+                NumeroCartao = dados.NumeroCartao,
                 NomeCartao = dados.NomeCartao,
                 Validade = dados.Validade,
                 CVV = dados.CVV,
@@ -114,7 +121,7 @@ namespace Pet_shop.Services
             };
         }
 
-        private string GerarChavePix() => $"PIX_{Guid.NewGuid().ToString().Substring(0, 8)}";
+        private string GerarChavePix() => $"PIX_{Guid.NewGuid():N}".Substring(0, 12);
 
         private string GerarCodigoBoleto() =>
             $"3419.{Random.Shared.Next(1000, 9999)} {Random.Shared.Next(1000, 9999)} " +
@@ -122,7 +129,7 @@ namespace Pet_shop.Services
 
         private async Task SimularProcessamento(Pagamento pagamento)
         {
-            await Task.Delay(1500); // Simula processamento
+            await Task.Delay(1500);
             pagamento.Status = new Random().Next(0, 100) < 80 ? "aprovado" : "recusado";
             pagamento.DataAtualizacao = DateTime.UtcNow;
         }
@@ -131,15 +138,19 @@ namespace Pet_shop.Services
         {
             try
             {
+                // Evita problemas de serialização no Firebase
+                if (pagamento.Dados?.DataVencimento == null)
+                    pagamento.Dados.DataVencimento = null;
+
                 await _firebase
                     .Child("pagamentos")
                     .Child(pagamento.Id)
                     .PutAsync(pagamento);
             }
-            catch (FirebaseException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao salvar no Firebase");
-                throw new Exception("Falha ao registrar pagamento", ex);
+                _logger.LogError(ex, $"Erro ao salvar pagamento {pagamento.Id} no Firebase");
+                throw new Exception($"Falha ao registrar pagamento no Firebase: {ex.Message}", ex);
             }
         }
 
@@ -157,10 +168,10 @@ namespace Pet_shop.Services
 
                 return pagamento ?? throw new KeyNotFoundException("Pagamento não encontrado");
             }
-            catch (FirebaseException ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"Erro ao buscar pagamento {pagamentoId}");
-                throw new Exception("Falha ao acessar banco de dados", ex);
+                throw;
             }
         }
 

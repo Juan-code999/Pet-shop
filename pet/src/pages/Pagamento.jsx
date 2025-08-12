@@ -16,11 +16,13 @@ const Pagamento = () => {
   const [erro, setErro] = useState(null);
   const [cupom, setCupom] = useState("");
   const [usuario, setUsuario] = useState(null);
+  const [contato, setContato] = useState({
+    email: "",
+    telefone: ""
+  });
 
-
-  // Dados do cartão (se método for cartão)
+  // Dados do cartão
   const [dadosCartao, setDadosCartao] = useState({
-
     numeroCartao: "",
     nomeCartao: "",
     validade: "",
@@ -29,26 +31,38 @@ const Pagamento = () => {
     parcelas: 1,
   });
 
+  // Dados do PIX
+  const [dadosPix, setDadosPix] = useState({
+    chavePix: ""
+  });
+
   const METODOS = [
     { label: "Cartão de Crédito", value: "cartao" },
     { label: "PIX", value: "pix" },
     { label: "Boleto", value: "boleto" },
   ];
 
-  // Obter ID do usuário de forma consistente com Carrinho.jsx
   const usuarioId = localStorage.getItem("usuarioId");
-
+  // Evitar usar process.env direto, define aqui a API_URL
+  const API_URL = "http://localhost:5005";
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    setUsuario(userData);
-
     const carregarDados = async () => {
       try {
         setCarregandoProdutos(true);
+        setErro(null);
 
+        // Carrega dados do usuário
+        const userData = JSON.parse(localStorage.getItem("user"));
+        setUsuario(userData);
+        if (userData) {
+          setContato({
+            email: userData.email || "",
+            telefone: userData.telefone || ""
+          });
+        }
 
-        // Verificar se usuário está logado
+        // Verifica se usuário está logado
         if (!usuarioId) {
           setErro("Usuário não está logado");
           setCarregandoProdutos(false);
@@ -62,22 +76,20 @@ const Pagamento = () => {
           desconto: 0,
         };
 
-        // Busca os detalhes completos dos produtos do backend
-
+        // Busca detalhes dos produtos
         const produtosCompletos = await Promise.all(
           dadosCarrinho.items.map(async (item) => {
             try {
-              const response = await axios.get(`https://pet-shop-eiab.onrender.com/api/produtos/${item.produtoId}`);
+              const response = await axios.get(`${API_URL}/api/produtos/${item.produtoId}`);
               const produtoAPI = response.data;
-
               const tamanhoInfo = produtoAPI.tamanhos?.find((t) => t.tamanho === item.tamanho) || {};
-
 
               return {
                 ...item,
                 nome: produtoAPI.nome || item.nome,
                 imagem: produtoAPI.imagensUrl?.[0] || item.imagem || "",
                 precoUnitario: Number(tamanhoInfo.precoTotal ?? item.precoUnitario ?? 0),
+                precoOriginal: Number(tamanhoInfo.precoTotal ?? item.precoUnitario ?? 0),
                 precoTotal: Number((tamanhoInfo.precoTotal ?? item.precoUnitario ?? 0) * (item.quantidade ?? 1)),
               };
             } catch (error) {
@@ -87,6 +99,7 @@ const Pagamento = () => {
                 nome: item.nome || "Produto não encontrado",
                 imagem: item.imagem || "",
                 precoUnitario: Number(item.precoUnitario ?? 0),
+                precoOriginal: Number(item.precoUnitario ?? 0),
                 precoTotal: Number((item.precoUnitario ?? 0) * (item.quantidade ?? 1)),
               };
             }
@@ -95,18 +108,14 @@ const Pagamento = () => {
 
         setProdutos(produtosCompletos);
 
-
-        // Calcula total somando os preços de cada produto
+        // Calcula totais
         const totalCalculado = produtosCompletos.reduce((sum, p) => sum + Number(p.precoTotal || 0), 0);
-
-        // Ajusta o desconto
         let descontoPercentual = 0;
+        
         if (dadosCarrinho.desconto && dadosCarrinho.desconto > 0) {
-          if (dadosCarrinho.desconto < 1) {
-            descontoPercentual = dadosCarrinho.desconto;
-          } else {
-            descontoPercentual = dadosCarrinho.desconto / (dadosCarrinho.total || totalCalculado);
-          }
+          descontoPercentual = dadosCarrinho.desconto < 1 
+            ? dadosCarrinho.desconto 
+            : dadosCarrinho.desconto / (dadosCarrinho.total || totalCalculado);
         }
 
         setTotal(dadosCarrinho.total > 0 ? Number(dadosCarrinho.total) : totalCalculado);
@@ -120,36 +129,64 @@ const Pagamento = () => {
     };
 
     carregarDados();
-  }, [usuarioId]); // Adicionado usuarioId como dependência
+  }, [usuarioId]);
+
+  const formatarTelefone = (telefone) => {
+    const nums = telefone.replace(/\D/g, "").slice(0, 11);
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 6) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+    if (nums.length <= 10) return `(${nums.slice(0, 2)}) ${nums.slice(2, 6)}-${nums.slice(6)}`;
+    return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7, 11)}`;
+  };
 
   const handleDadosCartaoChange = (e) => {
-    const { name } = e.target;
-    let value = e.target.value;
+    const { name, value } = e.target;
+    let valorFormatado = value;
 
-    if (name === "numeroCartao") {
-      value = value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ").trim();
-    } else if (name === "validade") {
-      value = value.replace(/\D/g, "").slice(0, 4);
-      if (value.length >= 3) value = value.replace(/(\d{2})(\d{0,2})/, "$1/$2");
-    } else if (name === "cvv") {
-      value = value.replace(/\D/g, "").slice(0, 4);
-    } else if (name === "cpf") {
-      value = value.replace(/\D/g, "").slice(0, 11);
-      value = value
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-        .replace(/(-\d{2})\d+?$/, "$1");
-    } else if (name === "parcelas") {
-      value = parseInt(value, 10) || 1;
+    switch (name) {
+      case "numeroCartao":
+        valorFormatado = value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+        break;
+      case "validade":
+        valorFormatado = value.replace(/\D/g, "").slice(0, 4);
+        if (valorFormatado.length >= 3) valorFormatado = valorFormatado.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+        break;
+      case "cvv":
+        valorFormatado = value.replace(/\D/g, "").slice(0, 4);
+        break;
+      case "cpf":
+        valorFormatado = value.replace(/\D/g, "").slice(0, 11)
+          .replace(/(\d{3})(\d)/, "$1.$2")
+          .replace(/(\d{3})(\d)/, "$1.$2")
+          .replace(/(\d{3})(\d{1,2})/, "$1-$2")
+          .replace(/(-\d{2})\d+?$/, "$1");
+        break;
+      case "parcelas":
+        valorFormatado = Math.max(1, Math.min(12, parseInt(value, 10) || 1));
+        break;
     }
 
-    setDadosCartao((prev) => ({ ...prev, [name]: value }));
+    setDadosCartao(prev => ({ ...prev, [name]: valorFormatado }));
+  };
+
+  const handlePixChange = (e) => {
+    const { name, value } = e.target;
+    setDadosPix(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleContatoChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "telefone") {
+      setContato(prev => ({ ...prev, [name]: formatarTelefone(value) }));
+    } else {
+      setContato(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const aplicarCupom = () => {
     setErro(null);
     const code = cupom.trim().toUpperCase();
+    
     if (!code) {
       setErro("Informe um cupom");
       return;
@@ -157,92 +194,147 @@ const Pagamento = () => {
 
     if (code === "DESCONTO10") {
       setDesconto(0.1);
+      setErro(null);
     } else {
       setErro("Cupom inválido");
       setDesconto(0);
     }
   };
 
+  const validarEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handlePagamento = async () => {
-
     setErro(null);
+    setSucesso(false);
 
-    // Verificação consistente do usuário logado
     if (!usuarioId) {
       setErro("Você precisa fazer login para continuar");
       setTimeout(() => navigate('/login', { state: { from: '/pagamento' } }), 1500);
       return;
     }
 
-    // Aplica desconto percentual sobre total para calcular valor final
-    const valorFinal = Number(total - total * desconto);
+    if (!contato.email || !validarEmail(contato.email)) {
+      setErro("Informe um email válido");
+      return;
+    }
+
+    if (!contato.telefone || contato.telefone.replace(/\D/g, "").length < 10) {
+      setErro("Informe um telefone válido com DDD");
+      return;
+    }
+
+    const valorFinal = Number((total - total * desconto).toFixed(2));
     if (!(valorFinal > 0)) {
-      setErro("Valor total inválido.");
+      setErro("Valor total inválido");
       return;
     }
 
     if (!produtos || produtos.length === 0) {
-      setErro("Carrinho vazio.");
+      setErro("Carrinho vazio");
       return;
     }
 
     const metodo = String(metodoPagamento || "").toLowerCase();
     if (!["cartao", "pix", "boleto"].includes(metodo)) {
-      setErro("Método de pagamento inválido.");
+      setErro("Método de pagamento inválido");
       return;
     }
 
+    // Validações específicas por método
     if (metodo === "cartao") {
       const numeroSemEspaco = (dadosCartao.numeroCartao || "").replace(/\s/g, "");
       if (!numeroSemEspaco || numeroSemEspaco.length < 15) {
-        setErro("Número do cartão inválido.");
+        setErro("Número do cartão inválido");
         return;
       }
       if (!dadosCartao.nomeCartao || !dadosCartao.validade || !dadosCartao.cvv) {
-        setErro("Preencha todos os dados do cartão.");
+        setErro("Preencha todos os dados do cartão");
         return;
       }
     }
 
-    const itensDto = produtos.map((p) => ({
-      ProdutoId: p.produtoId ?? p.id ?? "",
-      Tamanho: p.tamanho ?? "",
-      Quantidade: Number(p.quantidade ?? 1),
-      PrecoUnitario: Number(p.precoUnitario ?? p.preco ?? 0),
-      PrecoOriginal: Number(p.precoUnitario ?? p.preco ?? 0),
-    }));
+    // Monta dados do pagamento conforme método
+    let dadosDto = {
+      numeroCartao: null,
+      nomeCartao: null,
+      validade: null,
+      cvv: null,
+      cpf: null,
+      parcelas: null,
+      chavePix: null,
+      codigoBoleto: null,
+      dataVencimento: null
+    };
 
-    let dadosDto = {};
     if (metodo === "cartao") {
       dadosDto = {
-        NumeroCartao: (dadosCartao.numeroCartao || "").replace(/\s/g, ""),
-        NomeCartao: dadosCartao.nomeCartao || "",
-        Validade: dadosCartao.validade || "",
-        CVV: dadosCartao.cvv || "",
-        CPF: (dadosCartao.cpf || "").replace(/\D/g, ""),
-        Parcelas: Number(dadosCartao.parcelas) || 1,
+        numeroCartao: (dadosCartao.numeroCartao || "").replace(/\s/g, ""),
+        nomeCartao: dadosCartao.nomeCartao || "",
+        validade: dadosCartao.validade || "",
+        cvv: dadosCartao.cvv || "",
+        cpf: (dadosCartao.cpf || "").replace(/\D/g, ""),
+        parcelas: Number(dadosCartao.parcelas) || 1,
+        chavePix: null,
+        codigoBoleto: null,
+        dataVencimento: null
+      };
+    } else if (metodo === "pix") {
+      dadosDto = {
+        numeroCartao: null,
+        nomeCartao: null,
+        validade: null,
+        cvv: null,
+        cpf: null,
+        parcelas: null,
+        chavePix: dadosPix.chavePix || "",
+        codigoBoleto: null,
+        dataVencimento: null
+      };
+    } else if (metodo === "boleto") {
+      dadosDto = {
+        numeroCartao: null,
+        nomeCartao: null,
+        validade: null,
+        cvv: null,
+        cpf: null,
+        parcelas: null,
+        chavePix: null,
+        codigoBoleto: `3419.${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1 + Math.random() * 9)} ${new Date().toISOString()}`,
+        dataVencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias depois
       };
     }
 
     const pagamentoDTO = {
-      UsuarioId: usuarioId, // Usando o usuarioId obtido consistentemente
-      CarrinhoId: `carrinho-${usuarioId}-${Date.now()}`,
-      ValorTotal: valorFinal,
-      MetodoPagamento: metodo,
-      Dados: dadosDto,
-      Itens: itensDto,
+      usuarioId: usuarioId,
+      carrinhoId: `carrinho-${usuarioId}-${Date.now()}`,
+      valorTotal: valorFinal,
+      metodoPagamento: metodo,
+      dados: dadosDto,
+      itens: produtos.map(p => ({
+        produtoId: p.produtoId ?? p.id ?? "",
+        tamanho: p.tamanho ?? "",
+        quantidade: Number(p.quantidade ?? 1),
+        precoUnitario: Number(p.precoUnitario ?? p.preco ?? 0),
+        precoOriginal: Number(p.precoOriginal ?? p.precoUnitario ?? p.preco ?? 0) || Number(p.precoUnitario ?? p.preco ?? 0),
+        dataAdicao: new Date().toISOString()
+      })),
+      contato: {
+        email: contato.email,
+        telefone: contato.telefone
+      }
     };
 
-    console.log("Payload enviado para /api/pagamento/processar:", pagamentoDTO);
+    console.log("Enviando pagamentoDTO:", pagamentoDTO);
 
     setCarregando(true);
 
     try {
-      const response = await axios.post("http://localhost:5005/api/pagamento/processar", pagamentoDTO);
+      const response = await axios.post(`${API_URL}/api/Pagamento/processar`, pagamentoDTO);
+      console.log("Resposta da API:", response.data);
 
-      console.log("Resposta do backend:", response.data);
-
-      if (response.data?.Success) {
+      if (response.data?.success) {
         setSucesso(true);
         localStorage.removeItem("checkoutItems");
 
@@ -252,239 +344,33 @@ const Pagamento = () => {
               produtos,
               total: valorFinal,
               metodoPagamento: metodo,
-              pagamentoId: response.data.PagamentoId,
-              status: response.data.Status,
-              dadosPagamento: response.data.Dados,
+              pagamentoId: response.data.pagamentoId,
+              status: response.data.status,
+              dadosPagamento: response.data.dados,
             },
           });
         }, 1200);
       } else {
-        const mensagem = response.data?.Mensagem ?? response.data?.Message ?? "Falha ao processar pagamento";
+        const mensagem = response.data?.mensagem ?? response.data?.message ?? "Falha ao processar pagamento";
         setErro(mensagem);
       }
     } catch (error) {
-      console.error("Erro no pagamento (catch):", error);
+      console.error("Erro no pagamento:", error);
 
-      const serverData = error.response?.data;
-      let serverMessage = null;
-
-      if (serverData) {
-        serverMessage =
-          serverData?.Message ||
-          serverData?.Mensagem ||
-          serverData?.message ||
-          serverData?.mensagem ||
-          (typeof serverData === "string" ? serverData : null);
-
-        if (!serverMessage) {
-          serverMessage = JSON.stringify(serverData);
-        }
-      } else {
-        serverMessage = error.message || "Falha ao processar pagamento";
+      let errorMessage = "Erro ao processar pagamento";
+      if (error.response) {
+        errorMessage = error.response.data?.message || 
+                      error.response.data?.mensagem || 
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
-      setErro(serverMessage);
-
+      setErro(errorMessage);
     } finally {
       setCarregando(false);
     }
   };
-
-  const renderFormularioPagamento = () => {
-    switch (metodoPagamento) {
-      case "cartao":
-        return (
-          <div style={{ marginTop: 20 }}>
-            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Dados do Cartão</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-              <div>
-                <label style={{ display: "block", marginBottom: 5 }}>Nome no Cartão</label>
-                <input
-                  type="text"
-                  name="nomeCartao"
-                  value={dadosPagamento.nomeCartao}
-                  onChange={handleChange}
-                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: "block", marginBottom: 5 }}>Número do Cartão</label>
-                <input
-                  type="text"
-                  name="numeroCartao"
-                  value={dadosPagamento.numeroCartao}
-                  onChange={handleChange}
-                  maxLength={19}
-                  placeholder="0000 0000 0000 0000"
-                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                  required
-                />
-              </div>
-              
-              <div style={{ display: "flex", gap: 15 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", marginBottom: 5 }}>Validade (MM/AA)</label>
-                  <input
-                    type="text"
-                    name="validade"
-                    value={dadosPagamento.validade}
-                    onChange={handleChange}
-                    maxLength={5}
-                    placeholder="MM/AA"
-                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                    required
-                  />
-                </div>
-                
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", marginBottom: 5 }}>CVV</label>
-                  <input
-                    type="text"
-                    name="cvv"
-                    value={dadosPagamento.cvv}
-                    onChange={handleChange}
-                    maxLength={4}
-                    placeholder="123"
-                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label style={{ display: "block", marginBottom: 5 }}>CPF do Titular</label>
-                <input
-                  type="text"
-                  name="cpf"
-                  value={dadosPagamento.cpf}
-                  onChange={handleChange}
-                  placeholder="000.000.000-00"
-                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: "block", marginBottom: 5 }}>Parcelas</label>
-                <select
-                  name="parcelas"
-                  value={dadosPagamento.parcelas}
-                  onChange={handleChange}
-                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                    <option key={num} value={num}>
-                      {num}x de R$ {((total - desconto) / num).toFixed(2)} {num > 1 ? '(sem juros)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        );
-      
-      case "pix":
-        return (
-          <div style={{ marginTop: 20 }}>
-            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Pagamento via PIX</h3>
-            <p style={{ color: "#666", marginBottom: 15 }}>
-              Informe sua chave PIX para recebimento:
-            </p>
-            <div>
-              <label style={{ display: "block", marginBottom: 5 }}>Chave PIX</label>
-              <input
-                type="text"
-                name="chavePix"
-                value={dadosPagamento.chavePix}
-                onChange={handleChange}
-                style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                required
-              />
-            </div>
-          </div>
-        );
-      
-      case "boleto":
-        return (
-          <div style={{ marginTop: 20 }}>
-            <h3 style={{ fontSize: 18, marginBottom: 15 }}>Pagamento via Boleto</h3>
-            <p style={{ color: "#666", marginBottom: 15 }}>
-              O boleto será gerado após a confirmação do pedido.
-            </p>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-  const renderContato = () => (
-    <div style={{ marginTop: 20 }}>
-      <h3 style={{ fontSize: 18, marginBottom: 15 }}>Informações de Contato</h3>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-        <div>
-          <label style={{ display: "block", marginBottom: 5 }}>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={dadosPagamento.email}
-            onChange={handleChange}
-            style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-            required
-          />
-        </div>
-        
-        <div>
-          <label style={{ display: "block", marginBottom: 5 }}>Telefone</label>
-          <input
-            type="tel"
-            name="telefone"
-            value={dadosPagamento.telefone}
-            onChange={handleChange}
-            placeholder="(00) 00000-0000"
-            style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-            required
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  const ImagemProduto = ({ src, alt }) => {
-    const [imgSrc, setImgSrc] = useState(src);
-
-    const handleError = () => {
-      setImgSrc(
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect fill='%23f5f5f5' width='80' height='80'/%3E%3Ctext fill='%23666' font-family='sans-serif' font-size='10' dy='3' text-anchor='middle' x='40' y='45'%3EProduto%3C/text%3E%3C/svg%3E"
-      );
-    };
-
-    useEffect(() => {
-      setImgSrc(src);
-    }, [src]);
-
-    return (
-      <img
-        src={imgSrc}
-        alt={alt}
-        onError={handleError}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          borderRadius: 4,
-        }}
-      />
-    );
-  };
-
-  const formatarMoeda = (valor) =>
-    valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 20 }}>
@@ -547,301 +433,235 @@ const Pagamento = () => {
                           overflow: "hidden",
                         }}
                       >
-                        <ImagemProduto src={produto.imagem} alt={produto.nome} />
+                        <img
+                          src={produto.imagem || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect fill='%23f5f5f5' width='80' height='80'/%3E%3Ctext fill='%23666' font-family='sans-serif' font-size='10' dy='3' text-anchor='middle' x='40' y='45'%3EProduto%3C/text%3E%3C/svg%3E"}
+                          alt={produto.nome}
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect fill='%23f5f5f5' width='80' height='80'/%3E%3Ctext fill='%23666' font-family='sans-serif' font-size='10' dy='3' text-anchor='middle' x='40' y='45'%3EProduto%3C/text%3E%3C/svg%3E";
+                          }}
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        />
                       </div>
-
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0, marginBottom: 5 }}>{produto.nome}</h3>
-                        <div style={{ color: "#666", fontSize: 14 }}>
-                          <p style={{ margin: "4px 0" }}>
-                            <strong>Tamanho:</strong> {produto.tamanho}
-                          </p>
-                          <p style={{ margin: "4px 0" }}>
-                            <strong>Quantidade:</strong> {produto.quantidade}
-                          </p>
-                          <p style={{ margin: "4px 0", fontWeight: "bold", color: "#000" }}>
-                            <strong>Preço:</strong> {formatarMoeda(produto.precoTotal)}
-                            {produto.quantidade > 1 && (
-                              <span style={{ fontSize: 12, color: "#666", marginLeft: 5 }}>
-                                ({formatarMoeda(produto.precoUnitario)} cada)
-                              </span>
-                            )}
-                          </p>
-                        </div>
+                        <p style={{ margin: 0, fontWeight: "bold", fontSize: 16 }}>{produto.nome}</p>
+                        <p style={{ margin: "4px 0" }}>Tamanho: {produto.tamanho}</p>
+                        <p style={{ margin: 0 }}>Quantidade: {produto.quantidade}</p>
+                      </div>
+                      <div style={{ minWidth: 90, textAlign: "right", fontWeight: "bold", fontSize: 16 }}>
+                        R$ {Number(produto.precoTotal).toFixed(2)}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Cupom de Desconto */}
-            <div style={{ marginTop: 20 }}>
-              <h3 style={{ fontSize: 18, marginBottom: 10 }}>Cupom de Desconto</h3>
-              <div style={{ display: "flex", gap: 10 }}>
-                <input
-                  type="text"
-                  placeholder="Digite seu cupom"
-                  value={cupom}
-                  onChange={(e) => setCupom(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: 4,
-                  }}
-                />
-                <button
-                  onClick={aplicarCupom}
-                  style={{
-                    padding: "8px 16px",
-                    background: "#333",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                  }}
-                >
-                  Aplicar
-                </button>
-              </div>
-              {erro && <p style={{ color: "red", fontSize: 14, marginTop: 5 }}>{erro}</p>}
-            </div>
-
-            {/* Métodos de Pagamento */}
-            <div style={{ marginTop: 30 }}>
-              <h2 style={{ fontSize: 20, marginBottom: 15 }}>Método de Pagamento</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {METODOS.map((metodo) => (
-                  <div
-                    key={metodo.value}
-                    style={{
-                      padding: 15,
-                      border: `2px solid ${metodoPagamento === metodo.value ? "#007bff" : "#eee"}`,
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                    onClick={() => setMetodoPagamento(metodo.value)}
-                  >
-                    <input type="radio" checked={metodoPagamento === metodo.value} readOnly />
-                    <span>{metodo.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {metodoPagamento === "cartao" && (
-                <div style={{ marginTop: 20, border: "1px solid #eee", borderRadius: 8, padding: 20 }}>
-                  <h3 style={{ fontSize: 18, marginBottom: 15 }}>Dados do Cartão</h3>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-                    <div>
-                      <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                        Número do Cartão
-                      </label>
-                      <input
-                        type="text"
-                        name="numeroCartao"
-                        value={dadosCartao.numeroCartao}
-                        onChange={handleDadosCartaoChange}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                        Nome no Cartão
-                      </label>
-                      <input
-                        type="text"
-                        name="nomeCartao"
-                        value={dadosCartao.nomeCartao}
-                        onChange={handleDadosCartaoChange}
-                        placeholder="Nome como está no cartão"
-                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                      />
-                    </div>
-
-                    <div style={{ display: "flex", gap: 15 }}>
-                      <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                          Validade (MM/AA)
-                        </label>
-                        <input
-                          type="text"
-                          name="validade"
-                          value={dadosCartao.validade}
-                          onChange={handleDadosCartaoChange}
-                          placeholder="MM/AA"
-                          maxLength={5}
-                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                        />
-                      </div>
-
-                      <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          name="cvv"
-                          value={dadosCartao.cvv}
-                          onChange={handleDadosCartaoChange}
-                          placeholder="123"
-                          maxLength={4}
-                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                        CPF do Titular
-                      </label>
-                      <input
-                        type="text"
-                        name="cpf"
-                        value={dadosCartao.cpf}
-                        onChange={handleDadosCartaoChange}
-                        placeholder="000.000.000-00"
-                        maxLength={14}
-                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: "block", marginBottom: 5, fontSize: 14 }}>
-                        Parcelas
-                      </label>
-                      <input
-                        type="number"
-                        name="parcelas"
-                        value={dadosCartao.parcelas}
-                        min={1}
-                        max={12}
-                        onChange={handleDadosCartaoChange}
-                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: 4 }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(metodoPagamento === "pix" || metodoPagamento === "boleto") && (
-                <div style={{ marginTop: 20, padding: 20, border: "1px solid #eee", borderRadius: 8 }}>
-                  <p>
-                    {metodoPagamento === "pix"
-                      ? "Após confirmar, será gerada a chave PIX para pagamento."
-                      : "Após confirmar, será gerado o boleto bancário para pagamento."}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Formulário de pagamento específico */}
-            {renderFormularioPagamento()}
-            
-            {/* Informações de contato (comum a todos os métodos) */}
-            {renderContato()}
           </div>
 
-          {/* Resumo do Pedido */}
-          <div
-            style={{
-              flex: 1,
-              minWidth: 280,
-              border: "1px solid #eee",
-              borderRadius: 8,
-              padding: 20,
-              height: "fit-content",
-            }}
-          >
-            <h2 style={{ fontSize: 20, marginBottom: 15 }}>Resumo do Pedido</h2>
+          {/* Formulário de pagamento */}
+          <div style={{ flex: 1, minWidth: 300 }}>
+            <h2 style={{ fontSize: 20, marginBottom: 15 }}>Detalhes do Pagamento</h2>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span>Subtotal</span>
-              <span>{formatarMoeda(total)}</span>
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ fontWeight: "bold" }}>Email:</label>
+              <input
+                type="email"
+                name="email"
+                value={contato.email}
+                onChange={handleContatoChange}
+                style={{ width: "100%", padding: 8, marginTop: 5 }}
+              />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span>Desconto</span>
-              <span>-{formatarMoeda(total * desconto)}</span>
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ fontWeight: "bold" }}>Telefone:</label>
+              <input
+                type="text"
+                name="telefone"
+                value={contato.telefone}
+                onChange={handleContatoChange}
+                placeholder="(00) 00000-0000"
+                style={{ width: "100%", padding: 8, marginTop: 5 }}
+              />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 15,
-                fontWeight: "bold",
-                fontSize: 18,
-                borderTop: "1px solid #ddd",
-                paddingTop: 10,
-              }}
-            >
-              <span>Total</span>
-              <span>{formatarMoeda(total - total * desconto)}</span>
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ fontWeight: "bold" }}>Método de Pagamento:</label>
+              <select
+                value={metodoPagamento}
+                onChange={(e) => setMetodoPagamento(e.target.value)}
+                style={{ width: "100%", padding: 8, marginTop: 5 }}
+              >
+                {METODOS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Campos dinâmicos por método */}
+            {metodoPagamento === "cartao" && (
+              <>
+                <div style={{ marginBottom: 15 }}>
+                  <label>Número do Cartão:</label>
+                  <input
+                    type="text"
+                    name="numeroCartao"
+                    value={dadosCartao.numeroCartao}
+                    onChange={handleDadosCartaoChange}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 15 }}>
+                  <label>Nome no Cartão:</label>
+                  <input
+                    type="text"
+                    name="nomeCartao"
+                    value={dadosCartao.nomeCartao}
+                    onChange={handleDadosCartaoChange}
+                    placeholder="João Gabriel Cunha"
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: 15, marginBottom: 15 }}>
+                  <div style={{ flex: 1 }}>
+                    <label>Validade (MM/AA):</label>
+                    <input
+                      type="text"
+                      name="validade"
+                      value={dadosCartao.validade}
+                      onChange={handleDadosCartaoChange}
+                      placeholder="12/27"
+                      maxLength={5}
+                      style={{ width: "100%", padding: 8, marginTop: 5 }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label>CVV:</label>
+                    <input
+                      type="text"
+                      name="cvv"
+                      value={dadosCartao.cvv}
+                      onChange={handleDadosCartaoChange}
+                      placeholder="123"
+                      maxLength={4}
+                      style={{ width: "100%", padding: 8, marginTop: 5 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 15 }}>
+                  <label>CPF:</label>
+                  <input
+                    type="text"
+                    name="cpf"
+                    value={dadosCartao.cpf}
+                    onChange={handleDadosCartaoChange}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 15 }}>
+                  <label>Parcelas:</label>
+                  <input
+                    type="number"
+                    name="parcelas"
+                    value={dadosCartao.parcelas}
+                    onChange={handleDadosCartaoChange}
+                    min={1}
+                    max={12}
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+              </>
+            )}
+
+            {metodoPagamento === "pix" && (
+              <div style={{ marginBottom: 15 }}>
+                <label>Chave PIX:</label>
+                <input
+                  type="text"
+                  name="chavePix"
+                  value={dadosPix.chavePix}
+                  onChange={handlePixChange}
+                  placeholder="exemplo@pix.com"
+                  style={{ width: "100%", padding: 8, marginTop: 5 }}
+                />
+              </div>
+            )}
+
+            {metodoPagamento === "boleto" && (
+              <p>O boleto será gerado após a confirmação do pedido.</p>
+            )}
+
+            <div style={{ marginBottom: 15 }}>
+              <label>Cupom de Desconto:</label>
+              <input
+                type="text"
+                value={cupom}
+                onChange={(e) => setCupom(e.target.value)}
+                placeholder="Digite seu cupom"
+                style={{ width: "100%", padding: 8, marginTop: 5 }}
+              />
+              <button onClick={aplicarCupom} style={{ marginTop: 10 }}>
+                Aplicar Cupom
+              </button>
+            </div>
+
+            <div style={{ marginBottom: 15, fontWeight: "bold", fontSize: 18 }}>
+              Total: R$ {(total - total * desconto).toFixed(2)}
+            </div>
+
+            {erro && (
+              <div
+                style={{
+                  backgroundColor: "#f8d7da",
+                  color: "#842029",
+                  padding: 10,
+                  borderRadius: 5,
+                  marginBottom: 15,
+                }}
+              >
+                <MdError style={{ verticalAlign: "middle" }} /> {erro}
+              </div>
+            )}
+
+            {sucesso && (
+              <div
+                style={{
+                  backgroundColor: "#d1e7dd",
+                  color: "#0f5132",
+                  padding: 10,
+                  borderRadius: 5,
+                  marginBottom: 15,
+                }}
+              >
+                <MdCheckCircle style={{ verticalAlign: "middle" }} /> Pagamento realizado com sucesso!
+              </div>
+            )}
 
             <button
               onClick={handlePagamento}
               disabled={carregando}
               style={{
-                marginTop: 30,
                 width: "100%",
-                background: carregando ? "#aaa" : "#007bff",
-                color: "white",
-                padding: "12px 0",
+                padding: 15,
+                backgroundColor: "#007bff",
                 border: "none",
-                borderRadius: 6,
-                fontSize: 16,
+                borderRadius: 5,
+                color: "#fff",
+                fontWeight: "bold",
                 cursor: carregando ? "not-allowed" : "pointer",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 10,
               }}
             >
-              {carregando ? "Processando..." : "Confirmar Pagamento"}
+              {carregando ? "Processando..." : "Finalizar Pagamento"}
             </button>
-
-            {sucesso && (
-              <div
-                style={{
-                  marginTop: 20,
-                  color: "green",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontWeight: "bold",
-                }}
-              >
-
-                <MdCheckCircle size={24} />
-                <span>Pagamento aprovado com sucesso!</span>
-              </div>
-            )}
-
-            {erro && (
-              <div
-                style={{
-                  marginTop: 20,
-                  color: "red",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontWeight: "bold",
-                }}
-              >
-                <MdError size={24} />
-                <span>{erro}</span>
-              </div>
-            )}
-
           </div>
         </div>
       )}

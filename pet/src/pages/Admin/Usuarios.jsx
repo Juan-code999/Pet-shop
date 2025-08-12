@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Table, Button, Pagination, Badge, InputGroup, Form, 
   Modal, Spinner, Alert, OverlayTrigger, Tooltip,
   Container, Row, Col
 } from 'react-bootstrap';
 import { 
-  BiSearch, BiRefresh, BiTrash, BiUserCheck, BiUserX, 
-  BiEdit, BiSort, BiFilterAlt, BiPlus
+  BiSearch, BiRefresh, BiUserCheck, BiUserX, 
+  BiSort, BiFilterAlt
 } from 'react-icons/bi';
 import { debounce } from 'lodash';
 import { useNavigate } from 'react-router-dom';
@@ -23,11 +23,9 @@ const Usuarios = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'nome', direction: 'asc' });
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [userToEdit, setUserToEdit] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [showAdminConfirmModal, setShowAdminConfirmModal] = useState(false);
+  const [adminConfirmData, setAdminConfirmData] = useState(null);
   const navigate = useNavigate();
 
   // Generate unique ID for temporary users
@@ -45,7 +43,6 @@ const Usuarios = () => {
     setIsLoading(true);
     setError(null);
     try {
-
       const response = await fetch('http://localhost:5005/api/Usuario', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -56,15 +53,14 @@ const Usuarios = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Erro ${response.status}: ${response.statusText}`);
       }
-
       
       const data = await response.json();
       
       const normalizedUsers = data.map(user => ({
         ...user,
         id: user._id || user.id || generateUniqueId(),
-        nome: user.nome || 'Sem nome',
-        email: user.email || 'Sem email',
+        nome: user.nome?.trim() || 'Sem nome',
+        email: user.email?.trim()?.toLowerCase() || 'Sem email',
         endereco: user.endereco || {
           rua: '',
           numero: '',
@@ -140,7 +136,7 @@ const Usuarios = () => {
   }, [searchTerm, showAdminsOnly, users, sortConfig]);
 
   // Debounced search
-  const handleSearch = useCallback(debounce((term) => {
+  const handleSearch = useMemo(() => debounce((term) => {
     setSearchTerm(term);
   }, 300), []);
 
@@ -167,17 +163,19 @@ const Usuarios = () => {
   };
 
   // Toggle admin status
-  const toggleAdminStatus = async (userId, email, isCurrentlyAdmin) => {
-    if (!window.confirm(`Tem certeza que deseja ${isCurrentlyAdmin ? 'remover' : 'conceder'} privilégios de administrador para ${email}?`)) {
-      return;
-    }
+  const toggleAdminStatus = (userId, email, isCurrentlyAdmin) => {
+    setAdminConfirmData({ userId, email, isCurrentlyAdmin });
+    setShowAdminConfirmModal(true);
+  };
 
+  const confirmAdminChange = async () => {
+    if (!adminConfirmData) return;
+    
+    const { userId, email, isCurrentlyAdmin } = adminConfirmData;
     setIsLoading(true);
     try {
-
       const response = await fetch('http://localhost:5005/api/Usuario/admin-status', {
         method: 'PUT',
-
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -190,7 +188,13 @@ const Usuarios = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const text = await response.text();
+        let errorData;
+        try {
+          errorData = text ? JSON.parse(text) : {};
+        } catch {
+          errorData = { message: text || 'Erro ao alterar status' };
+        }
         throw new Error(errorData.message || 'Erro ao alterar status');
       }
       
@@ -199,85 +203,10 @@ const Usuarios = () => {
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err) {
       console.error('Erro:', err);
-      setError(err.message);
+      setError(err.message || 'Erro ao alterar status de admin');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Handle edit user
-  const handleEdit = (user) => {
-    if (!user?.id) {
-      setError('Usuário inválido para edição');
-      return;
-    }
-    setUserToEdit({
-      ...user,
-      endereco: user.endereco || {
-        rua: '',
-        numero: '',
-        complemento: '',
-        bairro: '',
-        cidade: '',
-        estado: '',
-        cep: ''
-      }
-    });
-    setShowEditModal(true);
-  };
-
-  // Handle delete confirmation
-  const confirmDelete = (user) => {
-    if (!user?.id) {
-      setError('Usuário inválido para exclusão');
-      return;
-    }
-    setUserToDelete(user);
-    setShowDeleteModal(true);
-  };
-
-  // Handle user deletion
-  const handleDelete = async () => {
-
-    if (!userToDelete?.id) {
-      setError('Nenhum usuário selecionado para exclusão');
-
-      setShowDeleteModal(false);
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      if (userToDelete.id.startsWith('temp-')) {
-        setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
-        setFilteredUsers(prev => prev.filter(u => u.id !== userToDelete.id));
-        setSuccessMessage('Usuário removido localmente');
-      } else {
-        const response = await fetch(`http://localhost:5005/api/Usuario/${userToDelete.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao excluir usuário');
-        }
-
-        await loadUsers();
-        setSuccessMessage(`Usuário "${userToDelete.nome}" removido com sucesso`);
-      }
-      
-      setTimeout(() => setSuccessMessage(null), 5000);
-    } catch (err) {
-      console.error('Erro ao excluir usuário:', err);
-      setError(`Falha ao excluir usuário: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-      setShowDeleteModal(false);
-      setUserToDelete(null);
+      setShowAdminConfirmModal(false);
     }
   };
 
@@ -298,53 +227,12 @@ const Usuarios = () => {
       : <BiSort className="text-primary" style={{ transform: 'rotate(180deg)' }} />;
   };
 
-  // Save edited user
-  const handleSaveEdit = async () => {
-    if (!userToEdit?.id) {
-      setError('Usuário inválido para edição');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(`http://localhost:5005/api/Usuario/${userToEdit.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          nome: userToEdit.nome,
-          email: userToEdit.email,
-          telefone: userToEdit.telefone,
-          foto: userToEdit.foto,
-          endereco: userToEdit.endereco
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar usuário');
-      }
-      
-      await loadUsers();
-      setShowEditModal(false);
-      setSuccessMessage(`Usuário ${userToEdit.nome} atualizado com sucesso`);
-      setTimeout(() => setSuccessMessage(null), 5000);
-    } catch (err) {
-      console.error('Erro:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Render table rows
   const renderTableRows = () => {
     if (currentUsers.length === 0) {
       return (
         <tr>
-          <td colSpan="7" className="text-center py-4">
+          <td colSpan="6" className="text-center py-4">
             {isLoading ? (
               <Spinner animation="border" variant="primary" />
             ) : (
@@ -379,40 +267,16 @@ const Usuarios = () => {
           </Badge>
         </td>
         <td className="align-middle">
-          <div className="d-flex gap-2">
-            <OverlayTrigger overlay={<Tooltip>{user.isAdmin ? 'Remover admin' : 'Tornar admin'}</Tooltip>}>
-              <Button
-                variant={user.isAdmin ? "outline-warning" : "outline-success"}
-                size="sm"
-                onClick={() => toggleAdminStatus(user.id, user.email, user.isAdmin)}
-                disabled={isLoading}
-              >
-                {user.isAdmin ? <BiUserX /> : <BiUserCheck />}
-              </Button>
-            </OverlayTrigger>
-            
-            <OverlayTrigger overlay={<Tooltip>Editar</Tooltip>}>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => handleEdit(user)}
-                disabled={isLoading}
-              >
-                <BiEdit />
-              </Button>
-            </OverlayTrigger>
-            
-            <OverlayTrigger overlay={<Tooltip>Excluir</Tooltip>}>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={() => confirmDelete(user)}
-                disabled={isLoading}
-              >
-                <BiTrash />
-              </Button>
-            </OverlayTrigger>
-          </div>
+          <OverlayTrigger overlay={<Tooltip>{user.isAdmin ? 'Remover admin' : 'Tornar admin'}</Tooltip>}>
+            <Button
+              variant={user.isAdmin ? "outline-warning" : "outline-success"}
+              size="sm"
+              onClick={() => toggleAdminStatus(user.id, user.email, user.isAdmin)}
+              disabled={isLoading}
+            >
+              {user.isAdmin ? <BiUserX /> : <BiUserCheck />}
+            </Button>
+          </OverlayTrigger>
         </td>
       </tr>
     ));
@@ -506,13 +370,6 @@ const Usuarios = () => {
               Gerenciamento de Usuários
             </h2>
             <div>
-              <Button 
-                variant="primary"
-                className="me-2"
-                onClick={() => navigate('/usuarios/novo')}
-              >
-                <BiPlus className="me-1" /> Novo Usuário
-              </Button>
               <Button 
                 variant="outline-secondary" 
                 onClick={loadUsers}
@@ -619,205 +476,21 @@ const Usuarios = () => {
         </Col>
       </Row>
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => !isLoading && setShowDeleteModal(false)} centered>
+      {/* Admin Confirm Modal */}
+      <Modal show={showAdminConfirmModal} onHide={() => !isLoading && setShowAdminConfirmModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Confirmar Exclusão</Modal.Title>
+          <Modal.Title>Confirmar Alteração</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Tem certeza que deseja excluir permanentemente o usuário <strong>{userToDelete?.nome || 'selecionado'}</strong>? Esta ação não pode ser desfeita.
+          Tem certeza que deseja {adminConfirmData?.isCurrentlyAdmin ? 'remover' : 'conceder'} 
+          privilégios de administrador para {adminConfirmData?.email}?
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowDeleteModal(false)} 
-            disabled={isLoading}
-          >
+          <Button variant="secondary" onClick={() => setShowAdminConfirmModal(false)} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleDelete} 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Excluindo...
-              </>
-            ) : 'Confirmar Exclusão'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Edit User Modal */}
-      <Modal show={showEditModal} onHide={() => !isLoading && setShowEditModal(false)} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Editar Usuário</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {userToEdit ? (
-            <Form>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Nome</Form.Label>
-                    <Form.Control
-                      value={userToEdit.nome}
-                      onChange={(e) => setUserToEdit({...userToEdit, nome: e.target.value})}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      value={userToEdit.email}
-                      onChange={(e) => setUserToEdit({...userToEdit, email: e.target.value})}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Telefone</Form.Label>
-                    <Form.Control
-                      value={userToEdit.telefone}
-                      onChange={(e) => setUserToEdit({...userToEdit, telefone: e.target.value})}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Foto (URL)</Form.Label>
-                    <Form.Control
-                      value={userToEdit.foto}
-                      onChange={(e) => setUserToEdit({...userToEdit, foto: e.target.value})}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <h5 className="mt-4">Endereço</h5>
-              <Row>
-                <Col md={8}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Rua</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.rua}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, rua: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Número</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.numero}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, numero: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Complemento</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.complemento}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, complemento: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Bairro</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.bairro}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, bairro: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Cidade</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.cidade}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, cidade: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Estado</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.estado}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, estado: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>CEP</Form.Label>
-                    <Form.Control
-                      value={userToEdit.endereco.cep}
-                      onChange={(e) => setUserToEdit({
-                        ...userToEdit,
-                        endereco: {...userToEdit.endereco, cep: e.target.value}
-                      })}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Form>
-          ) : (
-            <Alert variant="danger">Usuário não encontrado</Alert>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowEditModal(false)} 
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleSaveEdit} 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Salvando...
-              </>
-            ) : 'Salvar Alterações'}
+          <Button variant="primary" onClick={confirmAdminChange} disabled={isLoading}>
+            {isLoading ? <Spinner size="sm" /> : 'Confirmar'}
           </Button>
         </Modal.Footer>
       </Modal>

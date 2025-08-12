@@ -81,6 +81,36 @@ public class ProdutosController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> AtualizarProduto(string id, [FromBody] ProdutoDTO produtoDto)
+    {
+        try
+        {
+            // Garante que as listas nunca sejam nulas
+            produtoDto.ImagensUrl ??= new List<string>();
+            produtoDto.Tamanhos ??= new List<TamanhoPrecoDTO>();
+
+            // Validação manual básica
+            if (string.IsNullOrEmpty(produtoDto.Nome))
+                return BadRequest("Nome do produto é obrigatório");
+
+            if (string.IsNullOrEmpty(produtoDto.Categoria))
+                return BadRequest("Categoria é obrigatória");
+
+            var produtoAtualizado = await _produtoService.AtualizarProdutoAsync(id, produtoDto);
+
+            return Ok(new
+            {
+                mensagem = "Produto atualizado com sucesso!",
+                produto = produtoAtualizado
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao atualizar produto: {ex.Message}");
+        }
+    }
+
 
 }
 

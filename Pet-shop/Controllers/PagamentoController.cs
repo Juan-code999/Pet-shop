@@ -1,5 +1,4 @@
-﻿// Controllers/PagamentoController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Pet_shop.DTOs;
 using Pet_shop.Services;
@@ -15,9 +14,7 @@ namespace Pet_shop.Controllers
         private readonly IPagamentoService _pagamentoService;
         private readonly ILogger<PagamentoController> _logger;
 
-        public PagamentoController(
-            IPagamentoService pagamentoService,
-            ILogger<PagamentoController> logger)
+        public PagamentoController(IPagamentoService pagamentoService, ILogger<PagamentoController> logger)
         {
             _pagamentoService = pagamentoService;
             _logger = logger;
@@ -51,12 +48,19 @@ namespace Pet_shop.Controllers
             catch (ArgumentException ex)
             {
                 _logger.LogWarning(ex, "Erro de validação no pagamento");
-                return BadRequest(new { Success = false, ex.Message });
+                return BadRequest(new { Success = false, Mensagem = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao processar pagamento");
-                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao processar pagamento" });
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Mensagem = "Erro interno ao processar pagamento",
+                    ErroDetalhado = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException?.Message
+                });
             }
         }
 
@@ -79,12 +83,12 @@ namespace Pet_shop.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { Success = false, ex.Message });
+                return NotFound(new { Success = false, Mensagem = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Erro ao buscar pagamento {pagamentoId}");
-                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao buscar pagamento" });
+                return StatusCode(500, new { Success = false, Mensagem = ex.Message });
             }
         }
 
@@ -112,12 +116,12 @@ namespace Pet_shop.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { Success = false, ex.Message });
+                return BadRequest(new { Success = false, Mensagem = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Erro no webhook para pagamento {confirmacaoDto?.PagamentoId}");
-                return StatusCode(500, new { Success = false, Mensagem = "Erro interno ao processar webhook" });
+                return StatusCode(500, new { Success = false, Mensagem = ex.Message });
             }
         }
     }
