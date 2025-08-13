@@ -6,5 +6,7 @@ namespace Pet_shop.DTOs
     {
         [Required, EmailAddress]
         public string Email { get; set; }
+
+        public DateTime DataInscricao { get; set; } = DateTime.Now;
     }
 }

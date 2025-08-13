@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaStar, FaRegStar, FaHeart, FaShoppingCart } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -74,25 +74,29 @@ const Home = () => {
       id: 1,
       name: "Alimentação",
       description: "Rações, petiscos e suplementos para todas as fases",
-      icon: "paw"
+      icon: "paw",
+      filterName: "Ração" // Nome correspondente no filtro de produtos
     },
     {
       id: 2,
       name: "Brinquedos",
       description: "Diversão e entretenimento para seu companheiro",
-      icon: "dog"
+      icon: "dog",
+      filterName: "Brinquedos"
     },
     {
       id: 3,
       name: "Higiene",
       description: "Produtos para manter seu pet limpo e cheiroso",
-      icon: "hand-paper"
+      icon: "hand-paper",
+      filterName: "Higiene"
     },
     {
       id: 4,
       name: "Produtos Naturais",
       description: "Alternativas saudáveis para cuidados especiais",
-      icon: "leaf"
+      icon: "leaf",
+      filterName: "Medicamentos"
     }
   ];
 
@@ -292,9 +296,15 @@ const Home = () => {
         </div>
         <h3>{category.name}</h3>
         <p>{category.description}</p>
-        <a href={`/produtos?categoria=${category.name}`} className="category-link">
+        <Link 
+          to={{
+            pathname: '/produtos',
+            search: `?categoria=${encodeURIComponent(category.filterName)}`
+          }} 
+          className="category-link"
+        >
           Ver produtos →
-        </a>
+        </Link>
       </div>
     );
   };

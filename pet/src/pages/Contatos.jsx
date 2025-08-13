@@ -49,7 +49,7 @@ const Contatos = () => {
     id: 0
   });
   
-  const API_BASE_URL = 'https://api.seusite.com';
+  const API_BASE_URL = 'http://localhost:5005/api/Contato';
   const CONTACT_INFO = {
     email: 'contato@seusite.com',
     phone: '(11) 99999-9999',
@@ -97,9 +97,12 @@ const Contatos = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/contato`, {
-        ...data,
-        usuarioId: localStorage.getItem('usuarioId')
+      const response = await axios.post(`${API_BASE_URL}/mensagem`, {
+        usuarioId: localStorage.getItem('usuarioId') || null,
+        email: data.email,
+        telefone: data.telefone,
+        nome: data.nome,
+        mensagem: data.mensagem
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -126,7 +129,13 @@ const Contatos = () => {
     setNewsletterLoading(true);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/newsletter`, { email });
+      const response = await axios.post(`${API_BASE_URL}/newsletter`, { 
+        email 
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (response.status === 200) {
         showFeedback('Inscrição realizada com sucesso!', 'success');
@@ -134,8 +143,15 @@ const Contatos = () => {
       }
     } catch (error) {
       console.error('Erro na newsletter:', error);
-      const errorMessage = error.response?.data?.message || 
-        'Erro ao inscrever na newsletter. Tente novamente mais tarde.';
+      
+      let errorMessage = 'Erro ao inscrever na newsletter. Tente novamente mais tarde.';
+      
+      if (error.response?.status === 409) {
+        errorMessage = 'Este email já está cadastrado na nossa newsletter!';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       showFeedback(errorMessage, 'error');
     } finally {
       setNewsletterLoading(false);
@@ -325,7 +341,6 @@ const Contatos = () => {
                   )}
                 </div>
 
-                {/* Honeypot para spam */}
                 <input 
                   type="text" 
                   name="honeypot" 

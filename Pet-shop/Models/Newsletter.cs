@@ -4,6 +4,6 @@
     {
         public string Id { get; set; }
         public string Email { get; set; }
-        public DateTime DataCadastro { get; set; } = DateTime.Now;
+        public DateTime DataInscricao { get; set; } = DateTime.Now;
     }
 }

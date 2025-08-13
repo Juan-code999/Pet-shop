@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { FaStar, FaRegStar, FaHeart, FaShoppingCart, FaFilter, FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import debounce from "lodash.debounce";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -24,6 +24,7 @@ const Produtos = () => {
   const [activeFilterTab, setActiveFilterTab] = useState(null);
   const produtosPorPagina = 12;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Opções de filtro fixas
   const categoriasFixas = ["Ração", "Brinquedos", "Coleiras", "Acessórios", "Higiene", "Petiscos", "Medicamentos", "Camas"];
@@ -56,6 +57,21 @@ const Produtos = () => {
     const favs = JSON.parse(localStorage.getItem('favoritos')) || [];
     setFavoritos(favs);
   }, []);
+
+  // Ler parâmetros da URL ao carregar a página
+  useEffect(() => {
+    const categoriaUrl = searchParams.get('categoria');
+    
+    if (categoriaUrl && categoriasFixas.includes(categoriaUrl)) {
+      setCategoriasSelecionadas([categoriaUrl]);
+      setActiveFilterTab('categorias');
+      
+      // Se for mobile, mostra os filtros automaticamente
+      if (checkIsMobile()) {
+        setShowFilters(true);
+      }
+    }
+  }, [searchParams]);
 
   // Filtragem com debounce
   const aplicarFiltros = useCallback(debounce((produtos, filtros) => {

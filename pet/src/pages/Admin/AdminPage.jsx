@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '../../styles/AdminPage.css';
 import ProductList from './ProductList';
 import Usuarios from './Usuarios';
+import MensagensContato from './MensagensContato';
+import Newsletters from './Newsletters';
+
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 // Função auxiliar para gerar hash do nome (igual à NavBar)
@@ -187,6 +190,12 @@ export default function AdminPage() {
             </div>
           </div>
         );
+        case 'Mensagens':
+  return <MensagensContato />;
+
+      case 'Newsletters':
+  return < Newsletters />;
+
       case 'Configurações':
         return (
           <div className="dashboard-content">
@@ -236,7 +245,7 @@ export default function AdminPage() {
         </div>
         <nav className="menu">
           <ul>
-            {['Dashboard', 'Produtos', 'Usuários', 'Pedidos', 'Configurações'].map((item) => (
+            {['Dashboard', 'Produtos', 'Usuários', 'Pedidos','Mensagens','Newsletters','Configurações'].map((item) => (
               <li 
                 key={item}
                 className={menuAtivo === item ? 'ativo' : ''} 

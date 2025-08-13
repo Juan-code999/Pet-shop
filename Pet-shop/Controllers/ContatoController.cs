@@ -46,5 +46,46 @@ namespace Pet_shop.Controllers
 
             return Ok(new { id, message = "Assinatura realizada com sucesso!" });
         }
+
+        [HttpDelete("mensagem/{id}")]
+        public async Task<IActionResult> DeletarMensagem(string id)
+        {
+            try
+            {
+                var result = await _contatoService.DeletarContatoAsync(id);
+                if (!result)
+                    return NotFound(new { message = "Mensagem não encontrada" });
+
+                return Ok(new { message = "Mensagem deletada com sucesso" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro ao deletar mensagem", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("newsletter/{id}")]
+        public async Task<IActionResult> DeletarInscricao(string id)
+        {
+            try
+            {
+                var result = await _contatoService.DeletarNewsletterAsync(id);
+                if (!result)
+                    return NotFound(new { message = "Inscrição não encontrada" });
+
+                return Ok(new { message = "Inscrição removida com sucesso" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro ao remover inscrição", error = ex.Message });
+            }
+        }
+
+        [HttpGet("newsletters")]
+        public async Task<IActionResult> ObterTodasNewsletters()
+        {
+            var newsletters = await _contatoService.BuscarTodasNewslettersAsync();
+            return Ok(newsletters);
+        }
     }
 }
