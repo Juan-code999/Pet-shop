@@ -24,8 +24,30 @@ namespace Pet_shop.Services
         /// <summary>
         /// Adiciona um item ao carrinho
         /// </summary>
-        public async Task AdicionarItemAsync(string usuarioId, ItemCarrinhoDTO novoItem)
+        public async Task AdicionarItemAsync(string usuarioId, ItemCarrinhoDTO novoItem, ProdutoService produtoService)
         {
+            // 1. Validar entradas
+            if (string.IsNullOrWhiteSpace(usuarioId))
+                throw new ArgumentException("Usuário inválido");
+
+            if (novoItem == null)
+                throw new ArgumentNullException(nameof(novoItem));
+
+            // 2. Obter o produto para validar preços
+            var produto = await produtoService.ObterProdutoPorIdAsync(novoItem.ProdutoId);
+            if (produto == null)
+                throw new ArgumentException("Produto não encontrado");
+
+            // 3. Encontrar o tamanho selecionado no produto
+            var tamanhoProduto = produto.Tamanhos?.FirstOrDefault(t => t.Tamanho == novoItem.Tamanho);
+            if (tamanhoProduto == null)
+                throw new ArgumentException("Tamanho não disponível para este produto");
+
+            // 4. Atualizar os preços no item do carrinho
+            novoItem.PrecoUnitario = tamanhoProduto.PrecoTotal; // Usar PrecoTotal do produto
+            novoItem.PrecoOriginal = tamanhoProduto.PrecoTotal; // Ou aplicar desconto se houver
+
+            // 5. Restante da lógica existente
             var carrinho = await ObterCarrinhoAsync(usuarioId) ?? new CarrinhoDTO
             {
                 UsuarioId = usuarioId,

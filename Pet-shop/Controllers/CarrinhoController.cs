@@ -49,13 +49,21 @@ namespace Pet_shop.Controllers
         [HttpPost("{usuarioId}/adicionar")]
         public async Task<IActionResult> AdicionarItem(string usuarioId, [FromBody] ItemCarrinhoDTO item)
         {
-            if (string.IsNullOrWhiteSpace(usuarioId)) return BadRequest("Usuário inválido.");
-            if (item == null) return BadRequest("Item inválido.");
-            if (item.Quantidade <= 0) return BadRequest("A quantidade deve ser maior que zero.");
-
             try
             {
-                await _carrinhoService.AdicionarItemAsync(usuarioId, item);
+                // Validar antes
+                if (string.IsNullOrWhiteSpace(usuarioId))
+                    return BadRequest("Usuário inválido.");
+
+                if (item == null)
+                    return BadRequest("Item inválido.");
+
+                if (item.Quantidade <= 0)
+                    return BadRequest("A quantidade deve ser maior que zero.");
+
+                // Adicionar com validação de preços
+                await _carrinhoService.AdicionarItemAsync(usuarioId, item, _produtoService);
+
                 return Ok(new { mensagem = "Item adicionado ao carrinho." });
             }
             catch (Exception ex)
@@ -63,6 +71,7 @@ namespace Pet_shop.Controllers
                 return StatusCode(500, $"Erro ao adicionar item: {ex.Message}");
             }
         }
+ 
 
         /// <summary>
         /// Remove um item do carrinho

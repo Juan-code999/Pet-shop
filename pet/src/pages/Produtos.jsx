@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import "../styles/Produtos.css";
 
 const Produtos = () => {
-  // Estados
+  // States
   const [produtos, setProdutos] = useState([]);
   const [produtosFiltrados, setProdutosFiltrados] = useState([]);
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
@@ -26,39 +26,39 @@ const Produtos = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Opções de filtro fixas
+  // Fixed filter options
   const categoriasFixas = ["Ração", "Brinquedos", "Coleiras", "Acessórios", "Higiene", "Petiscos", "Medicamentos", "Camas"];
   const tiposAnimaisFixos = ["Cachorro", "Gato", "Pássaro", "Peixe", "Roedor", "Réptil"];
   const idadesFixas = ["Filhote", "Adulto", "Sênior"];
 
-  // Verificar tamanho da tela
+  // Check screen size
   const checkIsMobile = () => window.innerWidth < 992;
 
-  // Buscar produtos
+  // Fetch products
   useEffect(() => {
     const fetchProdutos = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("https://pet-shop-eiab.onrender.com/api/Produtos");
+        const response = await axios.get("http://localhost:5005/api/Produtos");
         setProdutos(response.data);
         setProdutosFiltrados(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Erro ao buscar produtos:", error);
-        setError("Erro ao carregar produtos. Tente novamente mais tarde.");
+        console.error("Error fetching products:", error);
+        setError("Error loading products. Please try again later.");
         setLoading(false);
       }
     };
     fetchProdutos();
   }, []);
 
-  // Carregar favoritos do localStorage
+  // Load favorites from localStorage
   useEffect(() => {
     const favs = JSON.parse(localStorage.getItem('favoritos')) || [];
     setFavoritos(favs);
   }, []);
 
-  // Ler parâmetros da URL ao carregar a página
+  // Read URL parameters on page load
   useEffect(() => {
     const categoriaUrl = searchParams.get('categoria');
     
@@ -66,14 +66,13 @@ const Produtos = () => {
       setCategoriasSelecionadas([categoriaUrl]);
       setActiveFilterTab('categorias');
       
-      // Se for mobile, mostra os filtros automaticamente
       if (checkIsMobile()) {
         setShowFilters(true);
       }
     }
   }, [searchParams]);
 
-  // Filtragem com debounce
+  // Filter with debounce
   const aplicarFiltros = useCallback(debounce((produtos, filtros) => {
     const { categorias, animais, idades, min, max } = filtros;
     
@@ -92,7 +91,7 @@ const Produtos = () => {
     setPaginaAtual(1);
   }, 300), []);
 
-  // Aplicar filtros quando mudar
+  // Apply filters when they change
   useEffect(() => {
     aplicarFiltros(produtos, {
       categorias: categoriasSelecionadas,
@@ -103,7 +102,7 @@ const Produtos = () => {
     });
   }, [produtos, categoriasSelecionadas, tiposAnimalSelecionados, idadesSelecionadas, precoMin, precoMax, aplicarFiltros]);
 
-  // Manipuladores de eventos
+  // Event handlers
   const handleProductClick = (id) => {
     navigate(`/produto/${id}`);
   };
@@ -166,14 +165,23 @@ const Produtos = () => {
     btn.innerHTML = '<FaShoppingCart /> Adicionando...';
     btn.disabled = true;
 
+    // Always use the first available size
+    const primeiroTamanho = produto.tamanhos[0];
+    
     const itemCarrinho = {
       produtoId: produto.id,
-      tamanho: produto.tamanhos[0].tamanho,
+      tamanho: primeiroTamanho.tamanho,
       quantidade: 1,
+      precoUnitario: primeiroTamanho.precoTotal,
+      precoOriginal: primeiroTamanho.precoTotal * (1 - (produto.desconto || 0) / 100),
+      dataAdicao: new Date().toISOString()
     };
 
     try {
-      await axios.post(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, itemCarrinho);
+      await axios.post(
+        `http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, 
+        itemCarrinho
+      );
       
       btn.innerHTML = '<FaShoppingCart /> Adicionado!';
       btn.style.backgroundColor = '#28a745';
@@ -204,7 +212,7 @@ const Produtos = () => {
     }
   };
 
-  // Paginação
+  // Pagination
   const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPagina);
   const indiceInicial = (paginaAtual - 1) * produtosPorPagina;
   const indiceFinal = indiceInicial + produtosPorPagina;
@@ -217,7 +225,7 @@ const Produtos = () => {
     }
   };
 
-  // Renderização condicional
+  // Conditional rendering
   const renderPaginacao = () => {
     if (produtosFiltrados.length <= produtosPorPagina) return null;
 
@@ -315,7 +323,7 @@ const Produtos = () => {
   return (
     <div className="container-produtos">
       <div className="produtos-content-wrapper">
-        {/* Botão de filtros mobile */}
+        {/* Mobile filters button */}
         <button 
           className="filtros-mobile-toggle"
           onClick={() => setShowFilters(!showFilters)}
@@ -329,7 +337,7 @@ const Produtos = () => {
           Filtros
         </button>
         
-        {/* Sidebar de Filtros */}
+        {/* Filters Sidebar */}
         <aside className={`sidebar-filtros ${showFilters ? 'show' : ''}`}>
           <div className="filtros-header">
             <h3>Filtrar Produtos</h3>
@@ -403,7 +411,7 @@ const Produtos = () => {
             </div>
           </div>
 
-          {/* Filtro de Categorias */}
+          {/* Category Filter */}
           <div className={`filtro ${activeFilterTab === 'categorias' ? 'aberto' : ''}`}>
             <h4>
               <button 
@@ -432,7 +440,7 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Filtro de Tipo de Animal */}
+          {/* Animal Type Filter */}
           <div className={`filtro ${activeFilterTab === 'animais' ? 'aberto' : ''}`}>
             <h4>
               <button 
@@ -461,7 +469,7 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Filtro de Idade */}
+          {/* Age Filter */}
           <div className={`filtro ${activeFilterTab === 'idades' ? 'aberto' : ''}`}>
             <h4>
               <button 
@@ -490,7 +498,7 @@ const Produtos = () => {
             </ul>
           </div>
 
-          {/* Filtro de Faixa de Preço */}
+          {/* Price Range Filter */}
           <div className={`filtro ${activeFilterTab === 'preco' ? 'aberto' : ''}`}>
             <h4>
               <button 
