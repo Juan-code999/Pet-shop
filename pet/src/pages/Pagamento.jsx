@@ -33,7 +33,13 @@ const Pagamento = () => {
 
   // Dados do PIX
   const [dadosPix, setDadosPix] = useState({
-    chavePix: ""
+    chavePix: "",
+    cpf: ""
+  });
+
+  // Dados do Boleto
+  const [dadosBoleto, setDadosBoleto] = useState({
+    cpf: ""
   });
 
   const METODOS = [
@@ -43,8 +49,7 @@ const Pagamento = () => {
   ];
 
   const usuarioId = localStorage.getItem("usuarioId");
-  // Evitar usar process.env direto, define aqui a API_URL
-  const API_URL = "http://localhost:5005";
+  const API_URL = "https://pet-shop-eiab.onrender.com";
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -164,6 +169,8 @@ const Pagamento = () => {
       case "parcelas":
         valorFormatado = Math.max(1, Math.min(12, parseInt(value, 10) || 1));
         break;
+      default:
+        valorFormatado = value;
     }
 
     setDadosCartao(prev => ({ ...prev, [name]: valorFormatado }));
@@ -172,6 +179,11 @@ const Pagamento = () => {
   const handlePixChange = (e) => {
     const { name, value } = e.target;
     setDadosPix(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBoletoChange = (e) => {
+    const { name, value } = e.target;
+    setDadosBoleto(prev => ({ ...prev, [name]: value }));
   };
 
   const handleContatoChange = (e) => {
@@ -205,173 +217,109 @@ const Pagamento = () => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handlePagamento = async () => {
-    setErro(null);
-    setSucesso(false);
+const handlePagamento = async () => {
+  setErro(null);
+  setSucesso(false);
 
-    if (!usuarioId) {
-      setErro("Você precisa fazer login para continuar");
-      setTimeout(() => navigate('/login', { state: { from: '/pagamento' } }), 1500);
-      return;
-    }
+  // Validações básicas
+  if (!usuarioId) {
+    setErro("Você precisa fazer login para continuar");
+    setTimeout(() => navigate('/login', { state: { from: '/pagamento' } }), 1500);
+    return;
+  }
 
-    if (!contato.email || !validarEmail(contato.email)) {
-      setErro("Informe um email válido");
-      return;
-    }
+  if (!produtos || produtos.length === 0) {
+    setErro("O pagamento deve conter itens");
+    return;
+  }
 
-    if (!contato.telefone || contato.telefone.replace(/\D/g, "").length < 10) {
-      setErro("Informe um telefone válido com DDD");
-      return;
-    }
+  const valorFinal = Number(total);
+  if (!(valorFinal > 0)) {
+    setErro("Valor total deve ser maior que zero");
+    return;
+  }
 
-    const valorFinal = Number((total - total * desconto).toFixed(2));
-    if (!(valorFinal > 0)) {
-      setErro("Valor total inválido");
-      return;
-    }
+  const metodo = String(metodoPagamento || "").toLowerCase();
+  if (!["cartao", "pix", "boleto"].includes(metodo)) {
+    setErro("Método de pagamento inválido");
+    return;
+  }
 
-    if (!produtos || produtos.length === 0) {
-      setErro("Carrinho vazio");
-      return;
-    }
-
-    const metodo = String(metodoPagamento || "").toLowerCase();
-    if (!["cartao", "pix", "boleto"].includes(metodo)) {
-      setErro("Método de pagamento inválido");
-      return;
-    }
-
-    // Validações específicas por método
-    if (metodo === "cartao") {
-      const numeroSemEspaco = (dadosCartao.numeroCartao || "").replace(/\s/g, "");
-      if (!numeroSemEspaco || numeroSemEspaco.length < 15) {
-        setErro("Número do cartão inválido");
-        return;
+  // Monta o objeto de pagamento
+  const pagamentoDTO = {
+    usuarioId,
+    carrinhoId: `carrinho-${usuarioId}-${Date.now()}`,
+    valorTotal: valorFinal,
+    itens: produtos.map(p => ({
+      produtoId: p.produtoId ?? p.id ?? "",
+      tamanho: p.tamanho ?? "",
+      quantidade: Number(p.quantidade ?? 1),
+      precoUnitario: Number(p.precoUnitario ?? p.preco ?? 0),
+      precoOriginal: Number(p.precoOriginal ?? p.precoUnitario ?? p.preco ?? 0),
+      dataAdicao: new Date().toISOString()
+    })),
+    metodo: (() => {
+      switch (metodo) {
+        case "cartao":
+          return {
+            tipo: "cartao",
+            numeroCartao: (dadosCartao.numeroCartao || "").replace(/\s/g, ""),
+            nomeCartao: dadosCartao.nomeCartao || "",
+            validade: dadosCartao.validade || "",
+            cvv: dadosCartao.cvv || "",
+            cpf: (dadosCartao.cpf || "").replace(/\D/g, ""),
+            parcelas: Number(dadosCartao.parcelas) || 1
+          };
+        case "pix":
+          return {
+            tipo: "pix",
+            chavePix: dadosPix.chavePix || "",
+            cpf: (dadosPix.cpf || "").replace(/\D/g, "")
+          };
+        case "boleto":
+          return {
+            tipo: "boleto",
+            cpf: (dadosBoleto.cpf || "").replace(/\D/g, "")
+          };
       }
-      if (!dadosCartao.nomeCartao || !dadosCartao.validade || !dadosCartao.cvv) {
-        setErro("Preencha todos os dados do cartão");
-        return;
-      }
-    }
-
-    // Monta dados do pagamento conforme método
-    let dadosDto = {
-      numeroCartao: null,
-      nomeCartao: null,
-      validade: null,
-      cvv: null,
-      cpf: null,
-      parcelas: null,
-      chavePix: null,
-      codigoBoleto: null,
-      dataVencimento: null
-    };
-
-    if (metodo === "cartao") {
-      dadosDto = {
-        numeroCartao: (dadosCartao.numeroCartao || "").replace(/\s/g, ""),
-        nomeCartao: dadosCartao.nomeCartao || "",
-        validade: dadosCartao.validade || "",
-        cvv: dadosCartao.cvv || "",
-        cpf: (dadosCartao.cpf || "").replace(/\D/g, ""),
-        parcelas: Number(dadosCartao.parcelas) || 1,
-        chavePix: null,
-        codigoBoleto: null,
-        dataVencimento: null
-      };
-    } else if (metodo === "pix") {
-      dadosDto = {
-        numeroCartao: null,
-        nomeCartao: null,
-        validade: null,
-        cvv: null,
-        cpf: null,
-        parcelas: null,
-        chavePix: dadosPix.chavePix || "",
-        codigoBoleto: null,
-        dataVencimento: null
-      };
-    } else if (metodo === "boleto") {
-      dadosDto = {
-        numeroCartao: null,
-        nomeCartao: null,
-        validade: null,
-        cvv: null,
-        cpf: null,
-        parcelas: null,
-        chavePix: null,
-        codigoBoleto: `3419.${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1 + Math.random() * 9)} ${new Date().toISOString()}`,
-        dataVencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias depois
-      };
-    }
-
-    const pagamentoDTO = {
-      usuarioId: usuarioId,
-      carrinhoId: `carrinho-${usuarioId}-${Date.now()}`,
-      valorTotal: valorFinal,
-      metodoPagamento: metodo,
-      dados: dadosDto,
-      itens: produtos.map(p => ({
-        produtoId: p.produtoId ?? p.id ?? "",
-        tamanho: p.tamanho ?? "",
-        quantidade: Number(p.quantidade ?? 1),
-        precoUnitario: Number(p.precoUnitario ?? p.preco ?? 0),
-        precoOriginal: Number(p.precoOriginal ?? p.precoUnitario ?? p.preco ?? 0) || Number(p.precoUnitario ?? p.preco ?? 0),
-        dataAdicao: new Date().toISOString()
-      })),
-      contato: {
-        email: contato.email,
-        telefone: contato.telefone
-      }
-    };
-
-    console.log("Enviando pagamentoDTO:", pagamentoDTO);
-
-    setCarregando(true);
-
-    try {
-      const response = await axios.post(`${API_URL}/api/Pagamento/processar`, pagamentoDTO);
-      console.log("Resposta da API:", response.data);
-
-      if (response.data?.success) {
-        setSucesso(true);
-        localStorage.removeItem("checkoutItems");
-
-        setTimeout(() => {
-          navigate("/confirmacao", {
-            state: {
-              produtos,
-              total: valorFinal,
-              metodoPagamento: metodo,
-              pagamentoId: response.data.pagamentoId,
-              status: response.data.status,
-              dadosPagamento: response.data.dados,
-            },
-          });
-        }, 1200);
-      } else {
-        const mensagem = response.data?.mensagem ?? response.data?.message ?? "Falha ao processar pagamento";
-        setErro(mensagem);
-      }
-    } catch (error) {
-      console.error("Erro no pagamento:", error);
-
-      let errorMessage = "Erro ao processar pagamento";
-      if (error.response) {
-        errorMessage = error.response.data?.message || 
-                      error.response.data?.mensagem || 
-                      errorMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      setErro(errorMessage);
-    } finally {
-      setCarregando(false);
-    }
+    })()
   };
 
+  try {
+    console.log("Enviando pagamentoDTO:", pagamentoDTO);
+
+    // Envia como string JSON
+    const response = await axios.post(
+      "https://pet-shop-eiab.onrender.com/api/Pagamento/processar",
+      JSON.stringify(pagamentoDTO),
+      {
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+
+    console.log("Pagamento aprovado:", response.data);
+    setSucesso(true);
+  } catch (err) {
+    console.error("Erro no pagamento:", err);
+    setErro("Erro ao processar pagamento");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Renderização do componente
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 20 }}>
       {/* Cabeçalho */}
@@ -583,39 +531,96 @@ const Pagamento = () => {
             )}
 
             {metodoPagamento === "pix" && (
-              <div style={{ marginBottom: 15 }}>
-                <label>Chave PIX:</label>
-                <input
-                  type="text"
-                  name="chavePix"
-                  value={dadosPix.chavePix}
-                  onChange={handlePixChange}
-                  placeholder="exemplo@pix.com"
-                  style={{ width: "100%", padding: 8, marginTop: 5 }}
-                />
-              </div>
+              <>
+                <div style={{ marginBottom: 15 }}>
+                  <label>Chave PIX (opcional):</label>
+                  <input
+                    type="text"
+                    name="chavePix"
+                    value={dadosPix.chavePix}
+                    onChange={handlePixChange}
+                    placeholder="exemplo@pix.com ou seu CPF/CNPJ"
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+                <div style={{ marginBottom: 15 }}>
+                  <label>CPF:</label>
+                  <input
+                    type="text"
+                    name="cpf"
+                    value={dadosPix.cpf}
+                    onChange={handlePixChange}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    style={{ width: "100%", padding: 8, marginTop: 5 }}
+                  />
+                </div>
+              </>
             )}
 
             {metodoPagamento === "boleto" && (
-              <p>O boleto será gerado após a confirmação do pedido.</p>
+              <div style={{ marginBottom: 15 }}>
+                <label>CPF:</label>
+                <input
+                  type="text"
+                  name="cpf"
+                  value={dadosBoleto.cpf}
+                  onChange={handleBoletoChange}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  style={{ width: "100%", padding: 8, marginTop: 5 }}
+                />
+                <p style={{ marginTop: 10, fontSize: 14, color: "#666" }}>
+                  O boleto será gerado após a confirmação do pedido.
+                </p>
+              </div>
             )}
 
             <div style={{ marginBottom: 15 }}>
               <label>Cupom de Desconto:</label>
-              <input
-                type="text"
-                value={cupom}
-                onChange={(e) => setCupom(e.target.value)}
-                placeholder="Digite seu cupom"
-                style={{ width: "100%", padding: 8, marginTop: 5 }}
-              />
-              <button onClick={aplicarCupom} style={{ marginTop: 10 }}>
-                Aplicar Cupom
-              </button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  type="text"
+                  value={cupom}
+                  onChange={(e) => setCupom(e.target.value)}
+                  placeholder="Digite seu cupom"
+                  style={{ flex: 1, padding: 8 }}
+                />
+                <button 
+                  onClick={aplicarCupom}
+                  style={{
+                    padding: "8px 15px",
+                    backgroundColor: "#f0f0f0",
+                    border: "1px solid #ddd",
+                    borderRadius: 4,
+                    cursor: "pointer"
+                  }}
+                >
+                  Aplicar
+                </button>
+              </div>
             </div>
 
-            <div style={{ marginBottom: 15, fontWeight: "bold", fontSize: 18 }}>
-              Total: R$ {(total - total * desconto).toFixed(2)}
+            <div style={{ 
+              backgroundColor: "#f9f9f9",
+              padding: 15,
+              borderRadius: 8,
+              marginBottom: 15 
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                <span>Subtotal:</span>
+                <span>R$ {total.toFixed(2)}</span>
+              </div>
+              {desconto > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span>Desconto ({desconto * 100}%):</span>
+                  <span>- R$ {(total * desconto).toFixed(2)}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: 18 }}>
+                <span>Total:</span>
+                <span>R$ {(total - total * desconto).toFixed(2)}</span>
+              </div>
             </div>
 
             {erro && (
@@ -626,9 +631,13 @@ const Pagamento = () => {
                   padding: 10,
                   borderRadius: 5,
                   marginBottom: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8
                 }}
               >
-                <MdError style={{ verticalAlign: "middle" }} /> {erro}
+                <MdError size={20} />
+                <span>{erro}</span>
               </div>
             )}
 
@@ -640,9 +649,13 @@ const Pagamento = () => {
                   padding: 10,
                   borderRadius: 5,
                   marginBottom: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8
                 }}
               >
-                <MdCheckCircle style={{ verticalAlign: "middle" }} /> Pagamento realizado com sucesso!
+                <MdCheckCircle size={20} />
+                <span>Pagamento realizado com sucesso!</span>
               </div>
             )}
 
@@ -658,9 +671,17 @@ const Pagamento = () => {
                 color: "#fff",
                 fontWeight: "bold",
                 cursor: carregando ? "not-allowed" : "pointer",
+                opacity: carregando ? 0.7 : 1,
+                transition: "opacity 0.2s"
               }}
             >
-              {carregando ? "Processando..." : "Finalizar Pagamento"}
+              {carregando ? (
+                <>
+                  <span style={{ verticalAlign: "middle" }}>Processando...</span>
+                </>
+              ) : (
+                "Finalizar Pagamento"
+              )}
             </button>
           </div>
         </div>

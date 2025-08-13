@@ -40,7 +40,6 @@ export default function Carrinho() {
   const usuarioId = localStorage.getItem("usuarioId");
   const navigate = useNavigate();
 
-  // Carrega dados do carrinho e produtos
   async function carregarDados() {
     if (!usuarioId) {
       setErro("Usuário não está logado");
@@ -52,8 +51,8 @@ export default function Carrinho() {
     setErro(null);
     try {
       const [resCarrinho, resProdutos] = await Promise.all([
-        fetch(`http://localhost:5005/api/Carrinho/${usuarioId}`),
-        fetch("http://localhost:5005/api/Produtos")
+        fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}`),
+        fetch("https://pet-shop-eiab.onrender.com/api/Produtos")
       ]);
 
       if (!resCarrinho.ok) throw new Error("Erro ao buscar carrinho");
@@ -77,7 +76,6 @@ export default function Carrinho() {
     carregarDados();
   }, [usuarioId]);
 
-  // Seleção de itens
   const toggleItemSelection = (produtoId, tamanho) => {
     const itemKey = `${produtoId}-${tamanho}`;
     setSelectedItems(prev =>
@@ -101,7 +99,6 @@ export default function Carrinho() {
     return selectedItems.includes(`${produtoId}-${tamanho}`);
   };
 
-  // Remoção de itens
   async function removerItem(produtoId, tamanho, confirmado = false) {
     if (!confirmado) {
       setItemToDelete({ produtoId, tamanho });
@@ -112,7 +109,7 @@ export default function Carrinho() {
     if (!carrinho) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/remover`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/remover`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +140,7 @@ export default function Carrinho() {
     try {
       const promises = selectedItems.map(itemKey => {
         const [produtoId, tamanho] = itemKey.split('-');
-        return fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/remover`, {
+        return fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/remover`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -161,12 +158,30 @@ export default function Carrinho() {
     }
   }
 
-  // Atualização de quantidade
   async function atualizarQuantidade(produtoId, tamanho, novaQuantidade) {
     if (!carrinho || novaQuantidade < 1) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
+      // Encontrar o produto para obter o preço atual
+      const produto = produtos.find(p => p.id === produtoId);
+      const tamanhoDetalhe = produto?.tamanhos?.find(t => t.tamanho === tamanho);
+      const precoAtual = tamanhoDetalhe?.precoTotal ?? 0;
+
+      // Atualização otimista do estado local
+      setCarrinho(prev => ({
+        ...prev,
+        itens: prev.itens.map(item => 
+          item.produtoId === produtoId && item.tamanho === tamanho
+            ? { 
+                ...item, 
+                quantidade: novaQuantidade,
+                precoUnitario: precoAtual
+              }
+            : item
+        )
+      }));
+      
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-quantidade`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -175,13 +190,16 @@ export default function Carrinho() {
       });
       
       if (!response.ok) throw new Error('Erro ao atualizar quantidade');
+      
+      // Recarregar os dados para garantir sincronização
       await carregarDados();
     } catch (error) {
       setErro(error.message);
+      // Reverter a atualização otimista em caso de erro
+      carregarDados();
     }
   }
 
-  // Cálculos de preço
   function calcularSubtotal() {
     if (!carrinho || carrinho.itens.length === 0 || selectedItems.length === 0) return 0;
     
@@ -198,7 +216,6 @@ export default function Carrinho() {
     }, 0);
   }
 
-  // Cupom de desconto
   async function aplicarCupom() {
     if (!cupom.trim()) {
       setErro("Digite um código de cupom");
@@ -229,7 +246,6 @@ export default function Carrinho() {
     return subtotal - valorDesconto;
   }
 
-  // Finalização da compra
   async function finalizarCompra() {
     if (selectedItems.length === 0) {
       setErro("Selecione pelo menos um item para finalizar a compra");
@@ -264,7 +280,6 @@ export default function Carrinho() {
     navigate('/pagamento');
   }
 
-  // Edição de tamanho
   const handleOpenEditModal = (item) => {
     setItemToEdit(item);
     setNewSize(item.tamanho);
@@ -289,7 +304,7 @@ export default function Carrinho() {
     if (!itemToEdit || !newSize || newSize === itemToEdit.tamanho) return;
     
     try {
-      const response = await fetch(`http://localhost:5005/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
+      const response = await fetch(`https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/atualizar-tamanho`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -319,7 +334,6 @@ export default function Carrinho() {
     }
   }
 
-  // Renderização condicional
   if (loading) return (
     <motion.div className="loading-container">
       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
@@ -357,7 +371,6 @@ export default function Carrinho() {
     </motion.div>
   );
 
-  // Cálculos finais
   const subtotal = calcularSubtotal();
   const valorDesconto = subtotal * desconto;
   const total = calcularTotal();
@@ -410,7 +423,15 @@ export default function Carrinho() {
 
                 if (!produto) {
                   return (
-                    <motion.div key={`${item.produtoId}-${item.tamanho}`} className={`cart-item ${isSelected ? 'selected' : ''}`}>
+                    <motion.div 
+                      key={`${item.produtoId}-${item.tamanho}`} 
+                      className={`cart-item ${isSelected ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        if (!e.target.closest('.item-actions')) {
+                          toggleItemSelection(item.produtoId, item.tamanho);
+                        }
+                      }}
+                    >
                       <div className="item-select">
                         <label className="custom-checkbox">
                           <input
@@ -433,7 +454,13 @@ export default function Carrinho() {
                         </div>
                       </div>
                       <div className="item-actions">
-                        <button className="remove-btn" onClick={() => removerItem(item.produtoId, item.tamanho)}>
+                        <button 
+                          className="remove-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removerItem(item.produtoId, item.tamanho);
+                          }}
+                        >
                           <FaTrash />
                         </button>
                       </div>
@@ -442,7 +469,15 @@ export default function Carrinho() {
                 }
 
                 return (
-                  <motion.div key={`${item.produtoId}-${item.tamanho}`} className={`cart-item ${isSelected ? 'selected' : ''}`}>
+                  <motion.div 
+                    key={`${item.produtoId}-${item.tamanho}`} 
+                    className={`cart-item ${isSelected ? 'selected' : ''}`}
+                    onClick={(e) => {
+                      if (!e.target.closest('.item-actions, .quantity-control')) {
+                        toggleItemSelection(item.produtoId, item.tamanho);
+                      }
+                    }}
+                  >
                     <div className="item-select">
                       <label className="custom-checkbox">
                         <input
@@ -475,7 +510,10 @@ export default function Carrinho() {
                         <div className="quantity-control">
                           <button 
                             className="qty-btn minus"
-                            onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade - 1);
+                            }}
                             disabled={item.quantidade <= 1}
                           >
                             −
@@ -483,7 +521,10 @@ export default function Carrinho() {
                           <span className="qty-value">{item.quantidade}</span>
                           <button 
                             className="qty-btn plus"
-                            onClick={() => atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade + 1)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              atualizarQuantidade(item.produtoId, item.tamanho, item.quantidade + 1);
+                            }}
                           >
                             +
                           </button>
@@ -498,20 +539,26 @@ export default function Carrinho() {
                         </p>
                       )}
                       <p className="price-unit">
-                        {descontoProduto > 0 ? 'Por: ' : ''}R$ {preco.toFixed(2)}
+                        {descontoProduto > 0 ? 'Por: ' : ''}R$ {(preco * item.quantidade).toFixed(2)}
                       </p>
                     </div>
                     
                     <div className="item-actions">
                       <button 
                         className="edit-btn"
-                        onClick={() => handleOpenEditModal(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditModal(item);
+                        }}
                       >
                         <FaExchangeAlt />
                       </button>
                       <button 
                         className="remove-btn"
-                        onClick={() => removerItem(item.produtoId, item.tamanho)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removerItem(item.produtoId, item.tamanho);
+                        }}
                       >
                         <FaTrash />
                       </button>
@@ -605,7 +652,6 @@ export default function Carrinho() {
         </div>
       </div>
 
-      {/* Modal de confirmação de exclusão */}
       <AnimatePresence>
         {showDeleteModal && (
           <div className="delete-modal-overlay">
@@ -635,7 +681,6 @@ export default function Carrinho() {
         )}
       </AnimatePresence>
 
-      {/* Modal de edição de tamanho */}
       <AnimatePresence>
         {showEditModal && itemToEdit && (
           <div className="edit-modal-overlay">

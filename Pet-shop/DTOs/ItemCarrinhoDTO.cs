@@ -35,4 +35,6 @@
         /// </summary>
         public DateTime DataAdicao { get; set; } = DateTime.UtcNow;
     }
+
+
 }

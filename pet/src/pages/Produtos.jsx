@@ -39,7 +39,7 @@ const Produtos = () => {
     const fetchProdutos = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5005/api/Produtos");
+        const response = await axios.get("https://pet-shop-eiab.onrender.com/api/Produtos");
         setProdutos(response.data);
         setProdutosFiltrados(response.data);
         setLoading(false);
@@ -179,7 +179,7 @@ const Produtos = () => {
 
     try {
       await axios.post(
-        `http://localhost:5005/api/Carrinho/${usuarioId}/adicionar`, 
+        `https://pet-shop-eiab.onrender.com/api/Carrinho/${usuarioId}/adicionar`, 
         itemCarrinho
       );
       

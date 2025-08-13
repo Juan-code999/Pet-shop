@@ -43,7 +43,7 @@ const Usuarios = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:5005/api/Usuario', {
+      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -174,7 +174,7 @@ const Usuarios = () => {
     const { userId, email, isCurrentlyAdmin } = adminConfirmData;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5005/api/Usuario/admin-status', {
+      const response = await fetch('https://pet-shop-eiab.onrender.com/api/Usuario/admin-status', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

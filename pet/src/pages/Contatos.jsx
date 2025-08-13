@@ -49,7 +49,7 @@ const Contatos = () => {
     id: 0
   });
   
-  const API_BASE_URL = 'http://localhost:5005/api/Contato';
+  const API_BASE_URL = 'https://pet-shop-eiab.onrender.com/api/Contato';
   const CONTACT_INFO = {
     email: 'contato@seusite.com',
     phone: '(11) 99999-9999',

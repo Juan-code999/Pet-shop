@@ -8,7 +8,7 @@
         public string Validade { get; set; }
         public string CVV { get; set; }
         public string CPF { get; set; }
-        public int Parcelas { get; set; }
+        public int? Parcelas { get; set; }
 
         // PIX
         public string ChavePix { get; set; }

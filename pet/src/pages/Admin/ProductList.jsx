@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  Table, Button, Pagination, Badge, InputGroup, Form, 
-  Modal, Spinner, Alert, OverlayTrigger, Tooltip, Container
-} from 'react-bootstrap';
-import { 
-  BiSearch, BiRefresh, BiTrash, BiEdit, BiStar, 
-  BiFilterAlt, BiSort, BiPlus, BiX, BiCheck
-} from 'react-icons/bi';
-import { debounce } from 'lodash';
+  FiTrash2, FiEdit2, FiStar, FiPlus, FiX, FiCheck,
+  FiSearch, FiRefreshCw, FiFilter, FiAlertCircle,
+  FiCheckCircle, FiChevronLeft, FiChevronRight,
+  FiChevronsLeft, FiChevronsRight
+} from 'react-icons/fi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/ProductList.css';
 
 const ProductList = () => {
@@ -116,18 +114,6 @@ const ProductList = () => {
     return { currentProducts, totalPages, indexOfFirstProduct, indexOfLastProduct };
   }, [filteredProducts, currentPage, itemsPerPage]);
 
-  // Debounce search with cleanup
-  const debouncedSearch = useMemo(
-    () => debounce((term) => setSearchTerm(term), 300),
-    []
-  );
-
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
-
   // Helper functions
   const renderPrices = (sizes) => {
     if (!sizes || sizes.length === 0) return 'N/A';
@@ -170,10 +156,10 @@ const ProductList = () => {
   };
 
   const renderSortIcon = (key) => {
-    if (sortConfig.key !== key) return <BiSort className="text-muted" />;
+    if (sortConfig.key !== key) return <FiFilter className="text-muted" />;
     return sortConfig.direction === 'asc' 
-      ? <BiSort className="text-primary" /> 
-      : <BiSort className="text-primary" style={{ transform: 'rotate(180deg)' }} />;
+      ? <FiFilter className="text-primary" /> 
+      : <FiFilter className="text-primary" style={{ transform: 'rotate(180deg)' }} />;
   };
 
   // Get unique categories and species for filters
@@ -198,357 +184,354 @@ const ProductList = () => {
   };
 
   const handleAddProduct = () => {
-    navigate('/admin/products/new');
+    navigate('/Formprodutos');
   };
 
   const handleEditProduct = (productId) => {
     navigate(`/admin/products/edit/${productId}`);
   };
 
+  const Notificacao = ({ mensagem, tipo, onFechar }) => (
+    <motion.div
+      className={`notificacao ${tipo}`}
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 300, opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+    >
+      <div className="notificacao-conteudo">
+        {tipo === 'sucesso' ? (
+          <FiCheckCircle className="notificacao-icone" />
+        ) : (
+          <FiAlertCircle className="notificacao-icone" />
+        )}
+        <span>{mensagem}</span>
+      </div>
+      <button className="notificacao-fechar" onClick={onFechar}>
+        <FiX />
+      </button>
+    </motion.div>
+  );
+
+  const ModalConfirmacao = ({ onConfirm, onCancel, product }) => (
+    <motion.div 
+      className="modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div 
+        className="modal-content"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.9 }}
+      >
+        <div className="modal-header">
+          <h3>
+            <FiAlertCircle className="modal-icon" />
+            Confirmar Exclusão
+          </h3>
+          <button onClick={onCancel} className="modal-close-btn">
+            <FiX />
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="product-preview">
+            <img 
+              src={product?.imagensUrl?.[0] || '/placeholder-product.png'} 
+              alt={product?.nome}
+              className="product-image"
+            />
+            <div className="product-info">
+              <h4>{product?.nome}</h4>
+              <p>ID: {product?.id}</p>
+              {product?.destaque && (
+                <span className="featured-badge">
+                  <FiStar /> Produto em destaque
+                </span>
+              )}
+            </div>
+          </div>
+          <p>Tem certeza que deseja excluir este produto permanentemente?</p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-secondary" onClick={onCancel}>
+            <FiX /> Cancelar
+          </button>
+          <button className="btn-danger" onClick={onConfirm}>
+            <FiTrash2 /> Excluir
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
   return (
-    <Container fluid className="admin-product-list-container py-4">
-      <div className="admin-product-content bg-white rounded-3 shadow-sm p-4">
-        {/* Header */}
-        <div className="admin-product-header mb-4">
-          <h2 className="m-0 d-flex align-items-center">
-            <Badge bg="primary" className="me-2">{filteredProducts.length}</Badge>
-            Product Management
-            <Button 
-              variant="outline-success" 
-              size="sm" 
-              className="ms-3"
-              onClick={handleAddProduct}
-            >
-              <BiPlus /> Add Product
-            </Button>
-          </h2>
+    <div className="product-list-container">
+      <AnimatePresence>
+        {showDeleteModal && (
+          <ModalConfirmacao
+            product={productToDelete}
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {error && (
+          <Notificacao
+            mensagem={error}
+            tipo="erro"
+            onFechar={() => setError(null)}
+          />
+        )}
+        {successMessage && (
+          <Notificacao
+            mensagem={successMessage}
+            tipo="sucesso"
+            onFechar={() => setSuccessMessage(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="product-list-header">
+        <h2>
+          <span className="badge">{filteredProducts.length}</span>
+          Gerenciamento de Produtos
+        </h2>
+        
+        <div className="actions">
+          <button 
+            className="btn-primary"
+            onClick={handleAddProduct}
+          >
+            <FiPlus /> Adicionar Produto
+          </button>
           
-          <Button 
-            variant="outline-primary" 
+          <button 
+            className="btn-refresh"
             onClick={loadProducts}
             disabled={isLoading}
-            className="d-flex align-items-center"
           >
-            <BiRefresh className="me-1" /> 
-            {isLoading ? 'Loading...' : 'Refresh'}
-          </Button>
+            <FiRefreshCw /> {isLoading ? 'Carregando...' : 'Atualizar'}
+          </button>
         </div>
+      </div>
 
-        {/* Alerts */}
-        {error && (
-          <Alert variant="danger" onClose={() => setError(null)} dismissible className="mb-4">
-            <strong>Error:</strong> {error}
-          </Alert>
-        )}
-        
-        {successMessage && (
-          <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible className="mb-4">
-            <BiCheck className="me-2" size={20} />
-            {successMessage}
-          </Alert>
-        )}
-
-        {/* Filters */}
-        <div className="admin-product-filters mb-4 p-3 bg-light rounded-3">
-          <InputGroup className="admin-search-input mb-3 mb-md-0">
-            <InputGroup.Text className="bg-white">
-              <BiSearch />
-            </InputGroup.Text>
-            <Form.Control
-              placeholder="Search by name, description or brand..."
-              onChange={(e) => debouncedSearch(e.target.value)}
-              disabled={isLoading}
-              value={searchTerm}
-            />
-            {(searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All') && (
-              <Button 
-                variant="outline-secondary" 
-                onClick={resetFilters}
-                title="Reset filters"
-              >
-                <BiX />
-              </Button>
-            )}
-          </InputGroup>
-
-          <div className="admin-filter-controls d-flex flex-wrap align-items-center gap-2">
-            <Form.Check
-              type="switch"
-              id="featured-switch"
-              label={
-                <span className="d-flex align-items-center gap-1">
-                  <BiStar /> Featured
-                </span>
-              }
-              checked={showFeaturedOnly}
-              onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-              disabled={isLoading}
-              className="me-2"
-            />
-
-            <Form.Select
-              size="sm"
-              className="admin-filter-select"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              disabled={isLoading}
+      <div className="filters-container">
+        <div className="search-container">
+          <FiSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Buscar por nome, descrição ou marca..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={isLoading}
+          />
+          {(searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All') && (
+            <button 
+              className="clear-filters"
+              onClick={resetFilters}
+              title="Limpar filtros"
             >
-              {categories.map((category, index) => (
-                <option key={`category-${index}`} value={category}>
-                  {category}
-                </option>
-              ))}
-            </Form.Select>
-
-            <Form.Select
-              size="sm"
-              className="admin-filter-select"
-              value={speciesFilter}
-              onChange={(e) => setSpeciesFilter(e.target.value)}
-              disabled={isLoading}
-            >
-              {species.map((specie, index) => (
-                <option key={`specie-${index}`} value={specie}>
-                  {specie}
-                </option>
-              ))}
-            </Form.Select>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="admin-table-responsive mb-4">
-          {isLoading && products.length === 0 ? (
-            <div className="admin-loading-container d-flex flex-column align-items-center justify-content-center py-5">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-3 text-muted">Loading products...</p>
-            </div>
-          ) : (
-            <Table striped hover className="admin-product-table mb-0">
-              <thead>
-                <tr>
-                  <th style={{ width: '80px' }}>Image</th>
-                  <th 
-                    onClick={() => requestSort('nome')} 
-                    className="admin-sortable-header"
-                    style={{ minWidth: '200px' }}
-                  >
-                    <div className="d-flex align-items-center gap-1">
-                      Name {renderSortIcon('nome')}
-                    </div>
-                  </th>
-                  <th onClick={() => requestSort('categoria')} className="admin-sortable-header">
-                    <div className="d-flex align-items-center gap-1">
-                      Category {renderSortIcon('categoria')}
-                    </div>
-                  </th>
-                  <th onClick={() => requestSort('especieAnimal')} className="admin-sortable-header">
-                    <div className="d-flex align-items-center gap-1">
-                      Species {renderSortIcon('especieAnimal')}
-                    </div>
-                  </th>
-                  <th style={{ minWidth: '150px' }}>Prices</th>
-                  <th>Status</th>
-                  <th style={{ width: '120px' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentProducts.length > 0 ? (
-                  currentProducts.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <div className="admin-product-image-container">
-                          <img 
-                            src={product.imagensUrl[0]} 
-                            alt={product.nome}
-                            className="admin-product-image"
-                            onError={(e) => {
-                              e.target.onerror = null; 
-                              e.target.src = '/placeholder-product.png';
-                            }}
-                          />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="admin-product-name">
-                          <strong>{product.nome}</strong>
-                          {product.marca && (
-                            <small className="text-muted d-block">{product.marca}</small>
-                          )}
-                        </div>
-                      </td>
-                      <td>{product.categoria}</td>
-                      <td>{product.especieAnimal}</td>
-                      <td className="small">{renderPrices(product.tamanhos)}</td>
-                      <td>
-                        <div className="d-flex flex-wrap gap-1">
-                          <Badge pill bg={product.disponivel ? "success" : "secondary"}>
-                            {product.disponivel ? 'Available' : 'Unavailable'}
-                          </Badge>
-                          {product.destaque && (
-                            <Badge pill bg="warning" className="d-flex align-items-center">
-                              <BiStar size={12} className="me-1" /> Featured
-                            </Badge>
-                          )}
-                          {product.desconto > 0 && (
-                            <Badge pill bg="danger">
-                              {product.desconto}% OFF
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="admin-actions-cell">
-                        <OverlayTrigger placement="top" overlay={<Tooltip>Edit</Tooltip>}>
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            disabled={isLoading}
-                            onClick={() => handleEditProduct(product.id)}
-                          >
-                            <BiEdit />
-                          </Button>
-                        </OverlayTrigger>
-                        
-                        <OverlayTrigger placement="top" overlay={<Tooltip>Delete</Tooltip>}>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => confirmDelete(product)}
-                            disabled={isLoading}
-                          >
-                            <BiTrash />
-                          </Button>
-                        </OverlayTrigger>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="admin-no-results text-center py-5">
-                      <BiFilterAlt size={24} className="mb-2" />
-                      <p className="mb-1">
-                        {searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All'
-                          ? 'No products match your filters' 
-                          : 'No products found'}
-                      </p>
-                      {(searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All') && (
-                        <Button 
-                          variant="link" 
-                          size="sm" 
-                          onClick={resetFilters}
-                          className="text-primary"
-                        >
-                          Clear all filters
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
+              <FiX />
+            </button>
           )}
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="admin-pagination-container d-flex flex-column flex-md-row justify-content-between align-items-center py-3 border-top">
-            <div className="admin-pagination-info small text-muted mb-2 mb-md-0">
-              Showing {Math.min(indexOfFirstProduct + 1, filteredProducts.length)}-
-              {Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products
-            </div>
-            
-            <Pagination className="admin-pagination-controls mb-0">
-              <Pagination.First 
-                onClick={() => !isLoading && setCurrentPage(1)} 
-                disabled={currentPage === 1 || isLoading} 
-              />
-              <Pagination.Prev 
-                onClick={() => !isLoading && setCurrentPage(p => Math.max(1, p - 1))} 
-                disabled={currentPage === 1 || isLoading} 
-              />
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <Pagination.Item
-                    key={pageNum}
-                    active={pageNum === currentPage}
-                    onClick={() => !isLoading && setCurrentPage(pageNum)}
-                    disabled={isLoading}
-                  >
-                    {pageNum}
-                  </Pagination.Item>
-                );
-              })}
-              
-              <Pagination.Next 
-                onClick={() => !isLoading && setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                disabled={currentPage === totalPages || isLoading} 
-              />
-              <Pagination.Last 
-                onClick={() => !isLoading && setCurrentPage(totalPages)} 
-                disabled={currentPage === totalPages || isLoading} 
-              />
-            </Pagination>
-          </div>
-        )}
+        <div className="filter-controls">
+          <label className="featured-switch">
+            <input
+              type="checkbox"
+              checked={showFeaturedOnly}
+              onChange={(e) => setShowFeaturedOnly(e.target.checked)}
+              disabled={isLoading}
+            />
+            <span className="slider round"></span>
+            <FiStar className="star-icon" /> Destaque
+          </label>
+
+          <select
+            className="filter-select"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            disabled={isLoading}
+          >
+            {categories.map((category, index) => (
+              <option key={`category-${index}`} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={speciesFilter}
+            onChange={(e) => setSpeciesFilter(e.target.value)}
+            disabled={isLoading}
+          >
+            {species.map((specie, index) => (
+              <option key={`specie-${index}`} value={specie}>
+                {specie}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-        <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="py-4">
-          <div className="d-flex align-items-center mb-3">
-            <div className="admin-product-image-container me-3">
-              <img 
-                src={productToDelete?.imagensUrl?.[0] || '/placeholder-product.png'} 
-                alt={productToDelete?.nome}
-                className="admin-product-image"
-              />
-            </div>
-            <div>
-              <h5 className="mb-1">{productToDelete?.nome}</h5>
-              <small className="text-muted">ID: {productToDelete?.id}</small>
-            </div>
-          </div>
-          <p className="mb-0">
-            Are you sure you want to delete this product? This action cannot be undone.
-            {productToDelete?.destaque && (
-              <span className="d-block mt-2 text-warning">
-                <BiStar className="me-1" /> This is a featured product
-              </span>
-            )}
-          </p>
-        </Modal.Body>
-        <Modal.Footer className="border-0">
-          <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Spinner as="span" animation="border" size="sm" role="status" className="me-2" />
-                Deleting...
-              </>
+      {isLoading && products.length === 0 ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Carregando produtos...</p>
+        </div>
+      ) : (
+        <>
+          <div className="products-grid">
+            {currentProducts.length > 0 ? (
+              currentProducts.map((product) => (
+                <div key={product.id} className="product-card">
+                  <div className="product-image-container">
+                    <img 
+                      src={product.imagensUrl[0]} 
+                      alt={product.nome}
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = '/placeholder-product.png';
+                      }}
+                    />
+                    <div className="product-actions">
+                      <button 
+                        className="edit-btn"
+                        onClick={() => handleEditProduct(product.id)}
+                        disabled={isLoading}
+                      >
+                        <FiEdit2 />
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => confirmDelete(product)}
+                        disabled={isLoading}
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="product-info">
+                    <h3>{product.nome}</h3>
+                    {product.marca && <p className="brand">{product.marca}</p>}
+                    
+                    <div className="product-meta">
+                      <span className="category">{product.categoria}</span>
+                      <span className="species">{product.especieAnimal}</span>
+                    </div>
+                    
+                    <div className="product-prices">
+                      {renderPrices(product.tamanhos)}
+                    </div>
+                    
+                    <div className="product-status">
+                      <span className={`status-badge ${product.disponivel ? 'available' : 'unavailable'}`}>
+                        {product.disponivel ? 'Disponível' : 'Indisponível'}
+                      </span>
+                      {product.destaque && (
+                        <span className="featured-badge">
+                          <FiStar /> Destaque
+                        </span>
+                      )}
+                      {product.desconto > 0 && (
+                        <span className="discount-badge">
+                          {product.desconto}% OFF
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
             ) : (
-              'Delete Product'
+              <div className="empty-state">
+                <FiFilter size={48} className="empty-icon" />
+                <p>
+                  {searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All'
+                    ? 'Nenhum produto corresponde aos filtros' 
+                    : 'Nenhum produto encontrado'}
+                </p>
+                {(searchTerm || showFeaturedOnly || categoryFilter !== 'All' || speciesFilter !== 'All') && (
+                  <button 
+                    className="clear-filters-btn"
+                    onClick={resetFilters}
+                  >
+                    Limpar todos os filtros
+                  </button>
+                )}
+              </div>
             )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Mostrando {Math.min(indexOfFirstProduct + 1, filteredProducts.length)}-
+                {Math.min(indexOfLastProduct, filteredProducts.length)} de {filteredProducts.length} produtos
+              </div>
+              
+              <div className="pagination-controls">
+                <button 
+                  onClick={() => !isLoading && setCurrentPage(1)} 
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  <FiChevronsLeft />
+                </button>
+                <button 
+                  onClick={() => !isLoading && setCurrentPage(p => Math.max(1, p - 1))} 
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  <FiChevronLeft />
+                </button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={pageNum === currentPage ? 'active' : ''}
+                      onClick={() => !isLoading && setCurrentPage(pageNum)}
+                      disabled={isLoading}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                <button 
+                  onClick={() => !isLoading && setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  <FiChevronRight />
+                </button>
+                <button 
+                  onClick={() => !isLoading && setCurrentPage(totalPages)} 
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  <FiChevronsRight />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 

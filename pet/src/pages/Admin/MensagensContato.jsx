@@ -21,13 +21,13 @@ const MensagensContato = () => {
   useEffect(() => {
     const fetchMensagens = async () => {
       try {
-        const response = await axios.get('http://localhost:5005/api/Contato/todos');
+        const response = await axios.get('https://pet-shop-eiab.onrender.com/api/Contato/todos');
         
         const mensagensComFoto = await Promise.all(
           response.data.map(async msg => {
             if (msg.usuarioId) {
               try {
-                const userResponse = await axios.get(`http://localhost:5005/api/Usuario/${msg.usuarioId}`);
+                const userResponse = await axios.get(`https://pet-shop-eiab.onrender.com/api/Usuario/${msg.usuarioId}`);
                 return { ...msg, fotoUsuario: userResponse.data.foto };
               } catch {
                 return msg;
@@ -114,7 +114,7 @@ const MensagensContato = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5005/api/Contato/mensagem/${id}`);
+      await axios.delete(`https://pet-shop-eiab.onrender.com/api/Contato/mensagem/${id}`);
       setMensagens(mensagens.filter(msg => msg.id !== id));
       setSuccess('Mensagem excluída com sucesso!');
       setTimeout(() => setSuccess(null), 3000);

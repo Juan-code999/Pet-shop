@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Pet_shop.DTOs;
 using Pet_shop.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,7 +14,6 @@ namespace Pet_shop.Services
     {
         private readonly FirebaseClient _firebase;
         private readonly ILogger<PagamentoService> _logger;
-        private readonly List<string> _metodosValidos = new() { "cartao", "pix", "boleto" };
         private readonly List<string> _statusValidos = new() { "pendente", "processando", "aprovado", "recusado", "cancelado" };
 
         public PagamentoService(IConfiguration configuration, ILogger<PagamentoService> logger)
@@ -27,69 +25,59 @@ namespace Pet_shop.Services
             _logger = logger;
         }
 
-        public async Task<Pagamento> ProcessarPagamentoAsync(PagamentoDTO pagamentoDto)
+        public async Task<Pagamento> ProcessarPagamentoAsync<T>(PagamentoDTO<T> pagamentoDto) where T : MetodoPagamentoDTO
         {
-            // Validações adicionais
             if (pagamentoDto.Itens == null || !pagamentoDto.Itens.Any())
-            {
                 throw new ArgumentException("O pagamento deve conter itens");
+
+            var dadosPagamento = new DadosPagamento();
+            var metodo = pagamentoDto.Metodo;
+
+            switch (metodo.Tipo)
+            {
+                case "pix":
+                    var pix = metodo as PixPagamentoDTO;
+                    dadosPagamento.ChavePix = pix?.ChavePix ?? GerarChavePix();
+                    dadosPagamento.CPF = pix?.CPF;
+                    break;
+
+                case "cartao":
+                    var cartao = metodo as CartaoPagamentoDTO;
+                    dadosPagamento.NumeroCartao = cartao?.NumeroCartao;
+                    dadosPagamento.NomeCartao = cartao?.NomeCartao;
+                    dadosPagamento.Validade = cartao?.Validade;
+                    dadosPagamento.CVV = cartao?.CVV;
+                    dadosPagamento.CPF = cartao?.CPF;
+                    dadosPagamento.Parcelas = cartao?.Parcelas ?? 1;
+                    break;
+
+                case "boleto":
+                    var boleto = metodo as BoletoPagamentoDTO;
+                    dadosPagamento.CodigoBoleto = GerarCodigoBoleto();
+                    dadosPagamento.DataVencimento = DateTime.UtcNow.AddDays(3);
+                    dadosPagamento.CPF = boleto?.CPF;
+                    break;
             }
 
-            // Criação do objeto Pagamento
             var pagamento = new Pagamento
             {
                 UsuarioId = pagamentoDto.UsuarioId,
                 CarrinhoId = pagamentoDto.CarrinhoId,
                 ValorTotal = pagamentoDto.ValorTotal,
-                MetodoPagamento = pagamentoDto.MetodoPagamento,
-                Dados = pagamentoDto.Dados,
+                MetodoPagamento = metodo.Tipo,
+                Dados = dadosPagamento,
                 Status = "pendente",
                 DataCriacao = DateTime.UtcNow,
                 DataAtualizacao = DateTime.UtcNow
             };
 
-            // Salva no Firebase
-            var result = await _firebase
-                .Child("pagamentos")
-                .PostAsync(pagamento);
-
+            var result = await _firebase.Child("pagamentos").PostAsync(pagamento);
             pagamento.Id = result.Key;
 
-            // Atualiza com o ID
-            await _firebase
-                .Child("pagamentos")
-                .Child(result.Key)
-                .PutAsync(pagamento);
+            await _firebase.Child("pagamentos").Child(result.Key).PutAsync(pagamento);
+            await SimularProcessamento(pagamento);
 
             return pagamento;
-        }
-
-        
-
-        private void ValidarDadosCartao(DadosPagamentoDTO dados)
-        {
-            if (dados == null) throw new ArgumentNullException(nameof(dados));
-            if (string.IsNullOrWhiteSpace(dados.NumeroCartao) || dados.NumeroCartao.Length < 15)
-                throw new ArgumentException("Número do cartão inválido");
-            if (string.IsNullOrWhiteSpace(dados.NomeCartao))
-                throw new ArgumentException("Nome no cartão é obrigatório");
-            if (string.IsNullOrWhiteSpace(dados.Validade) || !dados.Validade.Contains('/'))
-                throw new ArgumentException("Validade inválida (use MM/AA)");
-            if (string.IsNullOrWhiteSpace(dados.CVV) || dados.CVV.Length < 3)
-                throw new ArgumentException("CVV inválido");
-        }
-
-        private DadosPagamento MapearDadosCartao(DadosPagamentoDTO dados)
-        {
-            return new DadosPagamento
-            {
-                NumeroCartao = dados.NumeroCartao,
-                NomeCartao = dados.NomeCartao,
-                Validade = dados.Validade,
-                CVV = dados.CVV,
-                CPF = dados.CPF,
-                Parcelas = dados.Parcelas
-            };
         }
 
         private string GerarChavePix() => $"PIX_{Guid.NewGuid():N}".Substring(0, 12);
@@ -103,26 +91,8 @@ namespace Pet_shop.Services
             await Task.Delay(1500);
             pagamento.Status = new Random().Next(0, 100) < 80 ? "aprovado" : "recusado";
             pagamento.DataAtualizacao = DateTime.UtcNow;
-        }
 
-        private async Task SalvarPagamento(Pagamento pagamento)
-        {
-            try
-            {
-                // Evita problemas de serialização no Firebase
-                if (pagamento.Dados?.DataVencimento == null)
-                    pagamento.Dados.DataVencimento = null;
-
-                await _firebase
-                    .Child("pagamentos")
-                    .Child(pagamento.Id)
-                    .PutAsync(pagamento);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao salvar pagamento {pagamento.Id} no Firebase");
-                throw new Exception($"Falha ao registrar pagamento no Firebase: {ex.Message}", ex);
-            }
+            await _firebase.Child("pagamentos").Child(pagamento.Id).PutAsync(pagamento);
         }
 
         public async Task<Pagamento> ObterPagamentoAsync(string pagamentoId)
@@ -130,20 +100,12 @@ namespace Pet_shop.Services
             if (string.IsNullOrWhiteSpace(pagamentoId))
                 throw new ArgumentException("ID do pagamento é obrigatório");
 
-            try
-            {
-                var pagamento = await _firebase
-                    .Child("pagamentos")
-                    .Child(pagamentoId)
-                    .OnceSingleAsync<Pagamento>();
+            var pagamento = await _firebase
+                .Child("pagamentos")
+                .Child(pagamentoId)
+                .OnceSingleAsync<Pagamento>();
 
-                return pagamento ?? throw new KeyNotFoundException("Pagamento não encontrado");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao buscar pagamento {pagamentoId}");
-                throw;
-            }
+            return pagamento ?? throw new KeyNotFoundException("Pagamento não encontrado");
         }
 
         public async Task<Pagamento> AtualizarStatusPagamentoAsync(string pagamentoId, string status)
@@ -155,7 +117,7 @@ namespace Pet_shop.Services
             pagamento.Status = status.ToLower();
             pagamento.DataAtualizacao = DateTime.UtcNow;
 
-            await SalvarPagamento(pagamento);
+            await _firebase.Child("pagamentos").Child(pagamento.Id).PutAsync(pagamento);
             return pagamento;
         }
     }
